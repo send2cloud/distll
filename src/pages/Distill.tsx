@@ -1,185 +1,204 @@
-
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { summarizeContent } from "@/utils/openRouter";
-import { getSettings } from "@/utils/settings";
+import { summarizeContent } from '@/utils/openRouter';
+import { Copy, ArrowLeft } from 'lucide-react';
+import { getSettings } from '@/utils/settings';
 import SettingsModal from "@/components/SettingsModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from 'react-markdown';
+import MinimalContentView from '@/components/MinimalContentView';
 
 const Distill = () => {
   const { url } = useParams<{ url: string }>();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [originalContent, setOriginalContent] = useState('');
-  const [summary, setSummary] = useState('');
-  const [error, setError] = useState('');
-  const [progressStage, setProgressStage] = useState(0);
-  const [progress, setProgress] = useState(0);
+  const location = useLocation();
+  const [originalContent, setOriginalContent] = useState<string>('');
+  const [summary, setSummary] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [progress, setProgress] = useState<number>(0);
+  const [isDirectAccess, setIsDirectAccess] = useState<boolean>(false);
+  
+  // Determine if this is direct access via URL
+  useEffect(() => {
+    // Check if accessed directly via URL (e.g., by typing in browser or bookmark)
+    // We're assuming direct access if the URL contains "distill/" 
+    // and it's not from navigation from our app
+    const isDirectNavigationFromExternal = document.referrer === '' || 
+      !document.referrer.includes(window.location.hostname);
+    
+    const hasDistillPathPattern = location.pathname.match(/^\/distill\//);
+    
+    setIsDirectAccess(isDirectNavigationFromExternal && hasDistillPathPattern);
+  }, [location]);
 
+  useEffect(() => {
+    if (!url) return;
+
+    const fetchContent = async () => {
+      setIsLoading(true);
+      setError(null);
+      setProgress(10);
+      
+      try {
+        // Decode the URL if it's encoded
+        const decodedUrl = decodeURIComponent(url);
+        // Add protocol if missing
+        const fullUrl = decodedUrl.startsWith('http') ? decodedUrl : `https://${decodedUrl}`;
+        
+        setProgress(20);
+        
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(fullUrl)}`);
+        
+        setProgress(50);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch content: ${response.statusText}`);
+        }
+        
+        const html = await response.text();
+        setProgress(70);
+        
+        // Extract main content from HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Remove script tags and style tags to clean up the content
+        const scripts = doc.querySelectorAll('script, style, svg, iframe, img, noscript');
+        scripts.forEach(script => script.remove());
+        
+        // Try to find main content
+        const article = doc.querySelector('article') || 
+                        doc.querySelector('main') || 
+                        doc.querySelector('.content') || 
+                        doc.querySelector('.article') ||
+                        doc.querySelector('.post') ||
+                        doc.body;
+        
+        const mainContent = article?.textContent || doc.body.textContent || '';
+        
+        // Normalize whitespace
+        const cleanContent = mainContent
+          .replace(/\s+/g, ' ')
+          .trim()
+          .substring(0, 15000); // Limit content length
+        
+        setOriginalContent(cleanContent);
+        setProgress(80);
+        
+        // Request summary if API key is set
+        const settings = getSettings();
+        if (settings.openRouterApiKey) {
+          try {
+            const summaryText = await summarizeContent(cleanContent);
+            setSummary(summaryText);
+          } catch (summaryError) {
+            console.error('Error summarizing content:', summaryError);
+            toast({
+              title: "Summarization Error",
+              description: summaryError instanceof Error ? summaryError.message : "Failed to summarize content",
+              variant: "destructive"
+            });
+          }
+        }
+        
+        setProgress(100);
+      } catch (fetchError) {
+        console.error('Error fetching content:', fetchError);
+        setError(fetchError instanceof Error ? fetchError : new Error('Unknown error occurred'));
+        toast({
+          title: "Error",
+          description: fetchError instanceof Error ? fetchError.message : "Failed to fetch content",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchContent();
+  }, [url]);
+  
+  const copyToClipboard = (text: string, what: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        title: "Copied!",
+        description: `${what} copied to clipboard`,
+      });
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      toast({
+        title: "Copy failed",
+        description: "Could not copy to clipboard",
+        variant: "destructive"
+      });
+    });
+  };
+  
   const handleBack = () => {
     navigate('/');
   };
 
-  useEffect(() => {
-    if (!url) {
-      setError('No URL provided');
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchAndDistill = async () => {
-      try {
-        setProgressStage(1); // Starting content fetch
-        setProgress(10);
-        
-        // Step 1: Decode and format the URL
-        let targetUrl = decodeURIComponent(url);
-        if (!targetUrl.startsWith('http')) {
-          targetUrl = `http://${targetUrl}`;
-        }
-
-        // Step 2: Fetch content using r.jina.com
-        const jinaUrl = `https://r.jina.ai/${targetUrl}`;
-        console.log('Fetching content from:', jinaUrl);
-        
-        setProgress(30);
-        const contentResponse = await fetch(jinaUrl);
-        
-        if (!contentResponse.ok) {
-          throw new Error(`Failed to fetch content: ${contentResponse.statusText}`);
-        }
-        
-        setProgress(50);
-        const contentText = await contentResponse.text();
-        setOriginalContent(contentText);
-        
-        setProgressStage(2); // Starting summarization
-        setProgress(60);
-        
-        // Step 3: Check if we have an API key before attempting summarization
-        const settings = getSettings();
-        if (!settings.openRouterApiKey) {
-          setSummary("Please set your OpenRouter API key in settings to enable content summarization.");
-          setIsLoading(false);
-          setProgress(100);
-          return;
-        }
-        
-        // Step 4: Send to OpenRouter for summarization
-        setProgress(70);
-        const summaryText = await summarizeContent(contentText);
-        setSummary(summaryText);
-        
-        setProgress(100);
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Error:', err);
-        setError(`Failed to process the URL: ${err instanceof Error ? err.message : 'Unknown error'}`);
-        setIsLoading(false);
-        setProgress(100);
-        toast({
-          title: "Error",
-          description: `Failed to process the URL: ${err instanceof Error ? err.message : 'Unknown error'}`,
-          variant: "destructive"
-        });
-      }
-    };
-
-    fetchAndDistill();
-  }, [url]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen p-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
-          <Button onClick={handleBack} variant="outline" className="mb-4">
-            ← Back to Home
-          </Button>
-          
-          <Card className="mb-6 shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Processing {decodeURIComponent(url || '')}</span>
-                <SettingsModal />
-              </CardTitle>
-              <CardDescription>
-                {progressStage === 0 && "Preparing to process your URL..."}
-                {progressStage === 1 && "Extracting content from the webpage..."}
-                {progressStage === 2 && "Generating a summary of the content..."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Progress value={progress} className="w-full mb-4" />
-              <div className="space-y-4">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-[90%]" />
-                <Skeleton className="h-4 w-[80%]" />
-                <Skeleton className="h-4 w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+  // If direct access, show minimal view
+  if (isDirectAccess) {
+    return <MinimalContentView content={summary} isLoading={isLoading} error={error} />;
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen p-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
-          <Button onClick={handleBack} variant="outline" className="mb-4">
-            ← Back to Home
-          </Button>
-          
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Error</span>
-                <SettingsModal />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-red-600">{error}</p>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleBack}>Try Again</Button>
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
+  // Regular UI with tabs, back button, and settings
   return (
-    <div className="min-h-screen p-4 bg-gray-50">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-4">
-          <Button onClick={handleBack} variant="outline">
-            ← Back to Home
-          </Button>
-          <SettingsModal />
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6 flex items-center justify-between">
+        <Button variant="outline" onClick={handleBack} className="gap-1">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+        <SettingsModal />
+      </div>
+      
+      {isLoading && (
+        <div className="mb-4">
+          <p className="text-sm text-muted-foreground mb-2">Fetching and processing content...</p>
+          <Progress value={progress} className="h-2" />
         </div>
-        
+      )}
+      
+      {error && (
+        <Card className="mb-6 border-red-200 bg-red-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-red-700">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-600">{error.message}</p>
+          </CardContent>
+        </Card>
+      )}
+      
+      {!isLoading && !error && (
         <Tabs defaultValue="summary" className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="original">Original Content</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="summary">
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle>Summary</CardTitle>
-                <CardDescription>
-                  Distilled content from: {decodeURIComponent(url || '')}
-                </CardDescription>
+          <TabsContent value="summary" className="mt-0">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle>Content Summary</CardTitle>
+                {summary && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => copyToClipboard(summary, 'Summary')}
+                  >
+                    <Copy className="h-4 w-4 mr-1" />
+                    Copy
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
@@ -195,20 +214,33 @@ const Distill = () => {
             </Card>
           </TabsContent>
           
-          <TabsContent value="original">
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle>Original Content</CardTitle>
+          <TabsContent value="original" className="mt-0">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle>Original Content</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Source: <a href={`https://${url}`} target="_blank" rel="noopener noreferrer" className="underline">{url}</a>
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => copyToClipboard(originalContent, 'Original content')}
+                >
+                  <Copy className="h-4 w-4 mr-1" />
+                  Copy
+                </Button>
               </CardHeader>
               <CardContent>
-                <div className="prose max-w-none overflow-auto max-h-[600px] border rounded p-4">
-                  <pre className="whitespace-pre-wrap">{originalContent}</pre>
+                <div className="max-h-[500px] overflow-y-auto border rounded-md p-4 bg-muted/40">
+                  <p className="whitespace-pre-line">{originalContent}</p>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
+      )}
     </div>
   );
 };

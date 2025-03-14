@@ -22,11 +22,11 @@ export const summarizeContent = async (content: string) => {
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your goal is to identify the key information and present it in an easily digestible format. Always write your summary in markdown format. Never include phrases like 'Here is the summary' or 'Organized for clarity' - just present the summary directly."
+            content: "You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your goal is to identify the key information and present it in an easily digestible format. Always write your summary in markdown format. Use appropriate formatting like lists, headers, and bold text. If content contains rankings or lists (like top 10), format them as proper numbered lists. Never include phrases like 'Here is the summary' or 'Organized for clarity' - just present the summary directly."
           },
           {
             role: "user",
-            content: `Please summarize the following content. Extract the main points, key insights, and important details. Write in markdown format without any introduction or preamble:\n\n${content}`
+            content: `Please summarize the following content. Extract the main points, key insights, and important details. Use proper markdown formatting with appropriate headers, lists, and emphasis where needed. Present the summary directly without any introduction or preamble:\n\n${content}`
           }
         ],
         max_tokens: 1000
