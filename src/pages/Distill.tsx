@@ -12,7 +12,7 @@ import ContentTabs from '@/components/distill/ContentTabs';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
 
 const Distill = () => {
-  const { url, bulletCount: urlBulletCount } = useParams<{ url: string, bulletCount?: string }>();
+  const { url, bulletCount: bulletCountParam } = useParams<{ url: string, bulletCount?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const [isDirectAccess, setIsDirectAccess] = useState<boolean>(false);
@@ -22,17 +22,19 @@ const Distill = () => {
   useEffect(() => {
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
-      console.log("Path style:", style, "Bullet count:", bulletCount);
+      console.log("Path style detection:", style, "Bullet count:", bulletCount);
       setCurrentSummarizationStyle(style);
       setBulletCount(bulletCount);
       
       // If URL has a direct bullet count parameter
-      if (urlBulletCount && !isNaN(parseInt(urlBulletCount, 10))) {
-        setBulletCount(parseInt(urlBulletCount, 10));
+      if (bulletCountParam && !isNaN(parseInt(bulletCountParam, 10))) {
+        const count = parseInt(bulletCountParam, 10);
+        console.log("Setting bullet count from URL parameter:", count);
+        setBulletCount(count);
         setCurrentSummarizationStyle('bullets');
       }
     }
-  }, [location.pathname, urlBulletCount]);
+  }, [location.pathname, bulletCountParam]);
   
   const { 
     originalContent, 

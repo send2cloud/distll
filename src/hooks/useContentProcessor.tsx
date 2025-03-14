@@ -38,6 +38,7 @@ export const useContentProcessor = (
         const decodedUrl = decodeURIComponent(url);
         const fullUrl = decodedUrl.startsWith('http') ? decodedUrl : `https://${decodedUrl}`;
         
+        console.log("Processing URL:", fullUrl, "with style:", style, "and bullet count:", bulletCount);
         setProgress(20);
         
         const settings = getSettings();
@@ -94,6 +95,7 @@ export const useContentProcessor = (
           
           if (settings.openRouterApiKey) {
             try {
+              console.log("Sending to summarizeContent with bullet count:", bulletCount);
               const summaryText = await summarizeContent(
                 cleanContent,
                 style,
