@@ -27,10 +27,12 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
     return <div className="py-2 text-xs">No content available</div>;
   }
 
-  // Return just the raw markdown content with basic styling for readability
+  // Return the markdown content with proper rendering
   return (
-    <div className="font-mono text-sm whitespace-pre-wrap">
-      {content}
+    <div className="p-4 max-w-4xl mx-auto">
+      <ReactMarkdown className="prose prose-sm max-w-none">
+        {content}
+      </ReactMarkdown>
     </div>
   );
 };

@@ -28,8 +28,8 @@ const App = () => {
             <Route path="/tweet/*" element={<Distill />} />
             {/* Bullet count route */}
             <Route path="/:bulletCount(\d+)/*" element={<Distill />} />
-            {/* Direct URL summarization - let's adjust this to catch all non-matched URLs */}
-            <Route path="/*" element={<Distill />} />
+            {/* Direct URL summarization - this will catch any path */}
+            <Route path="*" element={<Distill />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
