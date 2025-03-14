@@ -14,7 +14,7 @@ export const summarizeContent = async (content: string) => {
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${settings.openRouterApiKey}`,
-        "HTTP-Referer": "https://llmcc.com", // Replace with your actual domain
+        "HTTP-Referer": window.location.origin,
         "X-Title": "Distill"
       },
       body: JSON.stringify({
@@ -34,8 +34,18 @@ export const summarizeContent = async (content: string) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`OpenRouter API error: ${errorData.error?.message || response.statusText}`);
+      const errorText = await response.text();
+      let errorMessage;
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error?.message || `API error (${response.status}: ${response.statusText})`;
+      } catch (e) {
+        errorMessage = `API error (${response.status}: ${response.statusText})`;
+      }
+      
+      console.error("OpenRouter API error:", errorMessage);
+      throw new Error(`OpenRouter API error: ${errorMessage}`);
     }
 
     const data = await response.json();

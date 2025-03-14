@@ -14,7 +14,17 @@ const MinimalContentView = ({ content, isLoading, error }: MinimalContentViewPro
   }
 
   if (error) {
-    return <div className="py-8 text-center text-red-500">Error: {error.message}</div>;
+    return (
+      <div className="py-8 text-center text-red-500">
+        <h2 className="text-xl font-bold mb-2">Error</h2>
+        <p>{error.message}</p>
+        {error.message.includes("OpenRouter API key") && (
+          <p className="mt-4">
+            Please set your OpenRouter API key in the settings to use this feature.
+          </p>
+        )}
+      </div>
+    );
   }
 
   if (!content) {
