@@ -27,6 +27,8 @@ export const useContentProcessor = (
   useEffect(() => {
     if (!url) return;
 
+    console.log("Processing content with style:", style, "and bullet count:", bulletCount);
+
     const processContent = async () => {
       setIsLoading(true);
       setError(null);

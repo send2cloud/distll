@@ -34,7 +34,9 @@ export const summarizeContent = async (content: string, style?: SummarizationSty
 
   // Use provided style or fall back to settings
   const summarizationStyle = style || settings.summarizationStyle;
-  const bulletCountToUse = bulletCount || settings.bulletCount;
+  const bulletCountToUse = bulletCount;
+  
+  console.log("Summarizing with style:", summarizationStyle, "and bullet count:", bulletCountToUse);
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -79,7 +81,6 @@ export const summarizeContent = async (content: string, style?: SummarizationSty
     const data = await response.json();
     let summary = data.choices[0].message.content;
     
-    // Remove common preambles if they exist
     const preambles = [
       "Here is the summary:",
       "Here is a summary:",
@@ -111,7 +112,9 @@ export const summarizeUrl = async (url: string, style?: SummarizationStyle, bull
 
   // Use provided style or fall back to settings
   const summarizationStyle = style || settings.summarizationStyle;
-  const bulletCountToUse = bulletCount || settings.bulletCount;
+  const bulletCountToUse = bulletCount;
+  
+  console.log("Summarizing URL with style:", summarizationStyle, "and bullet count:", bulletCountToUse);
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -156,7 +159,6 @@ export const summarizeUrl = async (url: string, style?: SummarizationStyle, bull
     const data = await response.json();
     let summary = data.choices[0].message.content;
     
-    // Remove common preambles if they exist
     const preambles = [
       "Here is the summary:",
       "Here is a summary:",
