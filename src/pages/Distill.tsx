@@ -34,7 +34,8 @@ const Distill = () => {
     
     const hasDistillPathPattern = location.pathname.match(/^\/distill\//);
     
-    setIsDirectAccess(isDirectNavigationFromExternal && hasDistillPathPattern);
+    // Fix: Convert the RegExpMatchArray to a boolean
+    setIsDirectAccess(isDirectNavigationFromExternal && Boolean(hasDistillPathPattern));
   }, [location]);
 
   useEffect(() => {
