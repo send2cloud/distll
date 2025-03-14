@@ -22,34 +22,8 @@ const Distill = () => {
   
   useEffect(() => {
     console.log("Distill component mounted with path:", location.pathname);
-    console.log("URL parameter:", url);
-    console.log("Location pathname:", location.pathname);
-    console.log("Bullet count parameter:", bulletCountParam);
     
-    // Extract the full URL from the pathname
-    let extractedUrl = '';
-    
-    if (location.pathname.startsWith('/eli5/')) {
-      extractedUrl = location.pathname.substring(6); // Remove '/eli5/'
-    } else if (location.pathname.startsWith('/simple/')) {
-      extractedUrl = location.pathname.substring(8); // Remove '/simple/'
-    } else if (location.pathname.startsWith('/esl/')) {
-      extractedUrl = location.pathname.substring(5); // Remove '/esl/'
-    } else if (location.pathname.startsWith('/tweet/')) {
-      extractedUrl = location.pathname.substring(7); // Remove '/tweet/'
-    } else {
-      // Check for bullet point number
-      const bulletMatch = location.pathname.match(/^\/(\d+)\/(.*)/);
-      if (bulletMatch) {
-        extractedUrl = bulletMatch[2]; // The URL after the bullet count
-      } else if (url) {
-        extractedUrl = url;
-      }
-    }
-    
-    console.log("Extracted URL:", extractedUrl);
-    setFullUrl(extractedUrl);
-    
+    // First, determine the style and bullet count
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
       console.log("Path style detection:", style, "Bullet count:", bulletCount);
@@ -64,6 +38,38 @@ const Distill = () => {
         setCurrentSummarizationStyle('bullets');
       }
     }
+    
+    // Extract the full URL from the pathname
+    let extractedUrl = '';
+    
+    if (location.pathname.startsWith('/eli5/')) {
+      extractedUrl = location.pathname.substring(6); // Remove '/eli5/'
+      console.log("Extracted URL from eli5 path:", extractedUrl);
+    } else if (location.pathname.startsWith('/simple/')) {
+      extractedUrl = location.pathname.substring(8); // Remove '/simple/'
+      console.log("Extracted URL from simple path:", extractedUrl);
+    } else if (location.pathname.startsWith('/esl/')) {
+      extractedUrl = location.pathname.substring(5); // Remove '/esl/'
+      console.log("Extracted URL from esl path:", extractedUrl);
+    } else if (location.pathname.startsWith('/tweet/')) {
+      extractedUrl = location.pathname.substring(7); // Remove '/tweet/'
+      console.log("Extracted URL from tweet path:", extractedUrl);
+    } else {
+      // Check for bullet point number
+      const bulletMatch = location.pathname.match(/^\/(\d+)\/(.*)/);
+      if (bulletMatch) {
+        extractedUrl = bulletMatch[2]; // The URL after the bullet count
+        console.log("Extracted URL from bullet count path:", extractedUrl);
+      } else if (url) {
+        // This is the direct URL case
+        extractedUrl = url;
+        console.log("Using direct URL parameter:", extractedUrl);
+      }
+    }
+    
+    console.log("Final extracted URL:", extractedUrl);
+    setFullUrl(extractedUrl);
+    
   }, [location.pathname, bulletCountParam, url]);
   
   const { 

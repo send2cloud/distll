@@ -27,13 +27,18 @@ const OriginalContentTab = ({ originalContent, url }: OriginalContentTabProps) =
     });
   };
 
+  // Format URL correctly based on what we received
+  const displayUrl = url.startsWith('http') ? url : 
+                      url.includes('://') ? url : 
+                      `https://${url}`;
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle>Original Content</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Source: <a href={`https://${url}`} target="_blank" rel="noopener noreferrer" className="underline">{url}</a>
+            Source: <a href={displayUrl} target="_blank" rel="noopener noreferrer" className="underline">{url}</a>
           </p>
         </div>
         <Button 

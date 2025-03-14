@@ -21,14 +21,14 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            {/* Style-based summarization routes - using * to capture all URL path segments */}
+            {/* Style-based summarization routes */}
             <Route path="/eli5/*" element={<Distill />} />
             <Route path="/simple/*" element={<Distill />} />
             <Route path="/esl/*" element={<Distill />} />
             <Route path="/tweet/*" element={<Distill />} />
-            {/* Bullet count route - needs to be before the generic URL route */}
+            {/* Bullet count route */}
             <Route path="/:bulletCount(\d+)/*" element={<Distill />} />
-            {/* Direct URL summarization (no prefix) - catch any other path */}
+            {/* Direct URL summarization - this MUST come last to avoid blocking other routes */}
             <Route path="/:url" element={<Distill />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
