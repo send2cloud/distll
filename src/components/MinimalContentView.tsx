@@ -30,9 +30,11 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
   // Return the markdown content with proper rendering
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <ReactMarkdown className="prose prose-sm max-w-none">
-        {content}
-      </ReactMarkdown>
+      <div className="prose prose-sm max-w-none">
+        <ReactMarkdown>
+          {content}
+        </ReactMarkdown>
+      </div>
     </div>
   );
 };

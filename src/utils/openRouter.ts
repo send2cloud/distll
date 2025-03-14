@@ -1,4 +1,3 @@
-
 import { getSettings } from "./settings";
 import { SummarizationStyle } from "@/components/SettingsModal";
 
@@ -41,92 +40,9 @@ const cleanupPreambles = (text: string): string => {
     return tagMatch[1].trim();
   }
   
-  // List of common preambles to remove (expanded list)
-  const preambles = [
-    "Here is the summary:",
-    "Here's a summary of the key takeaways:",
-    "Here's a summary of the content:",
-    "Here is a summary:",
-    "Here's a summary:",
-    "Summary:",
-    "Here's the summary:",
-    "Organized for clarity:",
-    "Here are the key points:",
-    "Here are the main points:",
-    "Here's what you need to know:",
-    "In summary:",
-    "To summarize:",
-    "The key takeaways are:",
-    "Based on the content:",
-    "From the content provided:",
-    "After reviewing the content:",
-    "Based on the article:",
-    "The main points are:",
-    "Please visit the URL:",
-    "Here's a summary of the URL:",
-    "After visiting the URL,",
-    "From the URL,",
-    "Based on the URL,",
-    "I'll summarize this for you:",
-    "I'll explain this simply:",
-    "To explain like you're 5:",
-    "In simple terms:",
-    "Let me break this down:",
-    "Let me simplify this for you:",
-    "Let me summarize this article:",
-    "Okay, here's a summary of the",
-    "Okay, here's",
-    "Okay,",
-    "I'll summarize",
-    "Here is the information about",
-    "From the information provided",
-    "Here's what you should know about",
-    "Based on the information provided",
-  ];
-  
-  // Common endings to remove
-  const endings = [
-    "Let me know if you'd like more information",
-    "Let me know if you need more details",
-    "Let me know if you have any questions",
-    "Let me know if you'd like me to clarify anything",
-    "Let me know if you'd like me to summarize another piece of content",
-    "Let me know if there's anything else you'd like to know",
-    "If you have any further questions, feel free to ask",
-    "Hope this helps!",
-    "I hope this helps!",
-    "Feel free to ask if you need more information",
-    "If you need more details, please ask",
-    "---\n\nLet me know",  // Specific pattern from our example
-    "---\n\nI hope",
-    "\n---\n",  // Common markdown separator that might indicate the end
-  ];
-  
-  let cleanedText = text;
-  
-  // Try to find and remove preambles at the beginning of the text
-  for (const preamble of preambles) {
-    const preambleRegex = new RegExp(`^\\s*${preamble}\\s*`, 'i');
-    cleanedText = cleanedText.replace(preambleRegex, '');
-  }
-  
-  // Try to remove endings
-  for (const ending of endings) {
-    const endingRegex = new RegExp(`${ending}.*$`, 'i');
-    cleanedText = cleanedText.replace(endingRegex, '');
-  }
-  
-  // Remove any sentences that mention visiting a URL or fetching content
-  cleanedText = cleanedText.replace(/\b(I visited|I checked|I browsed|I accessed|I reviewed|I read|I analyzed|After visiting)\b[^.]*\bURL\b[^.]*\./gi, '');
-  cleanedText = cleanedText.replace(/\b(According to the|From the|Based on the|The|This)\b[^.]*\b(webpage|website|article|page|content)\b[^.]*\./gi, '');
-  
-  // Remove phrases like "Here's a summary in bullet points:" that might appear before bullet lists
-  cleanedText = cleanedText.replace(/\b(Here's|Here are|These are|The following are)\b[^:]*\bpoints?\b[^:]*:/gi, '');
-  
-  // Clean up any extra whitespace that might have been created
-  cleanedText = cleanedText.trim();
-  
-  return cleanedText;
+  // If no tags, be more lenient - just return the content as is
+  // This makes sure we at least show something if the LLM doesn't follow instructions
+  return text.trim();
 };
 
 export const summarizeContent = async (content: string, style?: SummarizationStyle, bulletCount?: number) => {
