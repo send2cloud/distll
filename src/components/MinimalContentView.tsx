@@ -27,14 +27,20 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
     return <div className="py-2 text-xs">No content available</div>;
   }
 
-  // Return the markdown content with proper rendering
+  // Return plain text for minimal view to respect direct access settings
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <div className="prose prose-sm max-w-none">
-        <ReactMarkdown>
-          {content}
-        </ReactMarkdown>
-      </div>
+      <pre style={{ 
+        whiteSpace: 'pre-wrap', 
+        wordBreak: 'break-word',
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        lineHeight: '1.5',
+        padding: '0',
+        margin: '0'
+      }}>
+        {content}
+      </pre>
     </div>
   );
 };
