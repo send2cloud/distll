@@ -15,16 +15,26 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Settings } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+export type SummarizationStyle = 
+  | "standard" 
+  | "simple" 
+  | "bullets" 
+  | "eli5" 
+  | "concise";
 
 export type SettingsData = {
   openRouterApiKey: string;
   useDirectUrlSummarization: boolean;
+  summarizationStyle: SummarizationStyle;
 };
 
 const SettingsModal = () => {
   const [open, setOpen] = useState(false);
   const [openRouterApiKey, setOpenRouterApiKey] = useState('');
   const [useDirectUrlSummarization, setUseDirectUrlSummarization] = useState(false);
+  const [summarizationStyle, setSummarizationStyle] = useState<SummarizationStyle>("standard");
 
   // Load settings from localStorage on component mount
   useEffect(() => {
@@ -34,6 +44,7 @@ const SettingsModal = () => {
         const parsed = JSON.parse(savedSettings) as SettingsData;
         setOpenRouterApiKey(parsed.openRouterApiKey || '');
         setUseDirectUrlSummarization(parsed.useDirectUrlSummarization || false);
+        setSummarizationStyle(parsed.summarizationStyle || "standard");
       } catch (e) {
         console.error('Failed to parse settings from localStorage', e);
       }
@@ -43,7 +54,8 @@ const SettingsModal = () => {
   const saveSettings = () => {
     const settings: SettingsData = {
       openRouterApiKey,
-      useDirectUrlSummarization
+      useDirectUrlSummarization,
+      summarizationStyle
     };
     
     localStorage.setItem('distill-settings', JSON.stringify(settings));
@@ -100,6 +112,36 @@ const SettingsModal = () => {
               checked={useDirectUrlSummarization}
               onCheckedChange={setUseDirectUrlSummarization}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Summarization Style</Label>
+            <RadioGroup 
+              value={summarizationStyle} 
+              onValueChange={(value) => setSummarizationStyle(value as SummarizationStyle)}
+              className="grid grid-cols-1 gap-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="standard" id="standard" />
+                <Label htmlFor="standard" className="cursor-pointer">Standard Summary</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="simple" id="simple" />
+                <Label htmlFor="simple" className="cursor-pointer">Simple English</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="bullets" id="bullets" />
+                <Label htmlFor="bullets" className="cursor-pointer">5 Bullet Points</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="eli5" id="eli5" />
+                <Label htmlFor="eli5" className="cursor-pointer">Explain Like I'm 5</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="concise" id="concise" />
+                <Label htmlFor="concise" className="cursor-pointer">Concise Version</Label>
+              </div>
+            </RadioGroup>
           </div>
         </div>
         

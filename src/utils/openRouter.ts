@@ -1,5 +1,26 @@
 
 import { getSettings } from "./settings";
+import { SummarizationStyle } from "@/components/SettingsModal";
+
+const getSummarizationPrompt = (style: SummarizationStyle): string => {
+  switch (style) {
+    case 'simple':
+      return "You are a helpful assistant that specializes in simplifying complex content. Your goal is to rewrite the provided text in simple, easy-to-understand English with short sentences and common words. Avoid jargon and technical terms when possible. Format your summary in markdown with appropriate headings and lists. Don't include introductory phrases - just present the simplified content directly.";
+    
+    case 'bullets':
+      return "You are a helpful assistant that specializes in extracting the 5 most important points from content. Your goal is to identify only the 5 key takeaways and present them as a numbered list in markdown format. Make each point concise but informative. Don't include any introduction or conclusion - just present the 5 bullet points directly.";
+    
+    case 'eli5':
+      return "You are a helpful assistant that specializes in explaining complex topics as if talking to a 5-year-old child. Your goal is to use very simple language, basic analogies, and avoid technical terms. Break down complicated ideas into easily digestible concepts. Format your explanation in markdown with appropriate headings and emphasis where needed. Don't include any introductions - just present the ELI5 explanation directly.";
+    
+    case 'concise':
+      return "You are a helpful assistant that specializes in creating extremely concise summaries. Your goal is to distill the content down to its absolute essence in as few words as possible while retaining all key information. Use short sentences and be very economical with language. Format your response in markdown. Don't include any introductions - just present the concise summary directly.";
+    
+    case 'standard':
+    default:
+      return "You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your goal is to identify the key information and present it in an easily digestible format. Always write your summary in markdown format. Use appropriate formatting like lists, headers, and bold text. If content contains rankings or lists (like top 10), format them as proper numbered lists. Never include phrases like 'Here is the summary' or 'Organized for clarity' - just present the summary directly.";
+  }
+};
 
 export const summarizeContent = async (content: string) => {
   const settings = getSettings();
@@ -14,7 +35,7 @@ export const summarizeContent = async (content: string) => {
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${settings.openRouterApiKey}`,
-        "HTTP-Referer": window.location.origin,
+        "HTTP-Referer": window.location.origin || "https://distill.app",
         "X-Title": "Distill"
       },
       body: JSON.stringify({
@@ -22,11 +43,11 @@ export const summarizeContent = async (content: string) => {
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your goal is to identify the key information and present it in an easily digestible format. Always write your summary in markdown format. Use appropriate formatting like lists, headers, and bold text. If content contains rankings or lists (like top 10), format them as proper numbered lists. Never include phrases like 'Here is the summary' or 'Organized for clarity' - just present the summary directly."
+            content: getSummarizationPrompt(settings.summarizationStyle)
           },
           {
             role: "user",
-            content: `Please summarize the following content. Extract the main points, key insights, and important details. Use proper markdown formatting with appropriate headers, lists, and emphasis where needed. Present the summary directly without any introduction or preamble:\n\n${content}`
+            content: `Please summarize the following content according to the style specified in my system message:\n\n${content}`
           }
         ],
         max_tokens: 1000
@@ -87,7 +108,7 @@ export const summarizeUrl = async (url: string) => {
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${settings.openRouterApiKey}`,
-        "HTTP-Referer": window.location.origin,
+        "HTTP-Referer": window.location.origin || "https://distill.app",
         "X-Title": "Distill"
       },
       body: JSON.stringify({
@@ -95,11 +116,11 @@ export const summarizeUrl = async (url: string) => {
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your goal is to identify the key information and present it in an easily digestible format. Always write your summary in markdown format. Use appropriate formatting like lists, headers, and bold text. If content contains rankings or lists (like top 10), format them as proper numbered lists. Never include phrases like 'Here is the summary' or 'Organized for clarity' - just present the summary directly."
+            content: getSummarizationPrompt(settings.summarizationStyle)
           },
           {
             role: "user",
-            content: `Please visit the URL ${url} and summarize its content. Extract the main points, key insights, and important details. Use proper markdown formatting with appropriate headers, lists, and emphasis where needed. Present the summary directly without any introduction or preamble.`
+            content: `Please visit the URL ${url} and summarize its content according to the style specified in my system message.`
           }
         ],
         max_tokens: 1000

@@ -1,5 +1,5 @@
 
-import { SettingsData } from "@/components/SettingsModal";
+import { SettingsData, SummarizationStyle } from "@/components/SettingsModal";
 
 export const getSettings = (): SettingsData => {
   const savedSettings = localStorage.getItem('distill-settings');
@@ -12,6 +12,7 @@ export const getSettings = (): SettingsData => {
   }
   return { 
     openRouterApiKey: '',
-    useDirectUrlSummarization: false
+    useDirectUrlSummarization: false,
+    summarizationStyle: 'standard' as SummarizationStyle
   };
 };
