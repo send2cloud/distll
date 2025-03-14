@@ -14,6 +14,12 @@ const ErrorDisplay = ({ error }: ErrorDisplayProps) => {
       </CardHeader>
       <CardContent>
         <p className="text-red-600">{error.message}</p>
+        <details className="mt-4">
+          <summary className="cursor-pointer text-sm text-red-500">Technical Details</summary>
+          <pre className="mt-2 p-4 bg-gray-100 rounded text-xs overflow-auto">
+            {error.stack || "No stack trace available"}
+          </pre>
+        </details>
       </CardContent>
     </Card>
   );

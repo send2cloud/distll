@@ -10,28 +10,32 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* Style-based summarization routes */}
-          <Route path="/eli5/:url" element={<Distill />} />
-          <Route path="/simple/:url" element={<Distill />} />
-          <Route path="/esl/:url" element={<Distill />} />
-          <Route path="/tweet/:url" element={<Distill />} />
-          {/* Bullet count route - needs to be before the generic URL route */}
-          <Route path="/:bulletCount(\d+)/:url" element={<Distill />} />
-          {/* Direct URL summarization (no prefix) */}
-          <Route path="/:url" element={<Distill />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log("App rendering, checking routes");
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            {/* Style-based summarization routes - using * to capture all URL path segments */}
+            <Route path="/eli5/*" element={<Distill />} />
+            <Route path="/simple/*" element={<Distill />} />
+            <Route path="/esl/*" element={<Distill />} />
+            <Route path="/tweet/*" element={<Distill />} />
+            {/* Bullet count route - needs to be before the generic URL route */}
+            <Route path="/:bulletCount(\d+)/*" element={<Distill />} />
+            {/* Direct URL summarization (no prefix) - catch any other path */}
+            <Route path="/:url" element={<Distill />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

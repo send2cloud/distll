@@ -18,11 +18,37 @@ const Distill = () => {
   const [isDirectAccess, setIsDirectAccess] = useState<boolean>(false);
   const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<SummarizationStyle>('standard');
   const [bulletCount, setBulletCount] = useState<number | undefined>(undefined);
+  const [fullUrl, setFullUrl] = useState<string>('');
   
   useEffect(() => {
     console.log("Distill component mounted with path:", location.pathname);
     console.log("URL parameter:", url);
+    console.log("Location pathname:", location.pathname);
     console.log("Bullet count parameter:", bulletCountParam);
+    
+    // Extract the full URL from the pathname
+    let extractedUrl = '';
+    
+    if (location.pathname.startsWith('/eli5/')) {
+      extractedUrl = location.pathname.substring(6); // Remove '/eli5/'
+    } else if (location.pathname.startsWith('/simple/')) {
+      extractedUrl = location.pathname.substring(8); // Remove '/simple/'
+    } else if (location.pathname.startsWith('/esl/')) {
+      extractedUrl = location.pathname.substring(5); // Remove '/esl/'
+    } else if (location.pathname.startsWith('/tweet/')) {
+      extractedUrl = location.pathname.substring(7); // Remove '/tweet/'
+    } else {
+      // Check for bullet point number
+      const bulletMatch = location.pathname.match(/^\/(\d+)\/(.*)/);
+      if (bulletMatch) {
+        extractedUrl = bulletMatch[2]; // The URL after the bullet count
+      } else if (url) {
+        extractedUrl = url;
+      }
+    }
+    
+    console.log("Extracted URL:", extractedUrl);
+    setFullUrl(extractedUrl);
     
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
@@ -46,15 +72,15 @@ const Distill = () => {
     isLoading, 
     error, 
     progress 
-  } = useContentProcessor(url, currentSummarizationStyle, bulletCount);
+  } = useContentProcessor(fullUrl || url, currentSummarizationStyle, bulletCount);
   
   useEffect(() => {
     console.log("Content processor parameters:", {
-      url,
+      url: fullUrl || url,
       style: currentSummarizationStyle,
       bulletCount
     });
-  }, [url, currentSummarizationStyle, bulletCount]);
+  }, [fullUrl, url, currentSummarizationStyle, bulletCount]);
   
   const handleBack = () => {
     navigate('/');
@@ -81,7 +107,7 @@ const Distill = () => {
         <ContentTabs 
           summary={summary} 
           originalContent={originalContent} 
-          url={url || ''}
+          url={fullUrl || url || ''}
         />
       )}
     </div>
