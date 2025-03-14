@@ -22,12 +22,14 @@ export type SummarizationStyle =
   | "simple" 
   | "bullets" 
   | "eli5" 
-  | "concise";
+  | "concise"
+  | "tweet";
 
 export type SettingsData = {
   openRouterApiKey: string;
   useDirectUrlSummarization: boolean;
   summarizationStyle: SummarizationStyle;
+  bulletCount?: number;
 };
 
 const SettingsModal = () => {
@@ -55,7 +57,8 @@ const SettingsModal = () => {
     const settings: SettingsData = {
       openRouterApiKey,
       useDirectUrlSummarization,
-      summarizationStyle
+      summarizationStyle,
+      bulletCount: summarizationStyle === "bullets" ? 5 : undefined
     };
     
     localStorage.setItem('distill-settings', JSON.stringify(settings));
@@ -141,7 +144,15 @@ const SettingsModal = () => {
                 <RadioGroupItem value="concise" id="concise" />
                 <Label htmlFor="concise" className="cursor-pointer">Concise Version</Label>
               </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="tweet" id="tweet" />
+                <Label htmlFor="tweet" className="cursor-pointer">Twitter-sized (140 chars)</Label>
+              </div>
             </RadioGroup>
+            <p className="text-xs text-muted-foreground mt-2">
+              Quick access: domain.com/eli5/example.com, domain.com/simple/example.com, 
+              domain.com/5/example.com, domain.com/tweet/example.com
+            </p>
           </div>
         </div>
         

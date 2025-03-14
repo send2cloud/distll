@@ -6,7 +6,8 @@ import { toast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { summarizeContent, summarizeUrl } from '@/utils/openRouter';
 import { Copy, ArrowLeft } from 'lucide-react';
-import { getSettings } from '@/utils/settings';
+import { getSettings, getSummarizationStyleFromPath } from '@/utils/settings';
+import { SummarizationStyle } from '@/components/SettingsModal';
 import SettingsModal from "@/components/SettingsModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -23,21 +24,17 @@ const Distill = () => {
   const [error, setError] = useState<Error | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [isDirectAccess, setIsDirectAccess] = useState<boolean>(false);
+  const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<SummarizationStyle>('standard');
+  const [bulletCount, setBulletCount] = useState<number | undefined>(undefined);
   
-  // Determine if this is direct access via URL
   useEffect(() => {
-    // Check if accessed directly via URL (e.g., by typing in browser or bookmark)
-    // We're assuming direct access if the URL contains "distill/" 
-    // and it's not from navigation from our app
-    const isDirectNavigationFromExternal = document.referrer === '' || 
-      !document.referrer.includes(window.location.hostname);
-    
-    const hasDistillPathPattern = location.pathname.match(/^\/distill\//);
-    
-    // Convert the RegExpMatchArray to a boolean
-    setIsDirectAccess(isDirectNavigationFromExternal && Boolean(hasDistillPathPattern));
-  }, [location]);
-
+    if (location.pathname) {
+      const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
+      setCurrentSummarizationStyle(style);
+      setBulletCount(bulletCount);
+    }
+  }, [location.pathname]);
+  
   useEffect(() => {
     if (!url) return;
 
@@ -47,22 +44,22 @@ const Distill = () => {
       setProgress(10);
       
       try {
-        // Decode the URL if it's encoded
         const decodedUrl = decodeURIComponent(url);
-        // Add protocol if missing
         const fullUrl = decodedUrl.startsWith('http') ? decodedUrl : `https://${decodedUrl}`;
         
         setProgress(20);
         
-        // Check if we should use direct URL summarization
         const settings = getSettings();
         
         if (settings.useDirectUrlSummarization) {
           setProgress(40);
           try {
-            const summaryText = await summarizeUrl(fullUrl);
+            const summaryText = await summarizeUrl(
+              fullUrl, 
+              currentSummarizationStyle, 
+              bulletCount
+            );
             setSummary(summaryText);
-            // For direct URL summarization, we don't have original content
             setOriginalContent("Content fetched directly by OpenRouter API");
             setProgress(100);
           } catch (summaryError) {
@@ -70,7 +67,6 @@ const Distill = () => {
             throw summaryError;
           }
         } else {
-          // Use the original content fetching logic
           const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(fullUrl)}`);
           
           setProgress(50);
@@ -82,15 +78,12 @@ const Distill = () => {
           const html = await response.text();
           setProgress(70);
           
-          // Extract main content from HTML
           const parser = new DOMParser();
           const doc = parser.parseFromString(html, 'text/html');
           
-          // Remove script tags and style tags to clean up the content
           const scripts = doc.querySelectorAll('script, style, svg, iframe, img, noscript');
           scripts.forEach(script => script.remove());
           
-          // Try to find main content
           const article = doc.querySelector('article') || 
                           doc.querySelector('main') || 
                           doc.querySelector('.content') || 
@@ -100,19 +93,21 @@ const Distill = () => {
           
           const mainContent = article?.textContent || doc.body.textContent || '';
           
-          // Normalize whitespace
           const cleanContent = mainContent
             .replace(/\s+/g, ' ')
             .trim()
-            .substring(0, 15000); // Limit content length
+            .substring(0, 15000);
           
           setOriginalContent(cleanContent);
           setProgress(80);
           
-          // Request summary if API key is set
           if (settings.openRouterApiKey) {
             try {
-              const summaryText = await summarizeContent(cleanContent);
+              const summaryText = await summarizeContent(
+                cleanContent,
+                currentSummarizationStyle,
+                bulletCount
+              );
               setSummary(summaryText);
             } catch (summaryError) {
               console.error('Error summarizing content:', summaryError);
@@ -140,7 +135,7 @@ const Distill = () => {
     };
     
     fetchContent();
-  }, [url]);
+  }, [url, currentSummarizationStyle, bulletCount]);
   
   const copyToClipboard = (text: string, what: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -162,12 +157,15 @@ const Distill = () => {
     navigate('/');
   };
 
-  // If direct access, show minimal view
   if (isDirectAccess) {
-    return <MinimalContentView content={summary} isLoading={isLoading} error={error} />;
+    return <MinimalContentView 
+      content={summary} 
+      isLoading={isLoading} 
+      error={error} 
+      style={currentSummarizationStyle}
+    />;
   }
 
-  // Regular UI with tabs, back button, and settings
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
