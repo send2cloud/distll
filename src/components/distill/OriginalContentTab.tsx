@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ContentTab from './ContentTab';
 import { Button } from "@/components/ui/button";
 import { Copy } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
@@ -10,6 +10,10 @@ interface OriginalContentTabProps {
   url: string;
 }
 
+/**
+ * A component that displays the original content with a link to the source
+ * and allows copying to clipboard
+ */
 const OriginalContentTab = ({ originalContent, url }: OriginalContentTabProps) => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -33,14 +37,9 @@ const OriginalContentTab = ({ originalContent, url }: OriginalContentTabProps) =
                       `https://${url}`;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <div>
-          <CardTitle>Original Content</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            Source: <a href={displayUrl} target="_blank" rel="noopener noreferrer" className="underline">{url}</a>
-          </p>
-        </div>
+    <ContentTab 
+      title="Original Content"
+      headerActions={
         <Button 
           variant="outline" 
           size="sm" 
@@ -49,13 +48,17 @@ const OriginalContentTab = ({ originalContent, url }: OriginalContentTabProps) =
           <Copy className="h-4 w-4 mr-1" />
           Copy
         </Button>
-      </CardHeader>
-      <CardContent>
+      }
+    >
+      <div>
+        <p className="text-sm text-muted-foreground mb-2">
+          Source: <a href={displayUrl} target="_blank" rel="noopener noreferrer" className="underline">{url}</a>
+        </p>
         <div className="max-h-[500px] overflow-y-auto border rounded-md p-4 bg-muted/40">
           <p className="whitespace-pre-line">{originalContent}</p>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </ContentTab>
   );
 };
 

@@ -10,6 +10,10 @@ interface ContentTabsProps {
   url: string;
 }
 
+/**
+ * A component that provides tabs for different views of the content
+ * (summary and original)
+ */
 const ContentTabs = ({ summary, originalContent, url }: ContentTabsProps) => {
   return (
     <Tabs defaultValue="summary" className="w-full">

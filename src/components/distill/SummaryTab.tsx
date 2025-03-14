@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ContentTab from './ContentTab';
 import { Button } from "@/components/ui/button";
 import { Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -10,6 +10,10 @@ interface SummaryTabProps {
   summary: string;
 }
 
+/**
+ * A component that displays the summarized content with markdown formatting
+ * and allows copying to clipboard
+ */
 const SummaryTab = ({ summary }: SummaryTabProps) => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -27,33 +31,32 @@ const SummaryTab = ({ summary }: SummaryTabProps) => {
     });
   };
 
+  const copyButton = (
+    <Button 
+      variant="outline" 
+      size="sm" 
+      onClick={() => copyToClipboard(summary)}
+    >
+      <Copy className="h-4 w-4 mr-1" />
+      Copy
+    </Button>
+  );
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle>Content Summary</CardTitle>
-        {summary && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => copyToClipboard(summary)}
-          >
-            <Copy className="h-4 w-4 mr-1" />
-            Copy
-          </Button>
+    <ContentTab 
+      title="Content Summary"
+      headerActions={summary ? copyButton : undefined}
+    >
+      <div className="prose max-w-none">
+        {summary ? (
+          <ReactMarkdown>{summary}</ReactMarkdown>
+        ) : (
+          <div className="py-4 text-amber-600">
+            <p>No summary available yet. Please configure your OpenRouter API key in settings.</p>
+          </div>
         )}
-      </CardHeader>
-      <CardContent>
-        <div className="prose max-w-none">
-          {summary ? (
-            <ReactMarkdown>{summary}</ReactMarkdown>
-          ) : (
-            <div className="py-4 text-amber-600">
-              <p>No summary available yet. Please configure your OpenRouter API key in settings.</p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </ContentTab>
   );
 };
 
