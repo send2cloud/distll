@@ -1,37 +1,97 @@
+
 import { getSettings } from "./settings";
 import { SummarizationStyle } from "@/components/SettingsModal";
+
+// Default public API key with $5 limit
+const PUBLIC_API_KEY = "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";
 
 const getSummarizationPrompt = (style: SummarizationStyle, bulletCount?: number): string => {
   switch (style) {
     case 'simple':
-      return "You are a helpful assistant that specializes in simplifying complex content. Your goal is to rewrite the provided text in simple, easy-to-understand English with short sentences and common words. Avoid jargon and technical terms when possible. Format your summary in markdown with appropriate headings and lists. Don't include introductory phrases - just present the simplified content directly.";
+      return "You are a helpful assistant that specializes in simplifying complex content. Your task is to rewrite the provided text in simple, easy-to-understand English with short sentences and common words. Avoid jargon and technical terms when possible. Format your output in markdown with appropriate headings and lists. IMPORTANT: Never include introductions, preambles, or phrases like 'here is the summary' - just present the simplified content directly.";
     
     case 'bullets':
       const count = bulletCount || 5;
-      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your goal is to identify only the ${count} key takeaways and present them as a numbered list in markdown format. Make each point concise but informative. Don't include any introduction or conclusion - just present the ${count} bullet points directly.`;
+      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways and present them as a numbered list in markdown format. Make each point concise but informative. IMPORTANT: Do NOT include any introduction, conclusion, or phrases like 'here are the key points' - just present the ${count} bullet points directly. Each bullet point should start with a number followed by a period.`;
     
     case 'eli5':
-      return "You are a helpful assistant that specializes in explaining complex topics as if talking to a 5-year-old child. Your goal is to use very simple language, basic analogies, and avoid technical terms. Break down complicated ideas into easily digestible concepts. Format your explanation in markdown with appropriate headings and emphasis where needed. Don't include any introductions - just present the ELI5 explanation directly.";
+      return "You are a helpful assistant that specializes in explaining complex topics in simple terms. Your task is to use very simple language, basic analogies, and avoid technical terms. Break down complicated ideas into easily digestible concepts. Format your explanation in markdown with appropriate headings and emphasis where needed. IMPORTANT: Never include introductions, preambles, or phrases like 'here is the explanation' - just present the explanation directly.";
     
     case 'concise':
-      return "You are a helpful assistant that specializes in creating extremely concise summaries. Your goal is to distill the content down to its absolute essence in as few words as possible while retaining all key information. Use short sentences and be very economical with language. Format your response in markdown. Don't include any introductions - just present the concise summary directly.";
+      return "You are a helpful assistant that specializes in creating extremely concise summaries. Your task is to distill the content down to its absolute essence in as few words as possible while retaining all key information. Use short sentences and be very economical with language. Format your response in markdown. IMPORTANT: Never include introductions, preambles, or phrases like 'here is the summary' - just present the concise summary directly.";
     
     case 'tweet':
-      return "You are a helpful assistant that specializes in creating tweet-sized summaries. Your goal is to distill the content into exactly 140 characters or less. Be extremely concise while capturing the most essential point. Don't use hashtags unless they're crucial to the meaning. Don't include any introductions - just present the tweet directly.";
+      return "You are a helpful assistant that specializes in creating tweet-sized summaries. Your task is to distill the content into exactly 140 characters or less. Be extremely concise while capturing the most essential point. Don't use hashtags unless they're crucial to the meaning. IMPORTANT: Never include introductions or phrases like 'here is the tweet' - just present the tweet directly.";
     
     case 'standard':
     default:
-      return "You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your goal is to identify the key information and present it in an easily digestible format. Always write your summary in markdown format. Use appropriate formatting like lists, headers, and bold text. If content contains rankings or lists (like top 10), format them as proper numbered lists. Never include phrases like 'Here is the summary' or 'Organized for clarity' - just present the summary directly.";
+      return "You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in an easily digestible format. Always write your summary in markdown format. Use appropriate formatting like lists, headers, and bold text. If content contains rankings or lists (like top 10), format them as proper numbered lists. IMPORTANT: Never include introductions, preambles, or phrases like 'here is the summary' or 'organized for clarity' - just present the summary directly.";
   }
+};
+
+const cleanupPreambles = (text: string): string => {
+  // List of common preambles to remove
+  const preambles = [
+    "Here is the summary:",
+    "Here's a summary of the key takeaways:",
+    "Here's a summary of the content:",
+    "Here is a summary:",
+    "Here's a summary:",
+    "Summary:",
+    "Here's the summary:",
+    "Organized for clarity:",
+    "Here are the key points:",
+    "Here are the main points:",
+    "Here's what you need to know:",
+    "In summary:",
+    "To summarize:",
+    "The key takeaways are:",
+    "Based on the content:",
+    "From the content provided:",
+    "After reviewing the content:",
+    "Based on the article:",
+    "The main points are:",
+    "Please visit the URL:",
+    "Here's a summary of the URL:",
+    "After visiting the URL,",
+    "From the URL,",
+    "Based on the URL,",
+    "I'll summarize this for you:",
+    "I'll explain this simply:",
+    "To explain like you're 5:",
+    "In simple terms:",
+    "Let me break this down:",
+    "Let me simplify this for you:",
+    "Let me summarize this article:",
+  ];
+  
+  let cleanedText = text;
+  
+  // Try to find and remove preambles at the beginning of the text
+  for (const preamble of preambles) {
+    const preambleRegex = new RegExp(`^\\s*${preamble}\\s*`, 'i');
+    cleanedText = cleanedText.replace(preambleRegex, '');
+  }
+  
+  // Remove any sentences that mention visiting a URL or fetching content
+  cleanedText = cleanedText.replace(/\b(I visited|I checked|I browsed|I accessed|I reviewed|I read|I analyzed|After visiting)\b[^.]*\bURL\b[^.]*\./gi, '');
+  cleanedText = cleanedText.replace(/\b(According to the|From the|Based on the|The|This)\b[^.]*\b(webpage|website|article|page|content)\b[^.]*\./gi, '');
+  
+  // Remove phrases like "Here's a summary in bullet points:" that might appear before bullet lists
+  cleanedText = cleanedText.replace(/\b(Here's|Here are|These are|The following are)\b[^:]*\bpoints?\b[^:]*:/gi, '');
+  
+  // Clean up any extra whitespace that might have been created
+  cleanedText = cleanedText.trim();
+  
+  return cleanedText;
 };
 
 export const summarizeContent = async (content: string, style?: SummarizationStyle, bulletCount?: number) => {
   const settings = getSettings();
   
-  if (!settings.openRouterApiKey) {
-    throw new Error("OpenRouter API key not set. Please configure it in settings.");
-  }
-
+  // Use personal API key if available, otherwise use public key
+  const apiKey = settings.openRouterApiKey || PUBLIC_API_KEY;
+  
   // Use provided style or fall back to settings
   const summarizationStyle = style || settings.summarizationStyle;
   const bulletCountToUse = bulletCount;
@@ -43,7 +103,7 @@ export const summarizeContent = async (content: string, style?: SummarizationSty
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${settings.openRouterApiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
         "HTTP-Referer": window.location.origin || "https://distill.app",
         "X-Title": "Distill"
       },
@@ -56,7 +116,7 @@ export const summarizeContent = async (content: string, style?: SummarizationSty
           },
           {
             role: "user",
-            content: `Please summarize the following content according to the style specified in my system message:\n\n${content}`
+            content: `Summarize the following content according to the style specified in my system message:\n\n${content}`
           }
         ],
         max_tokens: 1000
@@ -81,20 +141,8 @@ export const summarizeContent = async (content: string, style?: SummarizationSty
     const data = await response.json();
     let summary = data.choices[0].message.content;
     
-    const preambles = [
-      "Here is the summary:",
-      "Here is a summary:",
-      "Summary:",
-      "Here's the summary:",
-      "Here's a summary:",
-      "Organized for clarity:",
-    ];
-    
-    preambles.forEach(preamble => {
-      if (summary.startsWith(preamble)) {
-        summary = summary.substring(preamble.length).trim();
-      }
-    });
+    // Clean up preambles and other unwanted text
+    summary = cleanupPreambles(summary);
     
     return summary;
   } catch (error) {
@@ -106,10 +154,9 @@ export const summarizeContent = async (content: string, style?: SummarizationSty
 export const summarizeUrl = async (url: string, style?: SummarizationStyle, bulletCount?: number) => {
   const settings = getSettings();
   
-  if (!settings.openRouterApiKey) {
-    throw new Error("OpenRouter API key not set. Please configure it in settings.");
-  }
-
+  // Use personal API key if available, otherwise use public key
+  const apiKey = settings.openRouterApiKey || PUBLIC_API_KEY;
+  
   // Use provided style or fall back to settings
   const summarizationStyle = style || settings.summarizationStyle;
   const bulletCountToUse = bulletCount;
@@ -121,7 +168,7 @@ export const summarizeUrl = async (url: string, style?: SummarizationStyle, bull
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${settings.openRouterApiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
         "HTTP-Referer": window.location.origin || "https://distill.app",
         "X-Title": "Distill"
       },
@@ -134,7 +181,7 @@ export const summarizeUrl = async (url: string, style?: SummarizationStyle, bull
           },
           {
             role: "user",
-            content: `Please visit the URL ${url} and summarize its content according to the style specified in my system message.`
+            content: `Visit the URL ${url} and summarize its content according to the style specified in my system message. IMPORTANT: Do NOT include any introduction, preamble, or mention of the URL - just present the summary directly.`
           }
         ],
         max_tokens: 1000
@@ -159,20 +206,8 @@ export const summarizeUrl = async (url: string, style?: SummarizationStyle, bull
     const data = await response.json();
     let summary = data.choices[0].message.content;
     
-    const preambles = [
-      "Here is the summary:",
-      "Here is a summary:",
-      "Summary:",
-      "Here's the summary:",
-      "Here's a summary:",
-      "Organized for clarity:",
-    ];
-    
-    preambles.forEach(preamble => {
-      if (summary.startsWith(preamble)) {
-        summary = summary.substring(preamble.length).trim();
-      }
-    });
+    // Clean up preambles and other unwanted text
+    summary = cleanupPreambles(summary);
     
     return summary;
   } catch (error) {

@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
-import { getSummarizationStyleFromPath } from '@/utils/settings';
+import { getSettings, getSummarizationStyleFromPath } from '@/utils/settings';
 import { SummarizationStyle } from '@/components/SettingsModal';
 import MinimalContentView from '@/components/MinimalContentView';
 import DistillHeader from '@/components/distill/DistillHeader';
@@ -15,13 +14,29 @@ const Distill = () => {
   const { url, bulletCount: bulletCountParam } = useParams<{ url: string, bulletCount?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isDirectAccess, setIsDirectAccess] = useState<boolean>(false);
+  const [isDirectAccess, setIsDirectAccess] = useState<boolean>(true);
   const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<SummarizationStyle>('standard');
   const [bulletCount, setBulletCount] = useState<number | undefined>(undefined);
   const [fullUrl, setFullUrl] = useState<string>('');
+  const [showRichUI, setShowRichUI] = useState<boolean>(false);
   
   useEffect(() => {
     console.log("Distill component mounted with path:", location.pathname);
+    
+    // Load settings first
+    const settings = getSettings();
+    setShowRichUI(settings.useRichResults);
+    
+    // Direct access detection logic
+    const referrer = document.referrer;
+    const isFromLandingPage = referrer && (
+      referrer.includes(window.location.host) || 
+      referrer.includes('localhost')
+    );
+    
+    // If we came from our own landing page, it's not a direct access
+    setIsDirectAccess(!isFromLandingPage);
+    console.log("Direct access:", !isFromLandingPage, "Referrer:", referrer);
     
     // First, determine the style and bullet count
     if (location.pathname) {
@@ -76,6 +91,16 @@ const Distill = () => {
     
   }, [location.pathname, bulletCountParam, url]);
   
+  // If we're in direct access mode or settings say plain text mode, set Content-Type header
+  useEffect(() => {
+    if (isDirectAccess) {
+      // Set the Content-Type for text/plain output
+      document.title = "Distill Summary";
+      // Can't actually set Content-Type from client side JavaScript, 
+      // but we'll style the output to look like plain text
+    }
+  }, [isDirectAccess]);
+  
   const { 
     originalContent, 
     summary, 
@@ -96,7 +121,8 @@ const Distill = () => {
     navigate('/');
   };
 
-  if (isDirectAccess) {
+  // For direct URL access or if rich UI is disabled in settings, use minimal view
+  if (isDirectAccess || !showRichUI) {
     return <MinimalContentView 
       content={summary} 
       isLoading={isLoading} 
@@ -105,6 +131,7 @@ const Distill = () => {
     />;
   }
 
+  // Otherwise, use the rich UI view
   return (
     <div className="container mx-auto px-4 py-8">
       <DistillHeader onBack={handleBack} />

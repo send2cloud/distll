@@ -13,7 +13,9 @@ export const getSettings = (): SettingsData => {
   return { 
     openRouterApiKey: '',
     useDirectUrlSummarization: false,
-    summarizationStyle: 'standard' as SummarizationStyle
+    summarizationStyle: 'standard' as SummarizationStyle,
+    useRichResults: false,
+    useJinaProxy: false
   };
 };
 

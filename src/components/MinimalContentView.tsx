@@ -11,49 +11,26 @@ interface MinimalContentViewProps {
 }
 
 const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: MinimalContentViewProps) => {
-  const getStyleLabel = (style: SummarizationStyle): string => {
-    switch (style) {
-      case 'simple': return 'Simple English';
-      case 'bullets': return 'Bullet Points';
-      case 'eli5': return 'Explain Like I\'m 5';
-      case 'concise': return 'Concise';
-      case 'tweet': return 'Tweet';
-      default: return 'Standard';
-    }
-  };
-
   if (isLoading) {
-    return <div className="py-8 text-center">Loading...</div>;
+    return <div className="py-2 text-xs">Loading...</div>;
   }
 
   if (error) {
     return (
-      <div className="py-8 text-center text-red-500">
-        <h2 className="text-xl font-bold mb-2">Error</h2>
-        <p>{error.message}</p>
-        {error.message.includes("OpenRouter API key") && (
-          <p className="mt-4">
-            Please set your OpenRouter API key in the settings to use this feature.
-          </p>
-        )}
+      <div className="py-2 text-xs">
+        Error: {error.message}
       </div>
     );
   }
 
   if (!content) {
-    return <div className="py-8 text-center">No content available</div>;
+    return <div className="py-2 text-xs">No content available</div>;
   }
 
+  // Return just the raw markdown content with basic styling for readability
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      {style !== 'standard' && (
-        <div className="mb-4 text-sm text-muted-foreground bg-muted inline-block px-2 py-1 rounded">
-          {getStyleLabel(style)} view
-        </div>
-      )}
-      <div className="prose prose-sm md:prose-base lg:prose-lg dark:prose-invert">
-        <ReactMarkdown>{content}</ReactMarkdown>
-      </div>
+    <div className="font-mono text-sm whitespace-pre-wrap">
+      {content}
     </div>
   );
 };

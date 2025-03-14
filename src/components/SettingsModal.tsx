@@ -29,6 +29,8 @@ export type SettingsData = {
   openRouterApiKey: string;
   useDirectUrlSummarization: boolean;
   summarizationStyle: SummarizationStyle;
+  useRichResults: boolean;
+  useJinaProxy: boolean;
   bulletCount?: number;
 };
 
@@ -37,6 +39,8 @@ const SettingsModal = () => {
   const [openRouterApiKey, setOpenRouterApiKey] = useState('');
   const [useDirectUrlSummarization, setUseDirectUrlSummarization] = useState(false);
   const [summarizationStyle, setSummarizationStyle] = useState<SummarizationStyle>("standard");
+  const [useRichResults, setUseRichResults] = useState(false);
+  const [useJinaProxy, setUseJinaProxy] = useState(false);
 
   // Load settings from localStorage on component mount
   useEffect(() => {
@@ -47,6 +51,8 @@ const SettingsModal = () => {
         setOpenRouterApiKey(parsed.openRouterApiKey || '');
         setUseDirectUrlSummarization(parsed.useDirectUrlSummarization || false);
         setSummarizationStyle(parsed.summarizationStyle || "standard");
+        setUseRichResults(parsed.useRichResults || false);
+        setUseJinaProxy(parsed.useJinaProxy || false);
       } catch (e) {
         console.error('Failed to parse settings from localStorage', e);
       }
@@ -58,6 +64,8 @@ const SettingsModal = () => {
       openRouterApiKey,
       useDirectUrlSummarization,
       summarizationStyle,
+      useRichResults,
+      useJinaProxy,
       bulletCount: summarizationStyle === "bullets" ? 5 : undefined
     };
     
@@ -114,6 +122,34 @@ const SettingsModal = () => {
               id="direct-url"
               checked={useDirectUrlSummarization}
               onCheckedChange={setUseDirectUrlSummarization}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="rich-results">Use Rich Results</Label>
+              <p className="text-xs text-muted-foreground">
+                Show results with rich formatting and UI elements
+              </p>
+            </div>
+            <Switch
+              id="rich-results"
+              checked={useRichResults}
+              onCheckedChange={setUseRichResults}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="jina-proxy">Use JINA Proxy</Label>
+              <p className="text-xs text-muted-foreground">
+                Alternative content fetching method
+              </p>
+            </div>
+            <Switch
+              id="jina-proxy"
+              checked={useJinaProxy}
+              onCheckedChange={setUseJinaProxy}
             />
           </div>
 
