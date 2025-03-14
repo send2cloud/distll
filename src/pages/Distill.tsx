@@ -20,6 +20,10 @@ const Distill = () => {
   const [bulletCount, setBulletCount] = useState<number | undefined>(undefined);
   
   useEffect(() => {
+    console.log("Distill component mounted with path:", location.pathname);
+    console.log("URL parameter:", url);
+    console.log("Bullet count parameter:", bulletCountParam);
+    
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
       console.log("Path style detection:", style, "Bullet count:", bulletCount);
@@ -34,7 +38,7 @@ const Distill = () => {
         setCurrentSummarizationStyle('bullets');
       }
     }
-  }, [location.pathname, bulletCountParam]);
+  }, [location.pathname, bulletCountParam, url]);
   
   const { 
     originalContent, 
@@ -43,6 +47,14 @@ const Distill = () => {
     error, 
     progress 
   } = useContentProcessor(url, currentSummarizationStyle, bulletCount);
+  
+  useEffect(() => {
+    console.log("Content processor parameters:", {
+      url,
+      style: currentSummarizationStyle,
+      bulletCount
+    });
+  }, [url, currentSummarizationStyle, bulletCount]);
   
   const handleBack = () => {
     navigate('/');

@@ -18,7 +18,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* URL code-based summarization routes */}
+          {/* Style-based summarization routes */}
           <Route path="/eli5/:url" element={<Distill />} />
           <Route path="/simple/:url" element={<Distill />} />
           <Route path="/esl/:url" element={<Distill />} />
