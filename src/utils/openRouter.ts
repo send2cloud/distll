@@ -22,11 +22,11 @@ export const summarizeContent = async (content: string) => {
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your goal is to identify the key information and present it in an easily digestible format."
+            content: "You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your goal is to identify the key information and present it in an easily digestible format. Always write your summary in markdown format. Never include phrases like 'Here is the summary' or 'Organized for clarity' - just present the summary directly."
           },
           {
             role: "user",
-            content: `Please summarize the following content. Extract the main points, key insights, and important details. Organize your summary in a clear, structured format:\n\n${content}`
+            content: `Please summarize the following content. Extract the main points, key insights, and important details. Write in markdown format without any introduction or preamble:\n\n${content}`
           }
         ],
         max_tokens: 1000
@@ -39,7 +39,25 @@ export const summarizeContent = async (content: string) => {
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    let summary = data.choices[0].message.content;
+    
+    // Remove common preambles if they exist
+    const preambles = [
+      "Here is the summary:",
+      "Here is a summary:",
+      "Summary:",
+      "Here's the summary:",
+      "Here's a summary:",
+      "Organized for clarity:",
+    ];
+    
+    preambles.forEach(preamble => {
+      if (summary.startsWith(preamble)) {
+        summary = summary.substring(preamble.length).trim();
+      }
+    });
+    
+    return summary;
   } catch (error) {
     console.error("Failed to summarize content:", error);
     throw error;

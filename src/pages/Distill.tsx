@@ -11,6 +11,7 @@ import { getSettings } from "@/utils/settings";
 import SettingsModal from "@/components/SettingsModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import ReactMarkdown from 'react-markdown';
 
 const Distill = () => {
   const { url } = useParams<{ url: string }>();
@@ -182,7 +183,9 @@ const Distill = () => {
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
-                  {summary || (
+                  {summary ? (
+                    <ReactMarkdown>{summary}</ReactMarkdown>
+                  ) : (
                     <div className="py-4 text-amber-600">
                       <p>No summary available yet. Please configure your OpenRouter API key in settings.</p>
                     </div>
