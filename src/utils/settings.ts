@@ -10,5 +10,8 @@ export const getSettings = (): SettingsData => {
       console.error('Failed to parse settings from localStorage', e);
     }
   }
-  return { openRouterApiKey: '' };
+  return { 
+    openRouterApiKey: '',
+    useDirectUrlSummarization: false
+  };
 };

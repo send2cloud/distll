@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { summarizeContent } from '@/utils/openRouter';
+import { summarizeContent, summarizeUrl } from '@/utils/openRouter';
 import { Copy, ArrowLeft } from 'lucide-react';
 import { getSettings } from '@/utils/settings';
 import SettingsModal from "@/components/SettingsModal";
@@ -34,7 +34,7 @@ const Distill = () => {
     
     const hasDistillPathPattern = location.pathname.match(/^\/distill\//);
     
-    // Fix: Convert the RegExpMatchArray to a boolean
+    // Convert the RegExpMatchArray to a boolean
     setIsDirectAccess(isDirectNavigationFromExternal && Boolean(hasDistillPathPattern));
   }, [location]);
 
@@ -54,61 +54,78 @@ const Distill = () => {
         
         setProgress(20);
         
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(fullUrl)}`);
-        
-        setProgress(50);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch content: ${response.statusText}`);
-        }
-        
-        const html = await response.text();
-        setProgress(70);
-        
-        // Extract main content from HTML
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        // Remove script tags and style tags to clean up the content
-        const scripts = doc.querySelectorAll('script, style, svg, iframe, img, noscript');
-        scripts.forEach(script => script.remove());
-        
-        // Try to find main content
-        const article = doc.querySelector('article') || 
-                        doc.querySelector('main') || 
-                        doc.querySelector('.content') || 
-                        doc.querySelector('.article') ||
-                        doc.querySelector('.post') ||
-                        doc.body;
-        
-        const mainContent = article?.textContent || doc.body.textContent || '';
-        
-        // Normalize whitespace
-        const cleanContent = mainContent
-          .replace(/\s+/g, ' ')
-          .trim()
-          .substring(0, 15000); // Limit content length
-        
-        setOriginalContent(cleanContent);
-        setProgress(80);
-        
-        // Request summary if API key is set
+        // Check if we should use direct URL summarization
         const settings = getSettings();
-        if (settings.openRouterApiKey) {
-          try {
-            const summaryText = await summarizeContent(cleanContent);
-            setSummary(summaryText);
-          } catch (summaryError) {
-            console.error('Error summarizing content:', summaryError);
-            toast({
-              title: "Summarization Error",
-              description: summaryError instanceof Error ? summaryError.message : "Failed to summarize content",
-              variant: "destructive"
-            });
-          }
-        }
         
-        setProgress(100);
+        if (settings.useDirectUrlSummarization) {
+          setProgress(40);
+          try {
+            const summaryText = await summarizeUrl(fullUrl);
+            setSummary(summaryText);
+            // For direct URL summarization, we don't have original content
+            setOriginalContent("Content fetched directly by OpenRouter API");
+            setProgress(100);
+          } catch (summaryError) {
+            console.error('Error summarizing URL directly:', summaryError);
+            throw summaryError;
+          }
+        } else {
+          // Use the original content fetching logic
+          const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(fullUrl)}`);
+          
+          setProgress(50);
+          
+          if (!response.ok) {
+            throw new Error(`Failed to fetch content: ${response.statusText}`);
+          }
+          
+          const html = await response.text();
+          setProgress(70);
+          
+          // Extract main content from HTML
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          
+          // Remove script tags and style tags to clean up the content
+          const scripts = doc.querySelectorAll('script, style, svg, iframe, img, noscript');
+          scripts.forEach(script => script.remove());
+          
+          // Try to find main content
+          const article = doc.querySelector('article') || 
+                          doc.querySelector('main') || 
+                          doc.querySelector('.content') || 
+                          doc.querySelector('.article') ||
+                          doc.querySelector('.post') ||
+                          doc.body;
+          
+          const mainContent = article?.textContent || doc.body.textContent || '';
+          
+          // Normalize whitespace
+          const cleanContent = mainContent
+            .replace(/\s+/g, ' ')
+            .trim()
+            .substring(0, 15000); // Limit content length
+          
+          setOriginalContent(cleanContent);
+          setProgress(80);
+          
+          // Request summary if API key is set
+          if (settings.openRouterApiKey) {
+            try {
+              const summaryText = await summarizeContent(cleanContent);
+              setSummary(summaryText);
+            } catch (summaryError) {
+              console.error('Error summarizing content:', summaryError);
+              toast({
+                title: "Summarization Error",
+                description: summaryError instanceof Error ? summaryError.message : "Failed to summarize content",
+                variant: "destructive"
+              });
+            }
+          }
+          
+          setProgress(100);
+        }
       } catch (fetchError) {
         console.error('Error fetching content:', fetchError);
         setError(fetchError instanceof Error ? fetchError : new Error('Unknown error occurred'));

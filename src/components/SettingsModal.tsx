@@ -11,16 +11,20 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Settings } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 export type SettingsData = {
   openRouterApiKey: string;
+  useDirectUrlSummarization: boolean;
 };
 
 const SettingsModal = () => {
   const [open, setOpen] = useState(false);
   const [openRouterApiKey, setOpenRouterApiKey] = useState('');
+  const [useDirectUrlSummarization, setUseDirectUrlSummarization] = useState(false);
 
   // Load settings from localStorage on component mount
   useEffect(() => {
@@ -29,6 +33,7 @@ const SettingsModal = () => {
       try {
         const parsed = JSON.parse(savedSettings) as SettingsData;
         setOpenRouterApiKey(parsed.openRouterApiKey || '');
+        setUseDirectUrlSummarization(parsed.useDirectUrlSummarization || false);
       } catch (e) {
         console.error('Failed to parse settings from localStorage', e);
       }
@@ -37,13 +42,14 @@ const SettingsModal = () => {
 
   const saveSettings = () => {
     const settings: SettingsData = {
-      openRouterApiKey
+      openRouterApiKey,
+      useDirectUrlSummarization
     };
     
     localStorage.setItem('distill-settings', JSON.stringify(settings));
     toast({
       title: "Settings saved",
-      description: "Your API key has been saved to local storage"
+      description: "Your settings have been saved to local storage"
     });
     setOpen(false);
   };
@@ -80,6 +86,20 @@ const SettingsModal = () => {
             <p className="text-xs text-muted-foreground">
               Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" className="underline">OpenRouter</a>
             </p>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="direct-url">Use Direct URL Summarization</Label>
+              <p className="text-xs text-muted-foreground">
+                Send URLs directly to OpenRouter for summary without fetching content first
+              </p>
+            </div>
+            <Switch
+              id="direct-url"
+              checked={useDirectUrlSummarization}
+              onCheckedChange={setUseDirectUrlSummarization}
+            />
           </div>
         </div>
         
