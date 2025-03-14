@@ -28,9 +28,9 @@ const App = () => {
             <Route path="/tweet/*" element={<Distill />} />
             {/* Bullet count route */}
             <Route path="/:bulletCount(\d+)/*" element={<Distill />} />
-            {/* Direct URL summarization - this MUST come last to avoid blocking other routes */}
-            <Route path="/:url" element={<Distill />} />
-            <Route path="*" element={<NotFound />} />
+            {/* Direct URL summarization - let's adjust this to catch all non-matched URLs */}
+            <Route path="/*" element={<Distill />} />
+            {/* We don't need the NotFound route since we're capturing all paths */}
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

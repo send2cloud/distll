@@ -60,8 +60,12 @@ const Distill = () => {
       if (bulletMatch) {
         extractedUrl = bulletMatch[2]; // The URL after the bullet count
         console.log("Extracted URL from bullet count path:", extractedUrl);
+      } else if (location.pathname !== '/' && location.pathname.length > 1) {
+        // This is the direct URL case - the URL is the entire pathname except the leading slash
+        extractedUrl = location.pathname.substring(1);
+        console.log("Direct URL case, extracted:", extractedUrl);
       } else if (url) {
-        // This is the direct URL case
+        // Fallback to the URL parameter if provided
         extractedUrl = url;
         console.log("Using direct URL parameter:", extractedUrl);
       }

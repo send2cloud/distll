@@ -23,8 +23,11 @@ export const getSummarizationStyleFromPath = (pathname: string): {style: Summari
   if (pathname.startsWith('/eli5/')) {
     console.log("Detected ELI5 style");
     return { style: 'eli5' };
-  } else if (pathname.startsWith('/simple/') || pathname.startsWith('/esl/')) {
-    console.log("Detected Simple/ESL style");
+  } else if (pathname.startsWith('/simple/')) {
+    console.log("Detected Simple style");
+    return { style: 'simple' };
+  } else if (pathname.startsWith('/esl/')) {
+    console.log("Detected ESL style");
     return { style: 'simple' };
   } else if (pathname.startsWith('/tweet/')) {
     console.log("Detected Tweet style");
@@ -39,6 +42,6 @@ export const getSummarizationStyleFromPath = (pathname: string): {style: Summari
     }
   }
   
-  console.log("Falling back to standard style");
+  console.log("Falling back to standard style for path:", pathname);
   return { style: 'standard' };
 };
