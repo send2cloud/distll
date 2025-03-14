@@ -26,7 +26,7 @@ export const getSummarizationStyleFromPath = (pathname: string): {style: Summari
     return { style: 'tweet' };
   } else {
     // Check for bullet point number in URL path
-    const bulletMatch = pathname.match(/^\/([1-9])\//);
+    const bulletMatch = pathname.match(/^\/(\d+)\//);
     if (bulletMatch) {
       const bulletCount = parseInt(bulletMatch[1], 10);
       return { style: 'bullets', bulletCount };

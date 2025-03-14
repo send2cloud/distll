@@ -22,11 +22,12 @@ const App = () => (
           <Route path="/eli5/:url" element={<Distill />} />
           <Route path="/simple/:url" element={<Distill />} />
           <Route path="/esl/:url" element={<Distill />} />
-          <Route path="/:bulletCount([1-9])/:url" element={<Distill />} />
           <Route path="/tweet/:url" element={<Distill />} />
+          {/* Bullet count route - needs to be before the generic URL route */}
+          <Route path="/:bulletCount(\d+)/:url" element={<Distill />} />
           {/* Direct URL summarization (no prefix) */}
           <Route path="/:url" element={<Distill />} />
-          <Route path="/*" element={<Index />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
