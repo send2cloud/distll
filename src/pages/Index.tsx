@@ -63,8 +63,8 @@ const Index = () => {
   };
 
   const processUrl = (targetUrl: string) => {
-    // Redirect to the distill page with the URL
-    navigate(`/distill/${encodeURIComponent(targetUrl)}`);
+    // Navigate directly to the URL without the /distill/ prefix
+    navigate(`/${encodeURIComponent(targetUrl)}`);
   };
 
   return (

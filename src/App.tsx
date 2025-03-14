@@ -18,13 +18,14 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/distill/:url" element={<Distill />} />
-          {/* URL path-based summarization routes */}
+          {/* URL code-based summarization routes */}
           <Route path="/eli5/:url" element={<Distill />} />
           <Route path="/simple/:url" element={<Distill />} />
           <Route path="/esl/:url" element={<Distill />} />
           <Route path="/:bulletCount([1-9])/:url" element={<Distill />} />
           <Route path="/tweet/:url" element={<Distill />} />
+          {/* Direct URL summarization (no prefix) */}
+          <Route path="/:url" element={<Distill />} />
           <Route path="/*" element={<Index />} />
         </Routes>
       </BrowserRouter>
