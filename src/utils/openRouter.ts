@@ -1,7 +1,7 @@
 
 import { getSettings } from "./settings";
 
-export const summarizeContent = async (content: string): Promise<string> {
+export const summarizeContent = async (content: string) => {
   const settings = getSettings();
   
   if (!settings.openRouterApiKey) {
