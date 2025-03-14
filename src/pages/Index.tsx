@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
+import SettingsModal from "@/components/SettingsModal";
 
 const Index = () => {
   const [url, setUrl] = useState('');
@@ -69,7 +70,10 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-2xl shadow-lg">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center relative">
+          <div className="absolute right-6 top-6">
+            <SettingsModal />
+          </div>
           <CardTitle className="text-4xl font-bold mb-2">Distill</CardTitle>
           <CardDescription className="text-xl">
             Extract and summarize content from any web page
