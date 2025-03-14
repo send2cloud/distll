@@ -1,6 +1,5 @@
 
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
 import { SummarizationStyle } from '@/components/SettingsModal';
 
 interface MinimalContentViewProps {
@@ -27,19 +26,30 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
     return <div className="py-2 text-xs">No content available</div>;
   }
 
+  // Process content to simplify formatting
+  const processedContent = content
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold formatting
+    .replace(/\*([^*]+)\*/g, '• $1')   // Convert italics to bullet points
+    .replace(/#{1,6}\s*([^#\n]+)/g, '$1') // Remove heading markers
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 [$2]') // Simplify links to text [url]
+    .replace(/`([^`]+)`/g, '$1')       // Remove code formatting
+    .replace(/>\s*([^>\n]+)/g, '$1')   // Remove blockquotes
+    .replace(/\n{3,}/g, '\n\n')        // Normalize excessive line breaks
+    .trim();
+
   // Return plain text for minimal view to respect direct access settings
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <pre style={{ 
         whiteSpace: 'pre-wrap', 
         wordBreak: 'break-word',
-        fontFamily: 'monospace',
+        fontFamily: 'system-ui, sans-serif',
         fontSize: '14px',
-        lineHeight: '1.5',
+        lineHeight: '1.6',
         padding: '0',
         margin: '0'
       }}>
-        {content}
+        {processedContent}
       </pre>
     </div>
   );
