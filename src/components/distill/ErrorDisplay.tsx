@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { AlertTriangle } from 'lucide-react'; // Using lucide-react instead as it's already installed
 
 interface ErrorDisplayProps {
   error: Error;
@@ -18,7 +18,7 @@ const ErrorDisplay = ({ error }: ErrorDisplayProps) => {
     <Card className="mb-6 border-red-200 bg-red-50">
       <CardHeader className="pb-2">
         <CardTitle className="text-red-700 flex items-center gap-2">
-          <ExclamationTriangleIcon className="h-5 w-5" />
+          <AlertTriangle className="h-5 w-5" />
           Error
         </CardTitle>
       </CardHeader>
