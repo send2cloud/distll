@@ -11,6 +11,10 @@ interface PlainTextDisplayProps {
  * for readability. Uses a pre tag with system font for better readability.
  */
 const PlainTextDisplay = ({ content, className = '' }: PlainTextDisplayProps) => {
+  if (!content || content.trim() === '') {
+    return null;
+  }
+  
   return (
     <pre 
       style={{ 

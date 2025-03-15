@@ -23,19 +23,19 @@ const ContentStateDisplay = ({
   emptyMessage = 'No content available'
 }: ContentStateDisplayProps) => {
   if (isLoading) {
-    return <div className="py-2 text-xs">{loadingMessage}</div>;
+    return <div className="py-2 text-sm">{loadingMessage}</div>;
   }
 
   if (error) {
     return (
-      <div className="py-2 text-xs">
+      <div className="py-2 text-sm text-red-600">
         Error: {errorMessage || error.message}
       </div>
     );
   }
 
   if (!hasContent) {
-    return <div className="py-2 text-xs">{emptyMessage}</div>;
+    return <div className="py-2 text-sm text-amber-600">{emptyMessage}</div>;
   }
 
   return null;
