@@ -15,6 +15,17 @@ const PlainTextDisplay = ({ content, className = '' }: PlainTextDisplayProps) =>
     return null;
   }
   
+  // Additional cleanup to ensure proper bullet point formatting
+  const formattedContent = content
+    // Fix inconsistent bullet point formatting
+    .replace(/•\s*([^•\n]+)/g, '• $1\n')
+    // Ensure proper spacing after bullet points
+    .replace(/•([^\s])/g, '• $1')
+    // Fix nested bullet points that might be missing proper indentation
+    .replace(/(\n\s*)•\s*/g, '$1  • ')
+    // Clean up multiple line breaks
+    .replace(/\n{3,}/g, '\n\n');
+    
   return (
     <pre 
       style={{ 
@@ -28,7 +39,7 @@ const PlainTextDisplay = ({ content, className = '' }: PlainTextDisplayProps) =>
       }}
       className={className}
     >
-      {content}
+      {formattedContent}
     </pre>
   );
 };
