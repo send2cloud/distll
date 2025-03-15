@@ -23,19 +23,26 @@ const ContentStateDisplay = ({
   emptyMessage = 'No content available'
 }: ContentStateDisplayProps) => {
   if (isLoading) {
-    return <div className="py-2 text-sm">{loadingMessage}</div>;
+    return <div className="py-4 px-4 text-sm bg-blue-50 border border-blue-200 rounded-md">{loadingMessage}</div>;
   }
 
   if (error) {
     return (
-      <div className="py-2 text-sm text-red-600">
+      <div className="py-4 px-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
         Error: {errorMessage || error.message}
       </div>
     );
   }
 
   if (!hasContent) {
-    return <div className="py-2 text-sm text-amber-600">{emptyMessage}</div>;
+    return (
+      <div className="py-4 px-4 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md">
+        {emptyMessage}
+        <p className="mt-2 text-xs">
+          Try a different URL or check if the URL is accessible and contains readable content.
+        </p>
+      </div>
+    );
   }
 
   return null;

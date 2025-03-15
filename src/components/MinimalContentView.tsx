@@ -17,30 +17,46 @@ interface MinimalContentViewProps {
  * for direct access or when rich formatting is not desired.
  */
 const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: MinimalContentViewProps) => {
-  // First check if we have any usable content
-  const hasRawContent = Boolean(content && content.trim() !== '');
+  // First check if we have any input at all
+  const hasRawInput = Boolean(content) && typeof content === 'string';
+  
+  // Then check if the input has actual content (not just whitespace)
+  const hasRawContent = hasRawInput && content.trim().length > 0;
   
   // Apply comprehensive text cleaning and formatting
   const processedContent = hasRawContent ? simplifyMarkdownText(content) : '';
   
   // Check if we still have valid content after processing
-  const hasActualContent = Boolean(processedContent && processedContent.trim() !== '');
+  const hasActualContent = Boolean(processedContent && processedContent.trim().length > 0);
+
+  // Add logging to help debug content processing issues
+  console.log("MinimalContentView: Content stats", {
+    hasRawInput,
+    hasRawContent,
+    contentLength: hasRawInput ? content.length : 0,
+    processedLength: processedContent.length,
+    hasActualContent,
+    isLoading,
+    hasError: Boolean(error)
+  });
 
   // Show loading/error states or empty content message
   if (isLoading || error || !hasActualContent) {
     return (
-      <ContentStateDisplay 
-        isLoading={isLoading}
-        error={error}
-        hasContent={hasActualContent}
-        emptyMessage="No content available. Please check the URL or try a different page."
-      />
+      <div className="max-w-4xl mx-auto p-4 border border-gray-200 rounded-md shadow-sm bg-white">
+        <ContentStateDisplay 
+          isLoading={isLoading}
+          error={error}
+          hasContent={hasActualContent}
+          emptyMessage={`No content available for the URL${hasRawContent ? ' (content was empty after processing)' : ''}. Please check the URL or try a different page.`}
+        />
+      </div>
     );
   }
 
   // Return properly formatted content
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className="p-4 max-w-4xl mx-auto border border-gray-200 rounded-md shadow-sm bg-white">
       <PlainTextDisplay content={processedContent} />
     </div>
   );
