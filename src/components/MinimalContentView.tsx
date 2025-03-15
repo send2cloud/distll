@@ -3,7 +3,7 @@ import React from 'react';
 import { SummarizationStyle } from '@/components/SettingsModal';
 import PlainTextDisplay from '@/components/common/PlainTextDisplay';
 import ContentStateDisplay from '@/components/common/ContentStateDisplay';
-import { simplifyMarkdownText } from '@/utils/textFormatting';
+import { simplifyMarkdownText, cleanTextFormatting } from '@/utils/textFormatting';
 
 interface MinimalContentViewProps {
   content: string;
@@ -17,16 +17,17 @@ interface MinimalContentViewProps {
  * for direct access or when rich formatting is not desired.
  */
 const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: MinimalContentViewProps) => {
-  // Process content to simplify formatting if there is content
-  const processedContent = content ? simplifyMarkdownText(content) : '';
+  // First check if we have any usable content
+  const hasRawContent = Boolean(content && content.trim() !== '');
   
-  // Check if we actually have content after processing
-  const hasActualContent = processedContent && processedContent.trim() !== '';
+  // Apply comprehensive text cleaning and formatting
+  const processedContent = hasRawContent ? simplifyMarkdownText(content) : '';
+  
+  // Check if we still have valid content after processing
+  const hasActualContent = Boolean(processedContent && processedContent.trim() !== '');
 
-  // Check for loading, error, or empty states
-  const showStateDisplay = isLoading || error || !hasActualContent;
-  
-  if (showStateDisplay) {
+  // Show loading/error states or empty content message
+  if (isLoading || error || !hasActualContent) {
     return (
       <ContentStateDisplay 
         isLoading={isLoading}
@@ -37,7 +38,7 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
     );
   }
 
-  // Return plain text for minimal view to respect direct access settings
+  // Return properly formatted content
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <PlainTextDisplay content={processedContent} />

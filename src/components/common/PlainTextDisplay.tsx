@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { cleanTextFormatting } from '@/utils/textFormatting';
 
 interface PlainTextDisplayProps {
   content: string;
@@ -12,20 +13,16 @@ interface PlainTextDisplayProps {
  */
 const PlainTextDisplay = ({ content, className = '' }: PlainTextDisplayProps) => {
   if (!content || content.trim() === '') {
-    return null;
+    return (
+      <div className="text-muted-foreground p-4 text-center">
+        No content available to display.
+      </div>
+    );
   }
   
-  // Additional cleanup to ensure proper bullet point formatting
-  const formattedContent = content
-    // Fix inconsistent bullet point formatting
-    .replace(/•\s*([^•\n]+)/g, '• $1\n')
-    // Ensure proper spacing after bullet points
-    .replace(/•([^\s])/g, '• $1')
-    // Fix nested bullet points that might be missing proper indentation
-    .replace(/(\n\s*)•\s*/g, '$1  • ')
-    // Clean up multiple line breaks
-    .replace(/\n{3,}/g, '\n\n');
-    
+  // Clean and format the content for better readability
+  const formattedContent = cleanTextFormatting(content);
+  
   return (
     <pre 
       style={{ 

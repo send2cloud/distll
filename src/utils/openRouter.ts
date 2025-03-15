@@ -1,5 +1,6 @@
 import { getSettings } from "./settings";
 import { SummarizationStyle } from "@/components/SettingsModal";
+import { extractContentBetweenMarkers } from "./textFormatting";
 
 // Default public API key with $5 limit
 const PUBLIC_API_KEY = "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";
@@ -32,44 +33,8 @@ const getSummarizationPrompt = (style: SummarizationStyle, bulletCount?: number)
 };
 
 const cleanupPreambles = (text: string): string => {
-  // Try to extract content between START and END tags if they exist
-  const tagPattern = /###\s*START\s*###([\s\S]*?)###\s*END\s*###/i;
-  const tagMatch = text.match(tagPattern);
-  
-  if (tagMatch && tagMatch[1]) {
-    return tagMatch[1].trim();
-  }
-  
-  // If no full tags, look for just START tag and take everything after it
-  const startTagPattern = /###\s*START\s*###([\s\S]*)/i;
-  const startTagMatch = text.match(startTagPattern);
-  
-  if (startTagMatch && startTagMatch[1]) {
-    return startTagMatch[1].trim();
-  }
-  
-  // If "START" appears without ### markers, try to extract content after it
-  const simpleStartPattern = /\bSTART\b\s*([\s\S]*)/i;
-  const simpleStartMatch = text.match(simpleStartPattern);
-  
-  if (simpleStartMatch && simpleStartMatch[1]) {
-    return simpleStartMatch[1].trim();
-  }
-  
-  // Remove any non-Latin script at the beginning of the text (like "रेझोर,Colorado")
-  // This pattern matches non-Latin characters at the start followed by punctuation/whitespace
-  const cleanedText = text.replace(/^[\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0A80-\u0AFF\u0B00-\u0B7F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F\u0D80-\u0DFF\u0E00-\u0E7F\u0E80-\u0EFF\u0F00-\u0FFF\u1000-\u109F\u10A0-\u10FF]+[.,\s]*/g, '');
-  
-  // Remove any trailing START ### patterns
-  const withoutTrailingStart = cleanedText.replace(/\bSTART\s*#{1,3}\s*$/i, '');
-  
-  // If we still have content, return it trimmed
-  if (withoutTrailingStart.trim()) {
-    return withoutTrailingStart.trim();
-  }
-  
-  // Fall back to the original text as a last resort
-  return text.trim();
+  // Use our comprehensive text extraction utility
+  return extractContentBetweenMarkers(text);
 };
 
 export const summarizeContent = async (content: string, style?: SummarizationStyle, bulletCount?: number) => {
