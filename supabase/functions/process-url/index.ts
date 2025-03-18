@@ -91,12 +91,22 @@ function cleanTextFormatting(text: string): string {
   return cleaned.trim();
 }
 
+// Simple text-based content extraction without using DOMParser
 async function fetchContent(url: string): Promise<string> {
   try {
+    console.log(`Fetching content from URL: ${url}`);
+    
     const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch content: ${response.status} ${response.statusText}`);
+    }
+    
+    // Check content type to ensure we're processing HTML
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml')) {
+      console.log(`Note: Content type is ${contentType}, which may not be HTML`);
+      // Continue anyway as some servers might not set the correct content type
     }
     
     const html = await response.text();
@@ -105,35 +115,64 @@ async function fetchContent(url: string): Promise<string> {
       throw new Error("Received empty content from URL");
     }
     
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Text-based extraction using regex patterns instead of DOMParser
+    let mainContent = '';
     
-    // Remove non-content elements
-    const scripts = doc.querySelectorAll('script, style, svg, iframe, img, noscript');
-    scripts.forEach(script => script.remove());
+    // First try to remove script, style tags and comments with regex
+    let cleanedHtml = html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, ' ')
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, ' ');
     
-    // Try to find the main content
-    const article = doc.querySelector('article') || 
-                    doc.querySelector('main') || 
-                    doc.querySelector('.content') || 
-                    doc.querySelector('.article') ||
-                    doc.querySelector('.post') ||
-                    doc.body;
+    // Try to extract content from common article containers
+    const articlePatterns = [
+      /<article[^>]*>([\s\S]*?)<\/article>/i,
+      /<main[^>]*>([\s\S]*?)<\/main>/i,
+      /<div[^>]*?class="[^"]*?(?:content|article|post)[^"]*?"[^>]*>([\s\S]*?)<\/div>/i,
+      /<div[^>]*?id="[^"]*?(?:content|article|post)[^"]*?"[^>]*>([\s\S]*?)<\/div>/i
+    ];
     
-    if (!article) {
-      throw new Error("Could not identify main content in the page");
+    for (const pattern of articlePatterns) {
+      const match = cleanedHtml.match(pattern);
+      if (match && match[1] && match[1].length > 500) {  // Ensure minimum content length
+        mainContent = match[1];
+        break;
+      }
     }
     
-    const mainContent = article.textContent || doc.body.textContent || '';
-    
-    if (!mainContent || mainContent.trim() === '') {
-      throw new Error("Extracted content is empty");
+    // If no article containers found, fallback to body content
+    if (!mainContent) {
+      const bodyMatch = cleanedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      if (bodyMatch && bodyMatch[1]) {
+        mainContent = bodyMatch[1];
+      }
     }
     
-    return mainContent
-      .replace(/\s+/g, ' ')
-      .trim()
-      .substring(0, 15000);
+    // Strip remaining HTML tags and decode entities
+    mainContent = mainContent
+      .replace(/<[^>]*>/g, ' ')  // Remove all HTML tags
+      .replace(/&nbsp;/g, ' ')   // Replace non-breaking spaces
+      .replace(/&lt;/g, '<')     // Decode common HTML entities
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ');     // Normalize whitespace
+    
+    // If no content extracted, use body text from the full HTML
+    if (!mainContent || mainContent.trim().length < 500) {
+      cleanedHtml = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+      mainContent = cleanedHtml;
+    }
+    
+    // Limit content length to prevent token issues
+    const truncatedContent = mainContent.trim().substring(0, 15000);
+    
+    console.log(`Successfully extracted ${truncatedContent.length} chars of content`);
+    
+    return truncatedContent;
   } catch (error) {
     console.error("Error fetching content:", error);
     throw error;
@@ -144,50 +183,85 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
   try {
     console.log(`Summarizing content with style: ${style}, bullet count: ${bulletCount}, content length: ${content.length} chars`);
     
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://distill.app",
-        "X-Title": "Distill"
-      },
-      body: JSON.stringify({
-        model: "google/gemma-3-1b-it:free",
-        messages: [
-          {
-            role: "system",
-            content: getSummarizationPrompt(style, bulletCount)
-          },
-          {
-            role: "user",
-            content: `Summarize the following content according to the style specified in my system message. Remember: Start directly with content. No preamble. No postamble.\n\n${content}`
-          }
-        ],
-        max_tokens: 1000
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorMessage;
-      
-      try {
-        const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error?.message || `API error (${response.status}: ${response.statusText})`;
-      } catch (e) {
-        errorMessage = `API error (${response.status}: ${response.statusText})`;
-      }
-      
-      console.error("OpenRouter API error:", errorMessage);
-      throw new Error(`OpenRouter API error: ${errorMessage}`);
+    if (!content || content.trim().length < 100) {
+      throw new Error("Content is too short to summarize meaningfully (less than 100 characters)");
     }
+    
+    // Implement retries for API calls
+    const maxRetries = 2;
+    let retries = 0;
+    let summary = '';
+    
+    while (retries <= maxRetries) {
+      try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+            "HTTP-Referer": "https://distill.app",
+            "X-Title": "Distill"
+          },
+          body: JSON.stringify({
+            model: "google/gemma-3-1b-it:free",
+            messages: [
+              {
+                role: "system",
+                content: getSummarizationPrompt(style, bulletCount)
+              },
+              {
+                role: "user",
+                content: `Summarize the following content according to the style specified in my system message. Remember: Start directly with content. No preamble. No postamble.\n\n${content}`
+              }
+            ],
+            max_tokens: 1000
+          })
+        });
 
-    const data = await response.json();
-    let summary = data.choices[0].message.content;
+        if (!response.ok) {
+          const errorText = await response.text();
+          let errorMessage;
+          
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error?.message || `API error (${response.status}: ${response.statusText})`;
+          } catch (e) {
+            errorMessage = `API error (${response.status}: ${response.statusText})`;
+          }
+          
+          console.error(`OpenRouter API error (attempt ${retries + 1}/${maxRetries + 1}):`, errorMessage);
+          
+          if (retries >= maxRetries) {
+            throw new Error(errorMessage);
+          }
+          
+          // Wait before retry with exponential backoff
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+          retries++;
+          continue;
+        }
+
+        const data = await response.json();
+        summary = data.choices[0].message.content;
+        break; // Success, exit retry loop
+      } catch (error) {
+        if (retries >= maxRetries) {
+          throw error; // Rethrow after all retries are exhausted
+        }
+        console.error(`API call failed (attempt ${retries + 1}/${maxRetries + 1}):`, error);
+        
+        // Wait before retry with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+        retries++;
+      }
+    }
     
     // Clean up preambles and other unwanted text
     summary = extractContentBetweenMarkers(summary);
+    
+    if (!summary || summary.trim().length < 10) {
+      throw new Error("Failed to generate a meaningful summary");
+    }
     
     return summary;
   } catch (error) {
