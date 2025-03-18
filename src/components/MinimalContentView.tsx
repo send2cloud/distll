@@ -49,6 +49,7 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
           error={error}
           hasContent={hasActualContent}
           emptyMessage={`No content available for the URL${hasRawContent ? ' (content was empty after processing)' : ''}. Please check the URL or try a different page.`}
+          errorMessage={error ? `Error: ${error.message}. The server-side processing failed. Please try again later or with a different URL.` : undefined}
         />
       </div>
     );

@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { summarizeContent, summarizeUrl } from '@/utils/openRouter';
 import { getSettings } from '@/utils/settings';
 import { SummarizationStyle } from '@/components/SettingsModal';
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContentProcessorResult {
   originalContent: string;
@@ -57,119 +57,44 @@ export const useContentProcessor = (
         
         const settings = getSettings();
         
-        if (settings.useDirectUrlSummarization) {
-          setProgress(40);
-          try {
-            const summaryText = await summarizeUrl(
-              fullUrl, 
-              style, 
-              bulletCount
-            );
-            
-            if (!summaryText || summaryText.trim() === '') {
-              throw new Error("Received empty response from summarization API");
+        // Call the Supabase Edge Function to process the URL
+        setProgress(40);
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('process-url', {
+            body: {
+              url: fullUrl,
+              style: style,
+              bulletCount: bulletCount,
+              openRouterApiKey: settings.openRouterApiKey
             }
-            
-            setSummary(summaryText);
-            setOriginalContent("Content fetched directly by OpenRouter API");
-            setProgress(100);
-          } catch (summaryError) {
-            console.error('Error summarizing URL directly:', summaryError);
-            throw summaryError;
+          });
+          
+          if (error) {
+            console.error('Error calling process-url function:', error);
+            throw new Error(`Edge function error: ${error.message || "Unknown error"}`);
           }
-        } else {
-          try {
-            // Use CORS proxy to fetch content
-            const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(fullUrl)}`);
-            
-            setProgress(50);
-            
-            if (!response.ok) {
-              throw new Error(`Failed to fetch content: ${response.status} ${response.statusText}`);
-            }
-            
-            const html = await response.text();
-            
-            if (!html || html.trim() === '') {
-              throw new Error("Received empty content from URL");
-            }
-            
-            setProgress(70);
-            
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Remove non-content elements
-            const scripts = doc.querySelectorAll('script, style, svg, iframe, img, noscript');
-            scripts.forEach(script => script.remove());
-            
-            // Try to find the main content
-            const article = doc.querySelector('article') || 
-                            doc.querySelector('main') || 
-                            doc.querySelector('.content') || 
-                            doc.querySelector('.article') ||
-                            doc.querySelector('.post') ||
-                            doc.body;
-            
-            if (!article) {
-              throw new Error("Could not identify main content in the page");
-            }
-            
-            const mainContent = article.textContent || doc.body.textContent || '';
-            
-            if (!mainContent || mainContent.trim() === '') {
-              throw new Error("Extracted content is empty");
-            }
-            
-            const cleanContent = mainContent
-              .replace(/\s+/g, ' ')
-              .trim()
-              .substring(0, 15000);
-            
-            if (!cleanContent || cleanContent.trim() === '') {
-              throw new Error("Content was empty after cleaning");
-            }
-            
-            setOriginalContent(cleanContent);
-            setProgress(80);
-            
-            if (settings.openRouterApiKey) {
-              try {
-                console.log("Sending to summarizeContent with bullet count:", bulletCount);
-                const summaryText = await summarizeContent(
-                  cleanContent,
-                  style,
-                  bulletCount
-                );
-                
-                if (!summaryText || summaryText.trim() === '') {
-                  throw new Error("Received empty summary from API");
-                }
-                
-                setSummary(summaryText);
-              } catch (summaryError) {
-                console.error('Error summarizing content:', summaryError);
-                toast({
-                  title: "Summarization Error",
-                  description: summaryError instanceof Error ? summaryError.message : "Failed to summarize content",
-                  variant: "destructive"
-                });
-                
-                // Even if summarization fails, we still have original content
-                if (!summary) {
-                  setSummary(`Summarization failed. Original content: \n\n${cleanContent.substring(0, 500)}...`);
-                }
-              }
-            } else {
-              // No API key, use original content as summary
-              setSummary("API key not configured. Here's the extracted content:\n\n" + cleanContent.substring(0, 1000) + "...");
-            }
-            
-            setProgress(100);
-          } catch (fetchError) {
-            console.error('Error fetching/processing content:', fetchError);
-            throw fetchError;
+          
+          if (!data) {
+            throw new Error("No data returned from edge function");
           }
+          
+          if (data.error) {
+            throw new Error(data.error);
+          }
+          
+          setProgress(80);
+          
+          if (!data.summary || data.summary.trim() === '') {
+            throw new Error("Received empty summary from API");
+          }
+          
+          setSummary(data.summary);
+          setOriginalContent(data.originalContent);
+          setProgress(100);
+        } catch (apiError) {
+          console.error('Error processing URL with edge function:', apiError);
+          throw apiError;
         }
       } catch (error) {
         console.error('Error in content processing:', error);
