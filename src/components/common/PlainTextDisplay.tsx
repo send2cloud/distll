@@ -38,6 +38,7 @@ const PlainTextDisplay = ({ content, className = '', asPlainText = false }: Plai
           lineHeight: '1.5',
           color: '#000'
         }}
+        data-testid="plain-text-content"
       >
         {content}
       </div>

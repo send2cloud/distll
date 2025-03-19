@@ -96,8 +96,15 @@ async function fetchContent(url: string): Promise<string> {
     console.log(`Fetching content from URL: ${url}`);
     
     // Validate URL format before fetching
+    let validatedUrl;
     try {
-      new URL(url); // This will throw if URL is invalid
+      validatedUrl = new URL(url); // This will throw if URL is invalid
+      
+      // Remove any fragments (anchors) as they can cause issues with some proxies
+      validatedUrl.hash = '';
+      url = validatedUrl.toString();
+      
+      console.log(`Validated URL: ${url}`);
     } catch (urlError) {
       throw new Error(`Invalid URL format: ${url}. Please ensure the URL includes the protocol (http:// or https://)`);
     }
@@ -110,7 +117,9 @@ async function fetchContent(url: string): Promise<string> {
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; DistillApp/1.0; +https://distill.app)'
+          'User-Agent': 'Mozilla/5.0 (compatible; DistillApp/1.0; +https://distill.app)',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5'
         }
       });
       
@@ -131,7 +140,13 @@ async function fetchContent(url: string): Promise<string> {
       
       // Check content type to ensure we're processing HTML
       const contentType = response.headers.get('content-type') || '';
-      if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml')) {
+      console.log(`Content type: ${contentType}`);
+      
+      // More permissive content type check - some sites return unusual but valid content types
+      if (!contentType.includes('text/html') && 
+          !contentType.includes('application/xhtml+xml') && 
+          !contentType.includes('application/xml') && 
+          !contentType.includes('text/plain')) {
         console.log(`Warning: Content type is ${contentType}, which may not be HTML. Attempting extraction anyway.`);
       }
       
@@ -352,13 +367,21 @@ async function processUrl(url: string, style: string, bulletCount?: number): Pro
       // Use the Jina proxy URL for fetching content
       content = await fetchContent(jinaProxyUrl);
     } catch (fetchError) {
-      // Create more user-friendly error messages
-      if (fetchError.message.includes("ENOTFOUND") || fetchError.message.includes("getaddrinfo")) {
-        throw new Error(`Could not resolve host: ${new URL(fullUrl).hostname}. Please check that the domain name is correct.`);
-      } else if (fetchError.message.includes("ECONNREFUSED")) {
-        throw new Error(`Connection refused by: ${new URL(fullUrl).hostname}. The website may be down or blocking our requests.`);
-      } else {
-        throw fetchError; // Rethrow original error if no specific handling
+      console.error("Error with Jina proxy, trying direct URL as fallback:", fetchError);
+      
+      try {
+        // Try direct URL as fallback
+        content = await fetchContent(fullUrl);
+        console.log("Direct URL fetch successful as fallback");
+      } catch (directFetchError) {
+        // Create more user-friendly error messages
+        if (directFetchError.message.includes("ENOTFOUND") || directFetchError.message.includes("getaddrinfo")) {
+          throw new Error(`Could not resolve host: ${new URL(fullUrl).hostname}. Please check that the domain name is correct.`);
+        } else if (directFetchError.message.includes("ECONNREFUSED")) {
+          throw new Error(`Connection refused by: ${new URL(fullUrl).hostname}. The website may be down or blocking our requests.`);
+        } else {
+          throw directFetchError; // Rethrow original error if no specific handling
+        }
       }
     }
     

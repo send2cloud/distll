@@ -64,8 +64,33 @@ const Distill = () => {
       }
     }
     
-    console.log("Final extracted URL:", extractedUrl);
-    setFullUrl(extractedUrl);
+    console.log("Final extracted URL before decoding:", extractedUrl);
+    
+    // Special handling for URLs with .html or other extensions
+    // URLs often get decoded incorrectly when they have special chars followed by extensions
+    try {
+      // First try standard decoding
+      let decodedUrl = decodeURIComponent(extractedUrl);
+      
+      // Check if the URL was properly decoded by looking for "http" in the string
+      if (!decodedUrl.includes('http') && !decodedUrl.includes('://')) {
+        // If not properly decoded, attempt a more conservative approach
+        // This is especially important for URLs with .html or other extensions
+        decodedUrl = extractedUrl.replace(/^https?%3A%2F%2F/, 'https://').replace(/%2F/g, '/');
+        
+        // If still no protocol, try direct extraction from the path
+        if (!decodedUrl.includes('http') && !decodedUrl.includes('://')) {
+          decodedUrl = extractedUrl;
+        }
+      }
+      
+      console.log("URL after decoding:", decodedUrl);
+      setFullUrl(decodedUrl);
+    } catch (e) {
+      console.error("Error decoding URL:", e);
+      // Fallback to raw URL if decoding fails
+      setFullUrl(extractedUrl);
+    }
     
   }, [location.pathname, bulletCountParam, url]);
   

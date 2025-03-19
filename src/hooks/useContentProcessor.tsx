@@ -43,16 +43,18 @@ export const useContentProcessor = (
       setProgress(10);
       
       try {
-        // Normalize URL to ensure it has a proper protocol prefix
-        let decodedUrl = decodeURIComponent(url);
-        decodedUrl = decodedUrl.trim();
+        // Process the URL carefully to handle various encoding issues
+        let processedUrl = url.trim();
         
-        if (!decodedUrl) {
-          throw Object.assign(new Error("URL is empty after decoding"), { errorCode: "URL_ERROR" as ErrorCodeType });
+        if (!processedUrl) {
+          throw Object.assign(new Error("URL is empty after processing"), { errorCode: "URL_ERROR" as ErrorCodeType });
         }
         
+        // Detect if URL contains protocol
+        const hasProtocol = processedUrl.match(/^[a-zA-Z]+:\/\//);
+        
         // Ensure the URL has a protocol prefix
-        const fullUrl = decodedUrl.startsWith('http') ? decodedUrl : `https://${decodedUrl}`;
+        const fullUrl = hasProtocol ? processedUrl : `https://${processedUrl}`;
         
         console.log("Processing URL:", fullUrl, "with style:", style, "and bullet count:", bulletCount);
         setProgress(20);
