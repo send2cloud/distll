@@ -23,7 +23,7 @@ const ContentTabs = ({ summary, originalContent, url }: ContentTabsProps) => {
       </TabsList>
       
       <TabsContent value="summary" className="mt-0">
-        <SummaryTab summary={summary} />
+        <SummaryTab summary={summary} url={url} />
       </TabsContent>
       
       <TabsContent value="original" className="mt-0">
