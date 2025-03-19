@@ -44,10 +44,10 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
     );
   }
 
-  // Return content as plain text
+  // Return content as true plain text without any styling
   return (
-    <div className="p-4 max-w-4xl mx-auto border border-gray-200 rounded-md shadow-sm bg-white">
-      <PlainTextDisplay content={processedContent} />
+    <div className="p-4 max-w-4xl mx-auto">
+      <PlainTextDisplay content={processedContent} asPlainText={true} />
     </div>
   );
 };

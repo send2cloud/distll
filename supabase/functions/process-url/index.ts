@@ -10,8 +10,8 @@ const corsHeaders = {
 };
 
 function getSummarizationPrompt(style: string, bulletCount?: number): string {
-  // Base instruction to avoid preambles and postambles, now with instruction to output plain text
-  const baseInstruction = "CRITICAL: Output ONLY plain text format. NO markdown. NO formatting. Do NOT include ANY introduction or conclusion. NO phrases like 'here's a summary', 'in summary', or 'here are the key points'. NO sign-offs like 'let me know if you need more information'. Start DIRECTLY with content. END immediately after content. Format your output with a ### START ### tag at the beginning and ### END ### tag at the end.";
+  // Base instruction to avoid preambles and postambles, emphasizing PLAIN TEXT output
+  const baseInstruction = "CRITICAL: Output ONLY plain text format. NO markdown. NO formatting. Do NOT include ANY introduction or conclusion. NO phrases like 'here's a summary', 'in summary', or 'here are the key points'. NO sign-offs like 'let me know if you need more information'. Start DIRECTLY with content. END immediately after content. Use only basic ASCII characters, no unicode, emojis, or special characters. Format your output with a ### START ### tag at the beginning and ### END ### tag at the end.";
   
   switch (style) {
     case 'simple':
@@ -19,20 +19,20 @@ function getSummarizationPrompt(style: string, bulletCount?: number): string {
     
     case 'bullets':
       const count = bulletCount || 5;
-      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. Present them as numbered bullet points (ex: 1. Point one). Make each point concise but informative. ${baseInstruction}`;
+      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. Present them as numbered items (ex: 1. Point one). Make each point concise and informative. Do not use any special characters or formatting. ${baseInstruction}`;
     
     case 'eli5':
-      return `You are a helpful assistant that explains complex topics as if to a 5-year-old child. Use ONLY very simple language. Short sentences. Common words. Avoid ANY complex terms. Add line breaks between logical sections. Keep paragraphs to 2-3 simple sentences. Pretend the audience knows nothing about the topic. Start with a simple title line. ${baseInstruction}`;
+      return `You are a helpful assistant that explains complex topics as if to a 5-year-old child. Use ONLY very simple language. Short sentences. Common words. Avoid ANY complex terms. Keep paragraphs to 2-3 simple sentences. Pretend the audience knows nothing about the topic. ${baseInstruction}`;
     
     case 'concise':
       return `You are a helpful assistant that specializes in creating extremely concise summaries. Your task is to distill the content down to its absolute essence in as few words as possible while retaining all key information. Use short sentences and be very economical with language. ${baseInstruction}`;
     
     case 'tweet':
-      return `You are a helpful assistant that specializes in creating tweet-sized summaries. Your task is to distill the content into exactly 140 characters or less. Be extremely concise while capturing the most essential point. Don't use hashtags unless they're crucial to the meaning. ${baseInstruction}`;
+      return `You are a helpful assistant that specializes in creating tweet-sized summaries. Your task is to distill the content into exactly 140 characters or less. Be extremely concise while capturing the most essential point. Don't use hashtags. ${baseInstruction}`;
     
     case 'standard':
     default:
-      return `You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in an easily digestible format. If content contains rankings or lists (like top 10), format them as proper numbered lists. ${baseInstruction}`;
+      return `You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in a plain text format. If content contains rankings or lists (like top 10), format them as proper numbered items. ${baseInstruction}`;
   }
 }
 

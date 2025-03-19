@@ -49,7 +49,7 @@ const SummaryTab = ({ summary }: SummaryTabProps) => {
     >
       <div>
         {summary ? (
-          <PlainTextDisplay content={summary} />
+          <PlainTextDisplay content={summary} asPlainText={true} />
         ) : (
           <div className="py-4 text-amber-600">
             <p>No summary available yet. Please configure your OpenRouter API key in settings.</p>

@@ -21,7 +21,8 @@ export const simplifyToPlainText = (content: string): string => {
     .replace(/\n\s*[-*+]\s+/g, '\n• ')         // Standardize bullet points
     .replace(/\n\s*\d+\.\s+/g, '\n• ')         // Convert numbered lists to bullet points
     .replace(/\n{3,}/g, '\n\n')                // Normalize multiple line breaks
-    .replace(/\s{2,}/g, ' ');                  // Normalize spaces
+    .replace(/\s{2,}/g, ' ')                   // Normalize spaces
+    .replace(/•/g, '- ');                      // Replace bullet points with simple dashes
   
   // Clean up any artifacts from JSON or other formatting
   cleaned = cleaned
