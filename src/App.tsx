@@ -11,8 +11,6 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  console.log("App rendering, checking routes");
-  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -21,16 +19,9 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            {/* Style-based summarization routes */}
-            <Route path="/eli5/*" element={<Distill />} />
-            <Route path="/simple/*" element={<Distill />} />
-            <Route path="/esl/*" element={<Distill />} />
-            <Route path="/tweet/*" element={<Distill />} />
-            {/* Bullet count route */}
-            <Route path="/:bulletCount(\d+)/*" element={<Distill />} />
-            {/* Custom style modifier route - this will catch any path pattern like /tamil/, /clickbait/, etc. */}
+            {/* Custom style modifier and bullet count routes */}
             <Route path="/:customStyle/*" element={<Distill />} />
-            {/* Direct URL summarization - this will catch any path */}
+            {/* Direct URL summarization - this will catch any other path */}
             <Route path="*" element={<Distill />} />
           </Routes>
         </BrowserRouter>

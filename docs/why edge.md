@@ -3,7 +3,7 @@
 
 ## Executive Summary
 
-This document outlines the technical rationale for migrating our content processing system from client-side operations to Supabase Edge Functions. The migration has resulted in significant improvements in performance, security, reliability, and cost-effectiveness.
+This document outlines the technical rationale for using Supabase Edge Functions for our content processing system. The edge-based architecture provides significant improvements in performance, security, reliability, and cost-effectiveness.
 
 ## Current Architecture
 
@@ -12,13 +12,12 @@ Our content processing system leverages a modern edge computing architecture:
 - **Edge Function Processing**: Content extraction and summarization run on Supabase Edge Functions
 - **Secure API Integration**: API keys and sensitive operations are handled server-side
 - **Content Extraction**: Uses Jina AI proxy (`https://r.jina.ai/`) for reliable content fetching
-- **AI Processing**: Integrates with OpenRouter API (Google Gemini model) for high-quality summarization
+- **AI Processing**: Integrates with OpenRouter API for high-quality summarization
 - **Single Request Flow**: Streamlined request pattern from client to Edge Function to client
 
 ## Current Performance Metrics
 
 - **Average Processing Time**: ~1.5 seconds (combined content fetch + AI processing)
-- **Server Memory Usage**: Optimized for edge computing environment
 - **Reliability**: ~95% success rate with comprehensive error handling
 - **Cost**: Efficient API usage with fixed public API key limits
 
@@ -52,7 +51,7 @@ Our content processing system leverages a modern edge computing architecture:
 - **Maintainable Structure**: Well-organized services for different aspects of processing
 - **Scalability**: Edge Functions can scale according to demand
 
-## Request Flow Comparison
+## Request Flow
 
 ### Current Edge Function Flow
 
@@ -66,14 +65,6 @@ Browser → Edge Function → [Jina Proxy + OpenRouter API] → Browser
 4. Edge Function sends content to OpenRouter AI
 5. Edge Function returns both original and summarized content
 6. Client displays the results
-
-### Benefits
-
-- **Reduced Latency**: ~1.5 seconds average processing time
-- **Simplified Error Handling**: Centralized in Edge Function
-- **Better Security**: API keys and processing logic hidden from client
-- **Reliable Content Extraction**: Server-side processing is more consistent
-- **Cost Control**: Better management of API usage and potential for caching
 
 ## Implementation Details
 
@@ -99,7 +90,7 @@ We've implemented a comprehensive error handling system:
 
 ## Conclusion
 
-The migration to Edge Functions has significantly improved our content processing system in terms of:
+The Edge Functions approach provides significant improvements in:
 
 1. **Security**: By keeping sensitive operations server-side
 2. **Performance**: Through optimized request flows and reduced network overhead
@@ -107,4 +98,4 @@ The migration to Edge Functions has significantly improved our content processin
 4. **Cost**: Via controlled API usage and potential for caching
 5. **Maintainability**: Through a clear separation of concerns
 
-These improvements have resulted in a better user experience, lower operational costs, and a more secure, scalable architecture that can evolve with our application's needs.
+These improvements result in a better user experience, lower operational costs, and a more secure, scalable architecture.

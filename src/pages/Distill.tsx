@@ -1,108 +1,70 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
 import { SummarizationStyle } from '@/components/SettingsModal';
 import MinimalContentView from '@/components/MinimalContentView';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
 
 const Distill = () => {
-  const { url, bulletCount: bulletCountParam } = useParams<{ url: string, bulletCount?: string }>();
+  const { customStyle } = useParams<{ customStyle?: string }>();
   const location = useLocation();
   const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<string>('standard');
   const [bulletCount, setBulletCount] = useState<number | undefined>(undefined);
   const [fullUrl, setFullUrl] = useState<string>('');
   
   useEffect(() => {
-    console.log("Distill component mounted with path:", location.pathname);
-    
     // First, determine the style and bullet count
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
-      console.log("Path style detection:", style, "Bullet count:", bulletCount);
       setCurrentSummarizationStyle(style);
       setBulletCount(bulletCount);
       
       // If URL has a direct bullet count parameter
-      if (bulletCountParam && !isNaN(parseInt(bulletCountParam, 10))) {
-        const count = parseInt(bulletCountParam, 10);
-        console.log("Setting bullet count from URL parameter:", count);
+      if (customStyle && !isNaN(parseInt(customStyle, 10))) {
+        const count = parseInt(customStyle, 10);
         setBulletCount(count);
         setCurrentSummarizationStyle('bullets');
       }
     }
     
-    // Extract the full URL from the pathname
+    // Extract the full URL from the pathname (everything after the style prefix)
     let extractedUrl = '';
     
-    // Known style prefixes
-    const knownPrefixes = ['/eli5/', '/simple/', '/esl/', '/tweet/'];
-    let matchedPrefix = false;
-    
-    // Check for known prefixes first
-    for (const prefix of knownPrefixes) {
-      if (location.pathname.startsWith(prefix)) {
-        extractedUrl = location.pathname.substring(prefix.length);
-        console.log(`Extracted URL from ${prefix} path:`, extractedUrl);
-        matchedPrefix = true;
-        break;
+    if (customStyle) {
+      // This is a style-based URL
+      const pathParts = location.pathname.split(`/${customStyle}/`);
+      if (pathParts.length > 1) {
+        extractedUrl = pathParts[1];
       }
+    } else if (location.pathname !== '/' && location.pathname.length > 1) {
+      // This is the direct URL case - the URL is the entire pathname except the leading slash
+      extractedUrl = location.pathname.substring(1);
     }
     
-    // If no known prefix, check for custom style or bullet count
-    if (!matchedPrefix) {
-      // Check for bullet point number
-      const bulletMatch = location.pathname.match(/^\/(\d+)\/(.*)/);
-      if (bulletMatch) {
-        extractedUrl = bulletMatch[2]; // The URL after the bullet count
-        console.log("Extracted URL from bullet count path:", extractedUrl);
-      } else {
-        // Check for custom style modifier
-        const customStyleMatch = location.pathname.match(/^\/([a-zA-Z0-9_-]+)\/(.*)/);
-        if (customStyleMatch) {
-          extractedUrl = customStyleMatch[2]; // The URL after the custom style
-          console.log("Extracted URL from custom style path:", extractedUrl);
-        } else if (location.pathname !== '/' && location.pathname.length > 1) {
-          // This is the direct URL case - the URL is the entire pathname except the leading slash
-          extractedUrl = location.pathname.substring(1);
-          console.log("Direct URL case, extracted:", extractedUrl);
-        } else if (url) {
-          // Fallback to the URL parameter if provided
-          extractedUrl = url;
-          console.log("Using direct URL parameter:", extractedUrl);
-        }
-      }
-    }
-    
-    console.log("Final extracted URL before decoding:", extractedUrl);
-    
-    // Special handling for URLs with .html or other extensions
-    // URLs often get decoded incorrectly when they have special chars followed by extensions
-    try {
-      // First try standard decoding
-      let decodedUrl = decodeURIComponent(extractedUrl);
-      
-      // Check if the URL was properly decoded by looking for "http" in the string
-      if (!decodedUrl.includes('http') && !decodedUrl.includes('://')) {
-        // If not properly decoded, attempt a more conservative approach
-        // This is especially important for URLs with .html or other extensions
-        decodedUrl = extractedUrl.replace(/^https?%3A%2F%2F/, 'https://').replace(/%2F/g, '/');
+    if (extractedUrl) {
+      try {
+        // First try standard decoding
+        let decodedUrl = decodeURIComponent(extractedUrl);
         
-        // If still no protocol, try direct extraction from the path
+        // If not properly decoded, attempt a more conservative approach
         if (!decodedUrl.includes('http') && !decodedUrl.includes('://')) {
-          decodedUrl = extractedUrl;
+          decodedUrl = extractedUrl.replace(/^https?%3A%2F%2F/, 'https://').replace(/%2F/g, '/');
+          
+          // If still no protocol, try direct extraction from the path
+          if (!decodedUrl.includes('http') && !decodedUrl.includes('://')) {
+            decodedUrl = extractedUrl;
+          }
         }
+        
+        setFullUrl(decodedUrl);
+      } catch (e) {
+        console.error("Error decoding URL:", e);
+        // Fallback to raw URL if decoding fails
+        setFullUrl(extractedUrl);
       }
-      
-      console.log("URL after decoding:", decodedUrl);
-      setFullUrl(decodedUrl);
-    } catch (e) {
-      console.error("Error decoding URL:", e);
-      // Fallback to raw URL if decoding fails
-      setFullUrl(extractedUrl);
     }
-    
-  }, [location.pathname, bulletCountParam, url]);
+  }, [location.pathname, customStyle]);
   
   // Set plain text title
   useEffect(() => {
@@ -110,20 +72,10 @@ const Distill = () => {
   }, []);
   
   const { 
-    originalContent, 
     summary, 
     isLoading, 
-    error, 
-    progress 
-  } = useContentProcessor(fullUrl || url, currentSummarizationStyle as SummarizationStyle, bulletCount);
-  
-  useEffect(() => {
-    console.log("Content processor parameters:", {
-      url: fullUrl || url,
-      style: currentSummarizationStyle,
-      bulletCount
-    });
-  }, [fullUrl, url, currentSummarizationStyle, bulletCount]);
+    error 
+  } = useContentProcessor(fullUrl, currentSummarizationStyle as SummarizationStyle, bulletCount);
 
   // Always use the minimal view
   return (

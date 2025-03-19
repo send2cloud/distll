@@ -1,11 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import SettingsModal from "@/components/SettingsModal";
-import { Workflow, MilestoneIcon, Users, LineChart } from 'lucide-react';
 
 const Index = () => {
   const [url, setUrl] = useState('');
@@ -89,7 +89,8 @@ const Index = () => {
     }
   };
 
-  return <div className="min-h-screen font-sans bg-[#e4d5c2]">
+  return (
+    <div className="min-h-screen font-sans bg-[#e4d5c2]">
       <header className="px-6 py-4 flex justify-between items-center">
         <div className="text-2xl font-bold text-[#221F26] font-serif">Distill</div>
         <div className="flex items-center space-x-2">
@@ -136,7 +137,8 @@ const Index = () => {
           </CardContent>
         </Card>
       </section>
-    </div>;
+    </div>
+  );
 };
 
 export default Index;
