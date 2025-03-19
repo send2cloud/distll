@@ -91,7 +91,6 @@ function cleanTextFormatting(text: string): string {
   return cleaned.trim();
 }
 
-// Simple text-based content extraction without using DOMParser
 async function fetchContent(url: string): Promise<string> {
   try {
     console.log(`Fetching content from URL: ${url}`);
@@ -244,7 +243,7 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
             "X-Title": "Distill"
           },
           body: JSON.stringify({
-            model: "google/gemma-3-1b-it:free",
+            model: "google/gemini-2.0-flash-thinking-exp:free",
             messages: [
               {
                 role: "system",
