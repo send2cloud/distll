@@ -1,21 +1,10 @@
 
-import { SettingsData, SummarizationStyle } from "@/components/SettingsModal";
+import { SummarizationStyle } from "@/components/SettingsModal";
 
-export const getSettings = (): SettingsData => {
-  const savedSettings = localStorage.getItem('distill-settings');
-  if (savedSettings) {
-    try {
-      return JSON.parse(savedSettings) as SettingsData;
-    } catch (e) {
-      console.error('Failed to parse settings from localStorage', e);
-    }
-  }
+// Return fixed default settings without using localStorage
+export const getSettings = () => {
   return { 
-    openRouterApiKey: '',
-    useDirectUrlSummarization: false,
-    summarizationStyle: 'standard' as SummarizationStyle,
-    useRichResults: false,
-    useJinaProxy: false
+    summarizationStyle: 'standard' as SummarizationStyle
   };
 };
 

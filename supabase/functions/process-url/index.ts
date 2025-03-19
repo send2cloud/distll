@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
+// Fixed public API key with $5 limit that will be used for all requests
 const PUBLIC_API_KEY = "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";
 
 const corsHeaders = {
@@ -219,7 +220,7 @@ async function fetchContent(url: string): Promise<string> {
   }
 }
 
-async function summarizeContent(content: string, style: string, bulletCount?: number, apiKey: string = PUBLIC_API_KEY): Promise<string> {
+async function summarizeContent(content: string, style: string, bulletCount?: number): Promise<string> {
   try {
     console.log(`Summarizing content with style: ${style}, bullet count: ${bulletCount}, content length: ${content.length} chars`);
     
@@ -239,7 +240,7 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
+            "Authorization": `Bearer ${PUBLIC_API_KEY}`,
             "HTTP-Referer": "https://distill.app",
             "X-Title": "Distill"
           },
@@ -321,7 +322,7 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
   }
 }
 
-async function processUrl(url: string, style: string, bulletCount?: number, apiKey?: string): Promise<{ originalContent: string; summary: string }> {
+async function processUrl(url: string, style: string, bulletCount?: number): Promise<{ originalContent: string; summary: string }> {
   try {
     // Normalize URL to ensure it has a proper protocol prefix
     let fullUrl = url.trim();
@@ -357,7 +358,7 @@ async function processUrl(url: string, style: string, bulletCount?: number, apiK
     
     let summary: string;
     try {
-      summary = await summarizeContent(content, style, bulletCount, apiKey);
+      summary = await summarizeContent(content, style, bulletCount);
     } catch (summaryError) {
       if (summaryError.message.includes("too short")) {
         throw new Error("The extracted content is too short to summarize meaningfully. Please try a different URL with more text content.");
@@ -392,7 +393,7 @@ serve(async (req) => {
       throw new Error("Invalid JSON in request body");
     });
     
-    const { url, content, style, bulletCount, openRouterApiKey } = requestData;
+    const { url, content, style, bulletCount } = requestData;
     
     if (!url && !content) {
       throw new Error("Either URL or content parameter is required");
@@ -400,15 +401,12 @@ serve(async (req) => {
     
     console.log(`Received request to process ${url ? 'URL: ' + url : 'direct content'} with style: ${style || 'standard'}`);
     
-    // Use provided API key or fallback to public key
-    const apiKey = openRouterApiKey || PUBLIC_API_KEY;
-    
     let result;
     if (url) {
-      result = await processUrl(url, style || 'standard', bulletCount, apiKey);
+      result = await processUrl(url, style || 'standard', bulletCount);
     } else if (content) {
       // Process direct content if provided
-      const summary = await summarizeContent(content, style || 'standard', bulletCount, apiKey);
+      const summary = await summarizeContent(content, style || 'standard', bulletCount);
       result = {
         originalContent: content,
         summary: summary

@@ -1,14 +1,13 @@
 
-// This file is kept for compatibility but its functionality has been moved to the Supabase Edge Function
-import { getSettings } from "./settings";
+// Direct OpenRouter integration with fixed API key
 import { SummarizationStyle } from "@/components/SettingsModal";
 import { supabase } from "@/integrations/supabase/client";
 import { ErrorCodeType } from "@/hooks/useContentProcessor";
 
-// Default public API key with $5 limit - now used in the Edge Function
+// Fixed public API key with $5 limit - used for all requests
 const PUBLIC_API_KEY = "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";
 
-// These functions now call the Supabase Edge Function
+// Process content through the Edge Function
 export const summarizeContent = async (content: string, style?: SummarizationStyle, bulletCount?: number) => {
   if (!content) {
     throw Object.assign(
@@ -18,14 +17,12 @@ export const summarizeContent = async (content: string, style?: SummarizationSty
   }
   
   try {
-    const settings = getSettings();
-    
     const { data, error } = await supabase.functions.invoke('process-url', {
       body: {
         content: content,
         style: style || 'standard',
         bulletCount: bulletCount,
-        openRouterApiKey: settings.openRouterApiKey
+        openRouterApiKey: PUBLIC_API_KEY
       }
     });
     
@@ -55,7 +52,6 @@ export const summarizeContent = async (content: string, style?: SummarizationSty
   } catch (error: any) {
     console.error('Error in summarizeContent:', error);
     
-    // If error doesn't have an errorCode property, add one based on the message
     if (!error.errorCode) {
       const errorCode = error.message.includes("content") ? "CONTENT_ERROR" :
                         error.message.includes("API") ? "AI_SERVICE_ERROR" :
@@ -76,14 +72,12 @@ export const summarizeUrl = async (url: string, style?: SummarizationStyle, bull
   }
   
   try {
-    const settings = getSettings();
-    
     const { data, error } = await supabase.functions.invoke('process-url', {
       body: {
         url: url,
         style: style || 'standard',
         bulletCount: bulletCount,
-        openRouterApiKey: settings.openRouterApiKey
+        openRouterApiKey: PUBLIC_API_KEY
       }
     });
     
@@ -113,7 +107,6 @@ export const summarizeUrl = async (url: string, style?: SummarizationStyle, bull
   } catch (error: any) {
     console.error('Error in summarizeUrl:', error);
     
-    // If error doesn't have an errorCode property, add one based on the message
     if (!error.errorCode) {
       const errorCode = error.message.includes("URL") ? "URL_ERROR" :
                         error.message.includes("fetch") || error.message.includes("connection") ? "CONNECTION_ERROR" :

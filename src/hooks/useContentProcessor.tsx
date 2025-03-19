@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { getSettings } from '@/utils/settings';
 import { SummarizationStyle } from '@/components/SettingsModal';
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,30 +57,25 @@ export const useContentProcessor = (
         console.log("Processing URL:", fullUrl, "with style:", style, "and bullet count:", bulletCount);
         setProgress(20);
         
-        const settings = getSettings();
-        
-        // Call the Supabase Edge Function to process the URL
         setProgress(40);
         
         // Add a timeout to detect long-running requests
         const timeoutDuration = 30000; // 30 seconds
         
         // Create a timeout mechanism using setTimeout
-        let timeoutId: NodeJS.Timeout | null = null;
         const timeoutPromise = new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(() => {
+          setTimeout(() => {
             reject(new Error("Request timed out after 30 seconds. The service might be experiencing high load or the website may be very large."));
           }, timeoutDuration);
         });
         
         try {
-          // Use Promise.race to implement timeout without using AbortController
+          // Use Promise.race to implement timeout
           const functionPromise = supabase.functions.invoke('process-url', {
             body: {
               url: fullUrl,
               style: style,
-              bulletCount: bulletCount,
-              openRouterApiKey: settings.openRouterApiKey
+              bulletCount: bulletCount
             }
           });
           
@@ -90,9 +84,6 @@ export const useContentProcessor = (
             functionPromise,
             timeoutPromise
           ]);
-          
-          // Clear the timeout if the function returned before timeout
-          if (timeoutId) clearTimeout(timeoutId);
           
           const { data, error } = result as Awaited<typeof functionPromise>;
           
@@ -132,9 +123,6 @@ export const useContentProcessor = (
           setOriginalContent(data.originalContent);
           setProgress(100);
         } catch (apiError: any) {
-          // Clear timeout if it exists
-          if (timeoutId) clearTimeout(timeoutId);
-          
           console.error('Error processing URL with edge function:', apiError);
           
           // If the error is a timeout error from our Promise.race
