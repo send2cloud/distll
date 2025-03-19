@@ -20,11 +20,9 @@ export async function summarizeContent(content: string, style: string, bulletCou
       throw new Error("Content is too short to summarize meaningfully (less than 100 characters)");
     }
     
-    // Implement retries for API calls
-    const maxRetries = 2;
+    // Single retry for API calls
     let retries = 0;
-    let summary = '';
-    let lastError = null;
+    const maxRetries = 1;
     
     while (retries <= maxRetries) {
       try {
@@ -54,68 +52,52 @@ export async function summarizeContent(content: string, style: string, bulletCou
 
         if (!response.ok) {
           const errorText = await response.text();
-          let errorMessage;
+          let errorMessage = `API error (${response.status}: ${response.statusText})`;
           
           try {
             const errorData = JSON.parse(errorText);
-            errorMessage = errorData.error?.message || `API error (${response.status}: ${response.statusText})`;
-            
-            // Special handling for specific OpenRouter errors
-            if (errorMessage.includes("quota")) {
-              throw new Error("AI provider quota exceeded. Please try again later or with a different summarization style.");
-            }
-            if (errorMessage.includes("rate limit")) {
-              throw new Error("AI rate limit reached. Please try again in a few moments.");
+            if (errorData.error?.message) {
+              errorMessage = errorData.error.message;
             }
           } catch (e) {
-            errorMessage = `AI provider error (${response.status}: ${response.statusText})`;
+            // If we can't parse the error, use the default message
           }
           
-          console.error(`OpenRouter API error (attempt ${retries + 1}/${maxRetries + 1}):`, errorMessage);
-          lastError = new Error(errorMessage);
-          
-          if (retries >= maxRetries) {
-            throw lastError;
+          if (retries < maxRetries) {
+            console.log(`Retrying after error: ${errorMessage}`);
+            retries++;
+            // Wait 1 second before retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
           }
           
-          // Wait before retry with exponential backoff
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
-          retries++;
-          continue;
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
-        summary = data.choices[0].message.content;
-        break; // Success, exit retry loop
-      } catch (error) {
-        lastError = error;
-        if (retries >= maxRetries) {
-          throw error; // Rethrow after all retries are exhausted
-        }
-        console.error(`API call failed (attempt ${retries + 1}/${maxRetries + 1}):`, error);
+        const summary = data.choices[0].message.content;
         
-        // Wait before retry with exponential backoff
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
-        retries++;
+        // Simple cleanup - no complex processing
+        const cleanedSummary = extractContentBetweenMarkers(summary);
+        
+        if (!cleanedSummary || cleanedSummary.trim().length < 10) {
+          throw new Error("Failed to generate a meaningful summary");
+        }
+        
+        // Basic text cleanup
+        return cleanedSummary.replace(/\s+/g, ' ').trim();
+      } catch (error) {
+        if (retries < maxRetries) {
+          console.log(`Retry ${retries + 1} after error:`, error);
+          retries++;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          throw error;
+        }
       }
     }
     
-    // Clean up preambles and other unwanted text
-    summary = extractContentBetweenMarkers(summary);
-    
-    if (!summary || summary.trim().length < 10) {
-      throw new Error("Failed to generate a meaningful summary. The AI model returned insufficient content.");
-    }
-    
-    // Plain text cleanup for all styles
-    summary = summary
-      .replace(/\*\*/g, '')   // Remove bold markdown
-      .replace(/\*/g, '')     // Remove italic markdown
-      .replace(/#{1,6}\s/g, '') // Remove heading markers
-      .replace(/\s+/g, ' ')   // Normalize multiple spaces
-      .replace(/\n{3,}/g, '\n\n'); // Normalize excessive line breaks
-    
-    return summary;
+    throw new Error("Failed to generate summary after retries");
   } catch (error) {
     console.error("Failed to summarize content:", error);
     throw error;

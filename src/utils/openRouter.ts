@@ -1,11 +1,7 @@
 
 import { SummarizationStyle } from "@/components/SettingsModal";
-import { ErrorCodeType } from "@/hooks/useContentProcessor";
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
 import { createAppError, enhanceError } from "@/utils/errorUtils";
-
-// Fixed public API key with $5 limit - used for all requests
-const PUBLIC_API_KEY = "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";
 
 /**
  * Summarizes content through the Edge Function
@@ -23,8 +19,7 @@ export const summarizeContent = async (content: string, style?: SummarizationSty
     const data = await invokeProcessFunction({
       content: content,
       style: style || 'standard',
-      bulletCount: bulletCount,
-      openRouterApiKey: PUBLIC_API_KEY
+      bulletCount: bulletCount
     });
     
     return data.summary;
@@ -56,8 +51,7 @@ export const summarizeUrl = async (url: string, style?: SummarizationStyle, bull
     const data = await invokeProcessFunction({
       url: fullUrl,
       style: style || 'standard',
-      bulletCount: bulletCount,
-      openRouterApiKey: PUBLIC_API_KEY
+      bulletCount: bulletCount
     });
     
     return data.summary;

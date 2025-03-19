@@ -21,7 +21,6 @@ interface ProcessParams {
   content?: string;
   style: SummarizationStyle;
   bulletCount?: number;
-  openRouterApiKey: string;
 }
 
 /**

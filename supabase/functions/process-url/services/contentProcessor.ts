@@ -28,45 +28,16 @@ export async function processUrl(url: string, style: string, bulletCount?: numbe
     
     console.log(`Processing URL: ${fullUrl} with Jina proxy: ${jinaProxyUrl}, style: ${style}, bullet count: ${bulletCount}`);
     
-    let content: string;
-    try {
-      // Use the Jina proxy URL for fetching content
-      content = await fetchContent(jinaProxyUrl);
-    } catch (fetchError) {
-      console.error("Error with Jina proxy, trying direct URL as fallback:", fetchError);
-      
-      try {
-        // Try direct URL as fallback
-        content = await fetchContent(fullUrl);
-        console.log("Direct URL fetch successful as fallback");
-      } catch (directFetchError) {
-        // Create more user-friendly error messages
-        if (directFetchError.message.includes("ENOTFOUND") || directFetchError.message.includes("getaddrinfo")) {
-          throw new Error(`Could not resolve host: ${new URL(fullUrl).hostname}. Please check that the domain name is correct.`);
-        } else if (directFetchError.message.includes("ECONNREFUSED")) {
-          throw new Error(`Connection refused by: ${new URL(fullUrl).hostname}. The website may be down or blocking our requests.`);
-        } else {
-          throw directFetchError; // Rethrow original error if no specific handling
-        }
-      }
-    }
+    // Always use Jina proxy - no fallbacks
+    const content = await fetchContent(jinaProxyUrl);
     
     if (!content || content.trim() === '') {
-      throw new Error("Content was empty after fetching and processing. The website may use techniques that prevent content extraction.");
+      throw new Error("Content was empty after fetching. The website may use techniques that prevent content extraction.");
     }
     
     console.log(`Successfully fetched content (${content.length} chars), summarizing...`);
     
-    let summary: string;
-    try {
-      summary = await summarizeContent(content, style, bulletCount);
-    } catch (summaryError) {
-      if (summaryError.message.includes("too short")) {
-        throw new Error("The extracted content is too short to summarize meaningfully. Please try a different URL with more text content.");
-      } else {
-        throw summaryError; // Rethrow original error
-      }
-    }
+    const summary = await summarizeContent(content, style, bulletCount);
     
     return {
       originalContent: content,

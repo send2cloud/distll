@@ -20,7 +20,7 @@ serve(async (req) => {
       throw new Error("Invalid JSON in request body");
     });
     
-    const { url, content, style, bulletCount } = requestData;
+    const { url, content, style, bulletCount, openRouterApiKey } = requestData;
     
     if (!url && !content) {
       throw new Error("Either URL or content parameter is required");
@@ -55,7 +55,7 @@ serve(async (req) => {
     // Categorize different error types
     if (userMessage.includes("URL")) {
       errorCode = "URL_ERROR";
-    } else if (userMessage.includes("fetch") || userMessage.includes("ENOTFOUND") || userMessage.includes("ECONNREFUSED")) {
+    } else if (userMessage.includes("fetch") || userMessage.includes("connection") || userMessage.includes("timed out")) {
       errorCode = "CONNECTION_ERROR";
     } else if (userMessage.includes("content") || userMessage.includes("extract")) {
       errorCode = "CONTENT_ERROR";
@@ -71,7 +71,7 @@ serve(async (req) => {
         summary: ""
       }),
       { 
-        status: 400, // Use 400 instead of 500 to indicate a client-side issue
+        status: 400,
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'

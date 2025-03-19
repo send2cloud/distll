@@ -4,8 +4,8 @@
  */
 
 /**
- * Fetches content from a URL
- * @param url URL to fetch content from
+ * Fetches content from a URL (primarily through Jina proxy)
+ * @param url URL to fetch content from (should be a Jina proxy URL)
  * @returns Extracted text content
  */
 export async function fetchContent(url: string): Promise<string> {
@@ -15,7 +15,7 @@ export async function fetchContent(url: string): Promise<string> {
     // Validate URL format before fetching
     let validatedUrl;
     try {
-      validatedUrl = new URL(url); // This will throw if URL is invalid
+      validatedUrl = new URL(url);
       
       // Remove any fragments (anchors) as they can cause issues with some proxies
       validatedUrl.hash = '';
@@ -55,25 +55,15 @@ export async function fetchContent(url: string): Promise<string> {
         }
       }
       
-      // Check content type to ensure we're processing HTML
-      const contentType = response.headers.get('content-type') || '';
-      console.log(`Content type: ${contentType}`);
+      const content = await response.text();
       
-      // More permissive content type check - some sites return unusual but valid content types
-      if (!contentType.includes('text/html') && 
-          !contentType.includes('application/xhtml+xml') && 
-          !contentType.includes('application/xml') && 
-          !contentType.includes('text/plain')) {
-        console.log(`Warning: Content type is ${contentType}, which may not be HTML. Attempting extraction anyway.`);
+      if (!content || content.trim() === '') {
+        throw new Error("Received empty content from URL. The page might not have any meaningful text content.");
       }
       
-      const html = await response.text();
-      
-      if (!html || html.trim() === '') {
-        throw new Error("Received empty content from URL. The page might be loading content dynamically with JavaScript.");
-      }
-      
-      return extractMainContent(html);
+      // Since we're using Jina proxy, we get clean content - no need for complex extraction
+      // Just do minimal processing to ensure it's clean
+      return cleanContent(content);
     } catch (fetchError) {
       clearTimeout(timeoutId);
       
@@ -90,68 +80,19 @@ export async function fetchContent(url: string): Promise<string> {
 }
 
 /**
- * Extracts the main content from HTML
- * @param html HTML content to extract from
- * @returns Extracted main content
+ * Performs minimal cleaning on the content from Jina proxy
+ * @param content Content to clean
+ * @returns Cleaned content
  */
-function extractMainContent(html: string): string {
-  // Text-based extraction using regex patterns instead of DOMParser
-  let mainContent = '';
+function cleanContent(content: string): string {
+  // Remove any excessive whitespace
+  let cleaned = content.replace(/\s+/g, ' ');
   
-  // First try to remove script, style tags and comments with regex
-  let cleanedHtml = html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, ' ')
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, ' ');
-  
-  // Try to extract content from common article containers
-  const articlePatterns = [
-    /<article[^>]*>([\s\S]*?)<\/article>/i,
-    /<main[^>]*>([\s\S]*?)<\/main>/i,
-    /<div[^>]*?class="[^"]*?(?:content|article|post)[^"]*?"[^>]*>([\s\S]*?)<\/div>/i,
-    /<div[^>]*?id="[^"]*?(?:content|article|post)[^"]*?"[^>]*>([\s\S]*?)<\/div>/i
-  ];
-  
-  for (const pattern of articlePatterns) {
-    const match = cleanedHtml.match(pattern);
-    if (match && match[1] && match[1].length > 500) {  // Ensure minimum content length
-      mainContent = match[1];
-      break;
-    }
-  }
-  
-  // If no article containers found, fallback to body content
-  if (!mainContent) {
-    const bodyMatch = cleanedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    if (bodyMatch && bodyMatch[1]) {
-      mainContent = bodyMatch[1];
-    }
-  }
-  
-  // Strip remaining HTML tags and decode entities
-  mainContent = mainContent
-    .replace(/<[^>]*>/g, ' ')  // Remove all HTML tags
-    .replace(/&nbsp;/g, ' ')   // Replace non-breaking spaces
-    .replace(/&lt;/g, '<')     // Decode common HTML entities
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, ' ');     // Normalize whitespace
-  
-  // If no content extracted, use body text from the full HTML
-  if (!mainContent || mainContent.trim().length < 500) {
-    cleanedHtml = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
-    mainContent = cleanedHtml;
-  }
-  
-  // Limit content length to prevent token issues
-  const truncatedContent = mainContent.trim().substring(0, 15000);
+  // Trim and limit content length to prevent token issues
+  const truncatedContent = cleaned.trim().substring(0, 15000);
   
   if (truncatedContent.length < 200) {
-    throw new Error("Could not extract meaningful content from the page. The content might be loaded dynamically or restricted.");
+    throw new Error("Could not extract meaningful content from the page. The content might be too short or restricted.");
   }
   
   console.log(`Successfully extracted ${truncatedContent.length} chars of content`);
