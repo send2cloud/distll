@@ -8,18 +8,24 @@ import { toast } from "@/components/ui/use-toast";
 
 interface SummaryTabProps {
   summary: string;
+  url?: string; // Add URL prop to include in clipboard
 }
 
 /**
  * A component that displays the summarized content as plain text
  * and allows copying to clipboard
  */
-const SummaryTab = ({ summary }: SummaryTabProps) => {
+const SummaryTab = ({ summary, url }: SummaryTabProps) => {
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
+    // Format the content with the URL if available
+    const contentToCopy = url 
+      ? `${text}\n\nSource: ${url}`
+      : text;
+      
+    navigator.clipboard.writeText(contentToCopy).then(() => {
       toast({
         title: "Copied!",
-        description: "Summary copied to clipboard",
+        description: "Summary copied to clipboard with source URL",
       });
     }).catch(err => {
       console.error('Failed to copy:', err);
@@ -49,7 +55,14 @@ const SummaryTab = ({ summary }: SummaryTabProps) => {
     >
       <div>
         {summary ? (
-          <PlainTextDisplay content={summary} asPlainText={true} />
+          <>
+            {url && (
+              <p className="text-sm text-muted-foreground mb-2">
+                Source: <a href={url} target="_blank" rel="noopener noreferrer" className="underline">{url}</a>
+              </p>
+            )}
+            <PlainTextDisplay content={summary} asPlainText={true} />
+          </>
         ) : (
           <div className="py-4 text-amber-600">
             <p>No summary available yet. Please configure your OpenRouter API key in settings.</p>

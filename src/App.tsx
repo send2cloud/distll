@@ -28,6 +28,8 @@ const App = () => {
             <Route path="/tweet/*" element={<Distill />} />
             {/* Bullet count route */}
             <Route path="/:bulletCount(\d+)/*" element={<Distill />} />
+            {/* Custom style modifier route - this will catch any path pattern like /tamil/, /clickbait/, etc. */}
+            <Route path="/:customStyle/*" element={<Distill />} />
             {/* Direct URL summarization - this will catch any path */}
             <Route path="*" element={<Distill />} />
           </Routes>

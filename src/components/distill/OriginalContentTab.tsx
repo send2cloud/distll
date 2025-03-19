@@ -16,10 +16,13 @@ interface OriginalContentTabProps {
  */
 const OriginalContentTab = ({ originalContent, url }: OriginalContentTabProps) => {
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
+    // Format the content with the URL for attribution
+    const contentToCopy = `${text}\n\nSource: ${url}`;
+    
+    navigator.clipboard.writeText(contentToCopy).then(() => {
       toast({
         title: "Copied!",
-        description: "Original content copied to clipboard",
+        description: "Original content copied to clipboard with source URL",
       });
     }).catch(err => {
       console.error('Failed to copy:', err);

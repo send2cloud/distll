@@ -63,6 +63,8 @@ serve(async (req) => {
       errorCode = "AI_SERVICE_ERROR";
     }
     
+    // IMPORTANT CHANGE: Return a 200 status with error in the body
+    // This ensures our client code can properly process the error
     return new Response(
       JSON.stringify({
         error: userMessage,
@@ -71,7 +73,7 @@ serve(async (req) => {
         summary: ""
       }),
       { 
-        status: 400,
+        status: 200, // Changed from 400 to 200
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
