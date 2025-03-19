@@ -28,7 +28,7 @@ export async function processUrl(url: string, style: string, bulletCount?: numbe
     
     console.log(`Processing URL: ${fullUrl} with Jina proxy: ${jinaProxyUrl}, style: ${style}, bullet count: ${bulletCount}`);
     
-    // Always use Jina proxy - no fallbacks
+    // Get content from Jina proxy - we're not doing any HTML extraction as Jina gives us clean content
     const content = await fetchContent(jinaProxyUrl);
     
     if (!content || content.trim() === '') {
@@ -37,6 +37,7 @@ export async function processUrl(url: string, style: string, bulletCount?: numbe
     
     console.log(`Successfully fetched content (${content.length} chars), summarizing...`);
     
+    // Pass the content directly to OpenRouter for summarization
     const summary = await summarizeContent(content, style, bulletCount);
     
     return {
