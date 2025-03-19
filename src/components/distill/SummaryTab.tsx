@@ -3,7 +3,7 @@ import React from 'react';
 import ContentTab from './ContentTab';
 import { Button } from "@/components/ui/button";
 import { Copy } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import PlainTextDisplay from '@/components/common/PlainTextDisplay';
 import { toast } from "@/components/ui/use-toast";
 
 interface SummaryTabProps {
@@ -11,7 +11,7 @@ interface SummaryTabProps {
 }
 
 /**
- * A component that displays the summarized content with markdown formatting
+ * A component that displays the summarized content as plain text
  * and allows copying to clipboard
  */
 const SummaryTab = ({ summary }: SummaryTabProps) => {
@@ -47,9 +47,9 @@ const SummaryTab = ({ summary }: SummaryTabProps) => {
       title="Content Summary"
       headerActions={summary ? copyButton : undefined}
     >
-      <div className="prose max-w-none">
+      <div>
         {summary ? (
-          <ReactMarkdown>{summary}</ReactMarkdown>
+          <PlainTextDisplay content={summary} />
         ) : (
           <div className="py-4 text-amber-600">
             <p>No summary available yet. Please configure your OpenRouter API key in settings.</p>

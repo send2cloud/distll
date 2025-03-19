@@ -1,70 +1,60 @@
 
 /**
- * Processes markdown content to create simplified, plain text output
- * Converts to a more readable format with simple bullet points and links
+ * Convert content to plain text format with minimal formatting
+ * for all display types
  */
-export const simplifyMarkdownText = (content: string): string => {
+export const simplifyToPlainText = (content: string): string => {
   if (!content) return '';
   
-  // Apply comprehensive cleaning to remove unwanted elements
-  let cleaned = cleanTextFormatting(content);
+  // Apply comprehensive cleaning to create a plain text representation
+  let cleaned = content;
   
-  return cleaned
-    .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold formatting
-    .replace(/\*([^*]+)\*/g, '• $1')   // Convert italics to bullet points
-    .replace(/#{1,6}\s*([^#\n]+)/g, '$1') // Remove heading markers
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 [$2]') // Simplify links to text [url]
-    .replace(/`([^`]+)`/g, '$1')       // Remove code formatting
-    .replace(/>\s*([^>\n]+)/g, '$1')   // Remove blockquotes
-    .replace(/\n{3,}/g, '\n\n')        // Normalize excessive line breaks
-    .trim();
+  // Remove markdown formatting
+  cleaned = cleaned
+    .replace(/#{1,6}\s+([^\n]+)/g, '$1\n\n')  // Convert headings to text with spacing
+    .replace(/\*\*([^*]+)\*\*/g, '$1')         // Remove bold
+    .replace(/\*([^*]+)\*/g, '$1')             // Remove italics
+    .replace(/`([^`]+)`/g, '$1')               // Remove code formatting
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1') // Convert links to just text
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')    // Remove images
+    .replace(/>\s*([^>\n]+)/g, '$1\n')         // Convert blockquotes to plain text
+    .replace(/\n\s*[-*+]\s+/g, '\n• ')         // Standardize bullet points
+    .replace(/\n\s*\d+\.\s+/g, '\n• ')         // Convert numbered lists to bullet points
+    .replace(/\n{3,}/g, '\n\n')                // Normalize multiple line breaks
+    .replace(/\s{2,}/g, ' ');                  // Normalize spaces
+  
+  // Clean up any artifacts from JSON or other formatting
+  cleaned = cleaned
+    .replace(/\\"/g, '"')
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, '    ');
+  
+  // Remove any START or END tags that may have been left
+  cleaned = cleaned
+    .replace(/#{1,3}\s*START\s*#{1,3}/gi, '')
+    .replace(/#{1,3}\s*END\s*#{1,3}/gi, '')
+    .replace(/\bSTART\b\s*#{1,3}/gi, '')
+    .replace(/\bEND\b\s*#{1,3}/gi, '')
+    .replace(/^START\s+/gi, '')
+    .replace(/\s+END$/gi, '');
+  
+  return cleaned.trim();
+};
+
+/**
+ * Legacy function maintained for backward compatibility
+ * Now just calls simplifyToPlainText
+ */
+export const simplifyMarkdownText = (content: string): string => {
+  return simplifyToPlainText(content);
 };
 
 /**
  * Comprehensive text cleaner that handles various formatting issues
- * from AI responses and other structured content
+ * Now just calls simplifyToPlainText for consistency
  */
 export const cleanTextFormatting = (text: string): string => {
-  if (!text) return '';
-  
-  let cleaned = text;
-  
-  // Remove non-Latin script at the beginning (like "रेझोर,Colorado")
-  cleaned = cleaned.replace(/^[\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0A80-\u0AFF\u0B00-\u0B7F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F\u0D80-\u0DFF\u0E00-\u0E7F\u0E80-\u0EFF\u0F00-\u0FFF\u1000-\u109F\u10A0-\u10FF]+[.,\s]*/g, '');
-  
-  // Remove any START or END tags in various formats
-  cleaned = cleaned.replace(/#{1,3}\s*START\s*#{1,3}/gi, '');
-  cleaned = cleaned.replace(/#{1,3}\s*END\s*#{1,3}/gi, '');
-  cleaned = cleaned.replace(/\bSTART\b\s*#{1,3}/gi, '');
-  cleaned = cleaned.replace(/\bEND\b\s*#{1,3}/gi, '');
-  
-  // Handle any START or END patterns without hashes
-  cleaned = cleaned.replace(/^START\s+/gi, '');
-  cleaned = cleaned.replace(/\s+END$/gi, '');
-  
-  // Remove any repeated START or END patterns in the middle of text
-  cleaned = cleaned.replace(/\bSTART\b\s*/gi, '');
-  cleaned = cleaned.replace(/\s*\bEND\b/gi, '');
-  
-  // Normalize bullet points for consistent formatting
-  cleaned = cleaned
-    .replace(/•\s*([^•\n]+)/g, '• $1\n')
-    .replace(/•([^\s])/g, '• $1')
-    .replace(/(\n\s*)•\s*/g, '$1  • ');
-  
-  // Clean up multiple consecutive line breaks
-  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-  
-  // For plain text mode, ensure proper paragraph formatting
-  cleaned = cleaned
-    .replace(/\*\*/g, '')     // Remove bold markdown
-    .replace(/\*/g, '')       // Remove italic markdown
-    .replace(/#{1,6}\s/g, '') // Remove heading markers
-    .replace(/\n-\s*/g, '\n• ') // Convert dashes to bullet points
-    .replace(/\n\d+\.\s*/g, '\n• ') // Convert numbered lists to bullet points for simplicity
-    .replace(/\s{2,}/g, ' '); // Normalize multiple spaces
-
-  return cleaned.trim();
+  return simplifyToPlainText(text);
 };
 
 /**
@@ -84,10 +74,10 @@ export const extractContentBetweenMarkers = (text: string, startMarker: string =
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match && match[1] && match[1].trim()) {
-      return cleanTextFormatting(match[1]);
+      return simplifyToPlainText(match[1]);
     }
   }
   
   // If no markers found, just clean the text
-  return cleanTextFormatting(text);
+  return simplifyToPlainText(text);
 };

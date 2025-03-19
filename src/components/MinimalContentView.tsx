@@ -3,7 +3,7 @@ import React from 'react';
 import { SummarizationStyle } from '@/components/SettingsModal';
 import PlainTextDisplay from '@/components/common/PlainTextDisplay';
 import ContentStateDisplay from '@/components/common/ContentStateDisplay';
-import { simplifyMarkdownText, cleanTextFormatting } from '@/utils/textFormatting';
+import { simplifyToPlainText } from '@/utils/textFormatting';
 
 interface MinimalContentViewProps {
   content: string;
@@ -23,24 +23,11 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
   // Then check if the input has actual content (not just whitespace)
   const hasRawContent = hasRawInput && content.trim().length > 0;
   
-  // Apply comprehensive text cleaning and formatting
-  const processedContent = hasRawContent ? 
-    (style === 'eli5' ? cleanTextFormatting(content) : simplifyMarkdownText(content)) : '';
+  // Apply plain text formatting to all content regardless of style
+  const processedContent = hasRawContent ? simplifyToPlainText(content) : '';
   
   // Check if we still have valid content after processing
   const hasActualContent = Boolean(processedContent && processedContent.trim().length > 0);
-
-  // Add logging to help debug content processing issues
-  console.log("MinimalContentView: Content stats", {
-    hasRawInput,
-    hasRawContent,
-    contentLength: hasRawInput ? content.length : 0,
-    processedLength: processedContent.length,
-    hasActualContent,
-    isLoading,
-    hasError: Boolean(error),
-    style
-  });
 
   // Show loading/error states or empty content message
   if (isLoading || error || !hasActualContent) {
@@ -57,7 +44,7 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
     );
   }
 
-  // Return properly formatted content
+  // Return content as plain text
   return (
     <div className="p-4 max-w-4xl mx-auto border border-gray-200 rounded-md shadow-sm bg-white">
       <PlainTextDisplay content={processedContent} />

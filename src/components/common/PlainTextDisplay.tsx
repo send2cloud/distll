@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { cleanTextFormatting } from '@/utils/textFormatting';
 
 interface PlainTextDisplayProps {
   content: string;
@@ -8,11 +7,11 @@ interface PlainTextDisplayProps {
 }
 
 /**
- * A component that displays content as plain text with proper formatting
- * for readability. Uses a pre tag with system font for better readability.
+ * A component that displays content as plain text without any special formatting.
+ * Uses native browser text rendering capabilities.
  */
 const PlainTextDisplay = ({ content, className = '' }: PlainTextDisplayProps) => {
-  // More robust content checking - handles empty strings, whitespace, and null/undefined
+  // Check if we have any content to display
   const hasContent = content && content.trim().length > 0;
   
   if (!hasContent) {
@@ -23,32 +22,11 @@ const PlainTextDisplay = ({ content, className = '' }: PlainTextDisplayProps) =>
     );
   }
   
-  // Clean and format the content for better readability
-  const formattedContent = cleanTextFormatting(content);
-  
-  // Secondary check after formatting in case cleanup removed all content
-  if (!formattedContent || formattedContent.trim().length === 0) {
-    return (
-      <div className="text-muted-foreground p-4 text-center border border-amber-200 bg-amber-50 rounded-md">
-        Content was retrieved but appeared to be empty after processing.
-      </div>
-    );
-  }
-  
   return (
     <pre 
-      style={{ 
-        whiteSpace: 'pre-wrap', 
-        wordBreak: 'break-word',
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '16px',
-        lineHeight: '1.8',
-        padding: '0',
-        margin: '0'
-      }}
-      className={className}
+      className={`whitespace-pre-wrap break-words font-sans text-base leading-relaxed p-0 m-0 ${className}`}
     >
-      {formattedContent}
+      {content}
     </pre>
   );
 };

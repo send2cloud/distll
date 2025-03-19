@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -11,29 +10,29 @@ const corsHeaders = {
 };
 
 function getSummarizationPrompt(style: string, bulletCount?: number): string {
-  // Base instruction to avoid preambles and postambles
-  const baseInstruction = "CRITICAL: Do NOT include ANY introduction or conclusion. NO phrases like 'here's a summary', 'in summary', or 'here are the key points'. NO sign-offs like 'let me know if you need more information'. Start DIRECTLY with content. END immediately after content. Any preamble or postamble will result in rejection. Format your output with a ### START ### tag at the beginning and ### END ### tag at the end.";
+  // Base instruction to avoid preambles and postambles, now with instruction to output plain text
+  const baseInstruction = "CRITICAL: Output ONLY plain text format. NO markdown. NO formatting. Do NOT include ANY introduction or conclusion. NO phrases like 'here's a summary', 'in summary', or 'here are the key points'. NO sign-offs like 'let me know if you need more information'. Start DIRECTLY with content. END immediately after content. Format your output with a ### START ### tag at the beginning and ### END ### tag at the end.";
   
   switch (style) {
     case 'simple':
-      return `You are a helpful assistant that specializes in simplifying complex content. Your task is to rewrite the provided text in simple, easy-to-understand English with short sentences and common words. Avoid jargon and technical terms when possible. Format your output in markdown with appropriate headings and lists. ${baseInstruction}`;
+      return `You are a helpful assistant that specializes in simplifying complex content. Your task is to rewrite the provided text in simple, easy-to-understand English with short sentences and common words. Avoid jargon and technical terms when possible. ${baseInstruction}`;
     
     case 'bullets':
       const count = bulletCount || 5;
-      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways and present them as a numbered list in markdown format. Make each point concise but informative. ${baseInstruction}`;
+      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. Present them as numbered bullet points (ex: 1. Point one). Make each point concise but informative. ${baseInstruction}`;
     
     case 'eli5':
-      return `You are a helpful assistant that explains complex topics as if to a 5-year-old child. Use ONLY very simple language. Short sentences. Common words. Avoid ANY complex terms. Output should be ONLY plain text. NO markdown formatting. Add line breaks between logical sections. Keep paragraphs to 2-3 simple sentences. Pretend the audience knows nothing about the topic. Start with a simple title line. ${baseInstruction}`;
+      return `You are a helpful assistant that explains complex topics as if to a 5-year-old child. Use ONLY very simple language. Short sentences. Common words. Avoid ANY complex terms. Add line breaks between logical sections. Keep paragraphs to 2-3 simple sentences. Pretend the audience knows nothing about the topic. Start with a simple title line. ${baseInstruction}`;
     
     case 'concise':
-      return `You are a helpful assistant that specializes in creating extremely concise summaries. Your task is to distill the content down to its absolute essence in as few words as possible while retaining all key information. Use short sentences and be very economical with language. Format your response in markdown. ${baseInstruction}`;
+      return `You are a helpful assistant that specializes in creating extremely concise summaries. Your task is to distill the content down to its absolute essence in as few words as possible while retaining all key information. Use short sentences and be very economical with language. ${baseInstruction}`;
     
     case 'tweet':
       return `You are a helpful assistant that specializes in creating tweet-sized summaries. Your task is to distill the content into exactly 140 characters or less. Be extremely concise while capturing the most essential point. Don't use hashtags unless they're crucial to the meaning. ${baseInstruction}`;
     
     case 'standard':
     default:
-      return `You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in an easily digestible format. Always write your summary in markdown format. Use appropriate formatting like lists, headers, and bold text. If content contains rankings or lists (like top 10), format them as proper numbered lists. ${baseInstruction}`;
+      return `You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in an easily digestible format. If content contains rankings or lists (like top 10), format them as proper numbered lists. ${baseInstruction}`;
   }
 }
 
@@ -252,7 +251,7 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
               },
               {
                 role: "user",
-                content: `Summarize the following content according to the style specified in my system message. Remember: Start directly with content. No preamble. No postamble.\n\n${content}`
+                content: `Summarize the following content according to the style specified in my system message. Remember: Start directly with content. No preamble. No postamble. PLAIN TEXT ONLY - NO MARKDOWN.\n\n${content}`
               }
             ],
             max_tokens: 1000
@@ -314,15 +313,13 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
       throw new Error("Failed to generate a meaningful summary. The AI model returned insufficient content.");
     }
     
-    // For ELI5 mode, ensure the output is plain text only
-    if (style === 'eli5') {
-      summary = cleanTextFormatting(summary)
-        .replace(/\*\*/g, '')   // Remove bold markdown
-        .replace(/\*/g, '')     // Remove italic markdown
-        .replace(/#{1,6}\s/g, '') // Remove heading markers
-        .replace(/\s+/g, ' ')   // Normalize multiple spaces
-        .replace(/\n{3,}/g, '\n\n'); // Normalize excessive line breaks
-    }
+    // Plain text cleanup for all styles
+    summary = summary
+      .replace(/\*\*/g, '')   // Remove bold markdown
+      .replace(/\*/g, '')     // Remove italic markdown
+      .replace(/#{1,6}\s/g, '') // Remove heading markers
+      .replace(/\s+/g, ' ')   // Normalize multiple spaces
+      .replace(/\n{3,}/g, '\n\n'); // Normalize excessive line breaks
     
     return summary;
   } catch (error) {
