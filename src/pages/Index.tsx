@@ -10,6 +10,7 @@ import SettingsModal from "@/components/SettingsModal";
 const Index = () => {
   const [url, setUrl] = useState('');
   const [isValidUrl, setIsValidUrl] = useState(false);
+  const [customStyle, setCustomStyle] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,6 +40,10 @@ const Index = () => {
     setIsValidUrl(validateUrl(input));
   };
 
+  const handleStyleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomStyle(e.target.value);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -59,12 +64,37 @@ const Index = () => {
       processableUrl = processableUrl.substring(8);
     }
 
-    navigate(`/${processableUrl}`);
+    // If a custom style is provided, include it in the path
+    if (customStyle.trim()) {
+      navigate(`/${customStyle.trim()}/${processableUrl}`);
+    } else {
+      navigate(`/${processableUrl}`);
+    }
   };
 
   const processUrl = (targetUrl: string) => {
     // Navigate directly to the URL without the /distill/ prefix
     navigate(`/${encodeURIComponent(targetUrl)}`);
+  };
+
+  const handleStyleClick = (style: string) => {
+    if (isValidUrl) {
+      // Process URL without http:// prefix to match URL routing pattern
+      let processableUrl = url;
+      if (processableUrl.startsWith('http://')) {
+        processableUrl = processableUrl.substring(7);
+      } else if (processableUrl.startsWith('https://')) {
+        processableUrl = processableUrl.substring(8);
+      }
+      
+      navigate(`/${style}/${processableUrl}`);
+    } else {
+      setCustomStyle(style);
+      toast({
+        title: "Style selected",
+        description: `"${style}" style will be applied when you enter a valid URL`,
+      });
+    }
   };
 
   return (
@@ -97,15 +127,41 @@ const Index = () => {
                   Distill
                 </Button>
               </div>
+              <div className="pt-2">
+                <p className="text-sm text-gray-600 mb-2">
+                  Optional: Apply a custom style or perspective
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Custom style (e.g., clickbait, academic, etc.)"
+                    value={customStyle}
+                    onChange={handleStyleChange}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="pt-1">
+              <p className="text-sm text-gray-600 mb-2">Try these styles:</p>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('simple')}>Simple</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('eli5')}>ELI5</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('clickbait')}>Clickbait</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('tamil')}>Tamil</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('executivesummary')}>Executive Summary</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('5')}>5 Bullets</Button>
+              </div>
             </div>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col text-sm text-gray-500">
           <p className="text-center mb-2">
-            You can also directly access any URL by adding it after llmcc.com/
+            You can also directly access any URL with a custom style by adding it after llmcc.com/
           </p>
           <p className="text-center italic">
-            Example: llmcc.com/example.com/article
+            Example: llmcc.com/executivesummary/example.com/article
           </p>
         </CardFooter>
       </Card>

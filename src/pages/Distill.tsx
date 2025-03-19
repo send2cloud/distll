@@ -9,7 +9,7 @@ import { useContentProcessor } from '@/hooks/useContentProcessor';
 const Distill = () => {
   const { url, bulletCount: bulletCountParam } = useParams<{ url: string, bulletCount?: string }>();
   const location = useLocation();
-  const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<SummarizationStyle>('standard');
+  const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<string>('standard');
   const [bulletCount, setBulletCount] = useState<number | undefined>(undefined);
   const [fullUrl, setFullUrl] = useState<string>('');
   
@@ -35,32 +35,42 @@ const Distill = () => {
     // Extract the full URL from the pathname
     let extractedUrl = '';
     
-    if (location.pathname.startsWith('/eli5/')) {
-      extractedUrl = location.pathname.substring(6); // Remove '/eli5/'
-      console.log("Extracted URL from eli5 path:", extractedUrl);
-    } else if (location.pathname.startsWith('/simple/')) {
-      extractedUrl = location.pathname.substring(8); // Remove '/simple/'
-      console.log("Extracted URL from simple path:", extractedUrl);
-    } else if (location.pathname.startsWith('/esl/')) {
-      extractedUrl = location.pathname.substring(5); // Remove '/esl/'
-      console.log("Extracted URL from esl path:", extractedUrl);
-    } else if (location.pathname.startsWith('/tweet/')) {
-      extractedUrl = location.pathname.substring(7); // Remove '/tweet/'
-      console.log("Extracted URL from tweet path:", extractedUrl);
-    } else {
+    // Known style prefixes
+    const knownPrefixes = ['/eli5/', '/simple/', '/esl/', '/tweet/'];
+    let matchedPrefix = false;
+    
+    // Check for known prefixes first
+    for (const prefix of knownPrefixes) {
+      if (location.pathname.startsWith(prefix)) {
+        extractedUrl = location.pathname.substring(prefix.length);
+        console.log(`Extracted URL from ${prefix} path:`, extractedUrl);
+        matchedPrefix = true;
+        break;
+      }
+    }
+    
+    // If no known prefix, check for custom style or bullet count
+    if (!matchedPrefix) {
       // Check for bullet point number
       const bulletMatch = location.pathname.match(/^\/(\d+)\/(.*)/);
       if (bulletMatch) {
         extractedUrl = bulletMatch[2]; // The URL after the bullet count
         console.log("Extracted URL from bullet count path:", extractedUrl);
-      } else if (location.pathname !== '/' && location.pathname.length > 1) {
-        // This is the direct URL case - the URL is the entire pathname except the leading slash
-        extractedUrl = location.pathname.substring(1);
-        console.log("Direct URL case, extracted:", extractedUrl);
-      } else if (url) {
-        // Fallback to the URL parameter if provided
-        extractedUrl = url;
-        console.log("Using direct URL parameter:", extractedUrl);
+      } else {
+        // Check for custom style modifier
+        const customStyleMatch = location.pathname.match(/^\/([a-zA-Z0-9_-]+)\/(.*)/);
+        if (customStyleMatch) {
+          extractedUrl = customStyleMatch[2]; // The URL after the custom style
+          console.log("Extracted URL from custom style path:", extractedUrl);
+        } else if (location.pathname !== '/' && location.pathname.length > 1) {
+          // This is the direct URL case - the URL is the entire pathname except the leading slash
+          extractedUrl = location.pathname.substring(1);
+          console.log("Direct URL case, extracted:", extractedUrl);
+        } else if (url) {
+          // Fallback to the URL parameter if provided
+          extractedUrl = url;
+          console.log("Using direct URL parameter:", extractedUrl);
+        }
       }
     }
     
@@ -105,7 +115,7 @@ const Distill = () => {
     isLoading, 
     error, 
     progress 
-  } = useContentProcessor(fullUrl || url, currentSummarizationStyle, bulletCount);
+  } = useContentProcessor(fullUrl || url, currentSummarizationStyle as SummarizationStyle, bulletCount);
   
   useEffect(() => {
     console.log("Content processor parameters:", {
@@ -121,7 +131,7 @@ const Distill = () => {
       content={summary} 
       isLoading={isLoading} 
       error={error} 
-      style={currentSummarizationStyle}
+      style={currentSummarizationStyle as SummarizationStyle}
     />
   );
 };

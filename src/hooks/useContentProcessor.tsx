@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { SummarizationStyle } from '@/components/SettingsModal';
 import { toast } from "@/components/ui/use-toast";
@@ -17,7 +16,7 @@ interface ContentProcessorResult {
 
 export const useContentProcessor = (
   url: string | undefined, 
-  style: SummarizationStyle,
+  style: string | SummarizationStyle,
   bulletCount?: number
 ): ContentProcessorResult => {
   const [originalContent, setOriginalContent] = useState<string>('');
