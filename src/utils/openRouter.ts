@@ -72,9 +72,17 @@ export const summarizeUrl = async (url: string, style?: SummarizationStyle, bull
   }
   
   try {
+    // Ensure URL has protocol prefix
+    let fullUrl = url.trim();
+    if (!fullUrl.startsWith('http')) {
+      fullUrl = `http://${fullUrl}`;
+    }
+    
+    // We don't need to modify the URL here as the edge function now handles adding the Jina AI proxy
+    
     const { data, error } = await supabase.functions.invoke('process-url', {
       body: {
-        url: url,
+        url: fullUrl,
         style: style || 'standard',
         bulletCount: bulletCount,
         openRouterApiKey: PUBLIC_API_KEY

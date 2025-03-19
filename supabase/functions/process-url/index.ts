@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -332,13 +331,19 @@ async function processUrl(url: string, style: string, bulletCount?: number): Pro
     }
     
     // Ensure the URL has a protocol prefix
-    fullUrl = fullUrl.startsWith('http') ? fullUrl : `https://${fullUrl}`;
+    if (!fullUrl.startsWith('http')) {
+      fullUrl = `http://${fullUrl}`;
+    }
     
-    console.log(`Processing URL: ${fullUrl} with style: ${style}, bullet count: ${bulletCount}`);
+    // Add Jina AI proxy prefix to the URL
+    const jinaProxyUrl = `https://r.jina.ai/${fullUrl}`;
+    
+    console.log(`Processing URL: ${fullUrl} with Jina proxy: ${jinaProxyUrl}, style: ${style}, bullet count: ${bulletCount}`);
     
     let content: string;
     try {
-      content = await fetchContent(fullUrl);
+      // Use the Jina proxy URL for fetching content
+      content = await fetchContent(jinaProxyUrl);
     } catch (fetchError) {
       // Create more user-friendly error messages
       if (fetchError.message.includes("ENOTFOUND") || fetchError.message.includes("getaddrinfo")) {
