@@ -99,11 +99,11 @@ const Index = () => {
 
       {/* Hero section */}
       <section className="max-w-5xl mx-auto px-6 pt-16 pb-12 text-center">
-        <h1 className="text-5xl font-bold mb-4 text-[#221F26]">Distill the web</h1>
-        <p className="text-2xl text-[#403E43] mb-8 max-w-3xl mx-auto">simple url based distiller</p>
+        <h1 className="text-5xl font-bold mb-4 text-[#5d4a1d]">Distill the web</h1>
+        <p className="text-2xl mb-8 max-w-3xl mx-auto text-[#a78a4e]">simple url based distiller</p>
         
         <Card className="w-full max-w-2xl mx-auto shadow-lg border-0 bg-white">
-          <CardContent className="pt-6 bg-[#e9e9e5]/[0.66]">
+          <CardContent className="pt-6 bg-[#e9e9e5]/[0.66] rounded-xl">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <div className="flex gap-2">
@@ -113,7 +113,7 @@ const Index = () => {
                   </Button>
                 </div>
                 <div className="pt-4 py-0 px-[150px]">
-                  <p className="text-sm text-[#8A898C] mb-2 text-left">
+                  <p className="text-sm mb-2 text-left text-orange-900">
                     Optional: Apply a custom style or perspective
                   </p>
                   <div className="flex gap-2">
@@ -135,14 +135,7 @@ const Index = () => {
               </div>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col text-sm text-[#8A898C] pb-6 bg-[#e9e9e5]/[0.66]">
-            <p className="text-center mb-2">
-              You can also directly access any URL with a custom style by adding it after llmcc.com/
-            </p>
-            <p className="text-center italic">
-              Example: llmcc.com/executivesummary/example.com/article
-            </p>
-          </CardFooter>
+          
         </Card>
       </section>
 
