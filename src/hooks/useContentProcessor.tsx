@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SummarizationStyle } from '@/components/SettingsModal';
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeProcessFunction } from "@/services/edgeFunctionService";
 
 // Define the valid error code types to match the ErrorDisplay component
 export type ErrorCodeType = 'URL_ERROR' | 'CONNECTION_ERROR' | 'CONTENT_ERROR' | 'AI_SERVICE_ERROR' | 'PROCESSING_ERROR';
@@ -71,45 +71,16 @@ export const useContentProcessor = (
         });
         
         try {
-          // Use Promise.race to implement timeout
-          const functionPromise = supabase.functions.invoke('process-url', {
-            body: {
-              url: fullUrl,
-              style: style,
-              bulletCount: bulletCount
-            }
+          console.log("Calling Edge Function with params:", { url: fullUrl, style, bulletCount });
+          
+          // Use invokeProcessFunction instead of directly using supabase.functions.invoke
+          const data = await invokeProcessFunction({
+            url: fullUrl,
+            style: style,
+            bulletCount: bulletCount
           });
           
-          // Race between the function call and the timeout
-          const result = await Promise.race([
-            functionPromise,
-            timeoutPromise
-          ]);
-          
-          const { data, error } = result as Awaited<typeof functionPromise>;
-          
-          if (error) {
-            console.error('Error calling process-url function:', error);
-            throw Object.assign(
-              new Error(`Edge function error: ${error.message || "Unknown error"}`),
-              { errorCode: "PROCESSING_ERROR" as ErrorCodeType }
-            );
-          }
-          
-          if (!data) {
-            throw Object.assign(
-              new Error("No data returned from edge function"), 
-              { errorCode: "PROCESSING_ERROR" as ErrorCodeType }
-            );
-          }
-          
-          if (data.error) {
-            // Use the error code if provided by the edge function
-            throw Object.assign(
-              new Error(data.error), 
-              { errorCode: (data.errorCode || "PROCESSING_ERROR") as ErrorCodeType }
-            );
-          }
+          console.log("Received response from Edge Function:", data);
           
           setProgress(80);
           
