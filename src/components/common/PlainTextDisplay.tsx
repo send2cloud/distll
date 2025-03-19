@@ -17,7 +17,7 @@ const PlainTextDisplay = ({ content, className = '', asPlainText = false }: Plai
   
   if (!hasContent) {
     return (
-      <div className="text-muted-foreground p-4 text-center border border-amber-200 bg-amber-50 rounded-md">
+      <div className="text-muted-foreground p-4 text-center border border-amber-200 bg-amber-50 rounded-md font-sans">
         No content available to display.
       </div>
     );
@@ -28,7 +28,7 @@ const PlainTextDisplay = ({ content, className = '', asPlainText = false }: Plai
     return (
       <div 
         style={{ 
-          fontFamily: 'monospace', 
+          fontFamily: '"Noto Sans", sans-serif', 
           whiteSpace: 'pre-wrap',
           margin: 0,
           padding: 0,
