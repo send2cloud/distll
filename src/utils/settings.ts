@@ -1,5 +1,5 @@
 
-import { SummarizationStyle } from "@/components/SettingsModal";
+import { SummarizationStyle } from "@/contexts/SettingsContext";
 
 // Return fixed default settings without using localStorage
 export const getSettings = () => {
