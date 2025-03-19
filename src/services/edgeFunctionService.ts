@@ -30,8 +30,16 @@ interface ProcessParams {
  */
 export const invokeProcessFunction = async (params: ProcessParams): Promise<EdgeFunctionResponse> => {
   try {
+    // Ensure style is one of the accepted SummarizationStyle values, otherwise fall back to 'standard'
+    const validStyle = Object.values(SummarizationStyle).includes(params.style as SummarizationStyle) 
+      ? params.style 
+      : 'standard' as SummarizationStyle;
+
     const { data, error } = await supabase.functions.invoke('process-url', {
-      body: params
+      body: {
+        ...params,
+        style: validStyle
+      }
     });
     
     // Handle edge function invocation errors (like network errors, not response errors)
