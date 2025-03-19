@@ -24,7 +24,8 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
   const hasRawContent = hasRawInput && content.trim().length > 0;
   
   // Apply comprehensive text cleaning and formatting
-  const processedContent = hasRawContent ? simplifyMarkdownText(content) : '';
+  const processedContent = hasRawContent ? 
+    (style === 'eli5' ? cleanTextFormatting(content) : simplifyMarkdownText(content)) : '';
   
   // Check if we still have valid content after processing
   const hasActualContent = Boolean(processedContent && processedContent.trim().length > 0);
@@ -37,7 +38,8 @@ const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: M
     processedLength: processedContent.length,
     hasActualContent,
     isLoading,
-    hasError: Boolean(error)
+    hasError: Boolean(error),
+    style
   });
 
   // Show loading/error states or empty content message

@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -22,7 +23,7 @@ function getSummarizationPrompt(style: string, bulletCount?: number): string {
       return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways and present them as a numbered list in markdown format. Make each point concise but informative. ${baseInstruction}`;
     
     case 'eli5':
-      return `You are a helpful assistant that specializes in explaining complex topics in simple terms. Your task is to use very simple language, basic analogies, and avoid technical terms. Break down complicated ideas into easily digestible concepts. Format your explanation in markdown with appropriate headings and emphasis where needed. ${baseInstruction}`;
+      return `You are a helpful assistant that explains complex topics as if to a 5-year-old child. Use ONLY very simple language. Short sentences. Common words. Avoid ANY complex terms. Output should be ONLY plain text. NO markdown formatting. Add line breaks between logical sections. Keep paragraphs to 2-3 simple sentences. Pretend the audience knows nothing about the topic. Start with a simple title line. ${baseInstruction}`;
     
     case 'concise':
       return `You are a helpful assistant that specializes in creating extremely concise summaries. Your task is to distill the content down to its absolute essence in as few words as possible while retaining all key information. Use short sentences and be very economical with language. Format your response in markdown. ${baseInstruction}`;
@@ -311,6 +312,16 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
     
     if (!summary || summary.trim().length < 10) {
       throw new Error("Failed to generate a meaningful summary. The AI model returned insufficient content.");
+    }
+    
+    // For ELI5 mode, ensure the output is plain text only
+    if (style === 'eli5') {
+      summary = cleanTextFormatting(summary)
+        .replace(/\*\*/g, '')   // Remove bold markdown
+        .replace(/\*/g, '')     // Remove italic markdown
+        .replace(/#{1,6}\s/g, '') // Remove heading markers
+        .replace(/\s+/g, ' ')   // Normalize multiple spaces
+        .replace(/\n{3,}/g, '\n\n'); // Normalize excessive line breaks
     }
     
     return summary;

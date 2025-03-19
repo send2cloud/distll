@@ -55,6 +55,15 @@ export const cleanTextFormatting = (text: string): string => {
   // Clean up multiple consecutive line breaks
   cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
   
+  // For plain text mode, ensure proper paragraph formatting
+  cleaned = cleaned
+    .replace(/\*\*/g, '')     // Remove bold markdown
+    .replace(/\*/g, '')       // Remove italic markdown
+    .replace(/#{1,6}\s/g, '') // Remove heading markers
+    .replace(/\n-\s*/g, '\n• ') // Convert dashes to bullet points
+    .replace(/\n\d+\.\s*/g, '\n• ') // Convert numbered lists to bullet points for simplicity
+    .replace(/\s{2,}/g, ' '); // Normalize multiple spaces
+
   return cleaned.trim();
 };
 

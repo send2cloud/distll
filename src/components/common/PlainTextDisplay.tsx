@@ -41,8 +41,8 @@ const PlainTextDisplay = ({ content, className = '' }: PlainTextDisplayProps) =>
         whiteSpace: 'pre-wrap', 
         wordBreak: 'break-word',
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '14px',
-        lineHeight: '1.6',
+        fontSize: '16px',
+        lineHeight: '1.8',
         padding: '0',
         margin: '0'
       }}
