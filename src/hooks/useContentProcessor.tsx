@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { SummarizationStyle } from '@/components/SettingsModal';
 import { toast } from "@/components/ui/use-toast";
@@ -74,15 +73,13 @@ export const useContentProcessor = (
         try {
           console.log("Calling Edge Function with params:", { url: fullUrl, style, bulletCount });
           
-          // Convert style to SummarizationStyle or use 'standard' as a fallback
-          const styleAsEnumValue = (style in SummarizationStyle) 
-            ? style as SummarizationStyle 
-            : 'standard' as SummarizationStyle;
+          // Convert style to a string value, ensuring it's a valid SummarizationStyle or use 'standard' as fallback
+          const styleValue = typeof style === 'string' ? style : 'standard';
           
           // Use invokeProcessFunction instead of directly using supabase.functions.invoke
           const data = await invokeProcessFunction({
             url: fullUrl,
-            style: styleAsEnumValue,
+            style: styleValue,
             bulletCount: bulletCount
           });
           

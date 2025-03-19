@@ -19,7 +19,7 @@ interface EdgeFunctionResponse {
 interface ProcessParams {
   url?: string;
   content?: string;
-  style: SummarizationStyle;
+  style: string;
   bulletCount?: number;
 }
 
@@ -30,16 +30,10 @@ interface ProcessParams {
  */
 export const invokeProcessFunction = async (params: ProcessParams): Promise<EdgeFunctionResponse> => {
   try {
-    // Ensure style is one of the accepted SummarizationStyle values, otherwise fall back to 'standard'
-    const validStyle = Object.values(SummarizationStyle).includes(params.style as SummarizationStyle) 
-      ? params.style 
-      : 'standard' as SummarizationStyle;
-
+    // Use the style as provided - we're enforcing that style is a string at this point
+    // SummarizationStyle is a TypeScript enum, not a runtime value, so we can't check against it here
     const { data, error } = await supabase.functions.invoke('process-url', {
-      body: {
-        ...params,
-        style: validStyle
-      }
+      body: params
     });
     
     // Handle edge function invocation errors (like network errors, not response errors)
