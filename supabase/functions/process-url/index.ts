@@ -96,83 +96,123 @@ async function fetchContent(url: string): Promise<string> {
   try {
     console.log(`Fetching content from URL: ${url}`);
     
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch content: ${response.status} ${response.statusText}`);
+    // Validate URL format before fetching
+    try {
+      new URL(url); // This will throw if URL is invalid
+    } catch (urlError) {
+      throw new Error(`Invalid URL format: ${url}. Please ensure the URL includes the protocol (http:// or https://)`);
     }
     
-    // Check content type to ensure we're processing HTML
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml')) {
-      console.log(`Note: Content type is ${contentType}, which may not be HTML`);
-      // Continue anyway as some servers might not set the correct content type
-    }
+    // Add timeout to fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
     
-    const html = await response.text();
-    
-    if (!html || html.trim() === '') {
-      throw new Error("Received empty content from URL");
-    }
-    
-    // Text-based extraction using regex patterns instead of DOMParser
-    let mainContent = '';
-    
-    // First try to remove script, style tags and comments with regex
-    let cleanedHtml = html
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
-      .replace(/<!--[\s\S]*?-->/g, ' ')
-      .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, ' ')
-      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, ' ');
-    
-    // Try to extract content from common article containers
-    const articlePatterns = [
-      /<article[^>]*>([\s\S]*?)<\/article>/i,
-      /<main[^>]*>([\s\S]*?)<\/main>/i,
-      /<div[^>]*?class="[^"]*?(?:content|article|post)[^"]*?"[^>]*>([\s\S]*?)<\/div>/i,
-      /<div[^>]*?id="[^"]*?(?:content|article|post)[^"]*?"[^>]*>([\s\S]*?)<\/div>/i
-    ];
-    
-    for (const pattern of articlePatterns) {
-      const match = cleanedHtml.match(pattern);
-      if (match && match[1] && match[1].length > 500) {  // Ensure minimum content length
-        mainContent = match[1];
-        break;
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; DistillApp/1.0; +https://distill.app)'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const statusInfo = `${response.status} ${response.statusText}`;
+        if (response.status === 403 || response.status === 401) {
+          throw new Error(`Access denied (${statusInfo}). The website may be blocking our requests.`);
+        } else if (response.status === 404) {
+          throw new Error(`Page not found (${statusInfo}). Please check that the URL is correct.`);
+        } else if (response.status >= 500) {
+          throw new Error(`Website server error (${statusInfo}). The target website is experiencing issues.`);
+        } else {
+          throw new Error(`Failed to fetch content: ${statusInfo}`);
+        }
       }
-    }
-    
-    // If no article containers found, fallback to body content
-    if (!mainContent) {
-      const bodyMatch = cleanedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-      if (bodyMatch && bodyMatch[1]) {
-        mainContent = bodyMatch[1];
+      
+      // Check content type to ensure we're processing HTML
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml')) {
+        console.log(`Warning: Content type is ${contentType}, which may not be HTML. Attempting extraction anyway.`);
       }
+      
+      const html = await response.text();
+      
+      if (!html || html.trim() === '') {
+        throw new Error("Received empty content from URL. The page might be loading content dynamically with JavaScript.");
+      }
+      
+      // Text-based extraction using regex patterns instead of DOMParser
+      let mainContent = '';
+      
+      // First try to remove script, style tags and comments with regex
+      let cleanedHtml = html
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+        .replace(/<!--[\s\S]*?-->/g, ' ')
+        .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, ' ')
+        .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, ' ');
+      
+      // Try to extract content from common article containers
+      const articlePatterns = [
+        /<article[^>]*>([\s\S]*?)<\/article>/i,
+        /<main[^>]*>([\s\S]*?)<\/main>/i,
+        /<div[^>]*?class="[^"]*?(?:content|article|post)[^"]*?"[^>]*>([\s\S]*?)<\/div>/i,
+        /<div[^>]*?id="[^"]*?(?:content|article|post)[^"]*?"[^>]*>([\s\S]*?)<\/div>/i
+      ];
+      
+      for (const pattern of articlePatterns) {
+        const match = cleanedHtml.match(pattern);
+        if (match && match[1] && match[1].length > 500) {  // Ensure minimum content length
+          mainContent = match[1];
+          break;
+        }
+      }
+      
+      // If no article containers found, fallback to body content
+      if (!mainContent) {
+        const bodyMatch = cleanedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        if (bodyMatch && bodyMatch[1]) {
+          mainContent = bodyMatch[1];
+        }
+      }
+      
+      // Strip remaining HTML tags and decode entities
+      mainContent = mainContent
+        .replace(/<[^>]*>/g, ' ')  // Remove all HTML tags
+        .replace(/&nbsp;/g, ' ')   // Replace non-breaking spaces
+        .replace(/&lt;/g, '<')     // Decode common HTML entities
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\s+/g, ' ');     // Normalize whitespace
+      
+      // If no content extracted, use body text from the full HTML
+      if (!mainContent || mainContent.trim().length < 500) {
+        cleanedHtml = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+        mainContent = cleanedHtml;
+      }
+      
+      // Limit content length to prevent token issues
+      const truncatedContent = mainContent.trim().substring(0, 15000);
+      
+      if (truncatedContent.length < 200) {
+        throw new Error("Could not extract meaningful content from the page. The content might be loaded dynamically or restricted.");
+      }
+      
+      console.log(`Successfully extracted ${truncatedContent.length} chars of content`);
+      
+      return truncatedContent;
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        throw new Error("Request timed out after 15 seconds. The website may be slow or unavailable.");
+      }
+      
+      throw fetchError;
     }
-    
-    // Strip remaining HTML tags and decode entities
-    mainContent = mainContent
-      .replace(/<[^>]*>/g, ' ')  // Remove all HTML tags
-      .replace(/&nbsp;/g, ' ')   // Replace non-breaking spaces
-      .replace(/&lt;/g, '<')     // Decode common HTML entities
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/\s+/g, ' ');     // Normalize whitespace
-    
-    // If no content extracted, use body text from the full HTML
-    if (!mainContent || mainContent.trim().length < 500) {
-      cleanedHtml = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
-      mainContent = cleanedHtml;
-    }
-    
-    // Limit content length to prevent token issues
-    const truncatedContent = mainContent.trim().substring(0, 15000);
-    
-    console.log(`Successfully extracted ${truncatedContent.length} chars of content`);
-    
-    return truncatedContent;
   } catch (error) {
     console.error("Error fetching content:", error);
     throw error;
@@ -191,6 +231,7 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
     const maxRetries = 2;
     let retries = 0;
     let summary = '';
+    let lastError = null;
     
     while (retries <= maxRetries) {
       try {
@@ -225,14 +266,23 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
           try {
             const errorData = JSON.parse(errorText);
             errorMessage = errorData.error?.message || `API error (${response.status}: ${response.statusText})`;
+            
+            // Special handling for specific OpenRouter errors
+            if (errorMessage.includes("quota")) {
+              throw new Error("AI provider quota exceeded. Please try again later or with a different summarization style.");
+            }
+            if (errorMessage.includes("rate limit")) {
+              throw new Error("AI rate limit reached. Please try again in a few moments.");
+            }
           } catch (e) {
-            errorMessage = `API error (${response.status}: ${response.statusText})`;
+            errorMessage = `AI provider error (${response.status}: ${response.statusText})`;
           }
           
           console.error(`OpenRouter API error (attempt ${retries + 1}/${maxRetries + 1}):`, errorMessage);
+          lastError = new Error(errorMessage);
           
           if (retries >= maxRetries) {
-            throw new Error(errorMessage);
+            throw lastError;
           }
           
           // Wait before retry with exponential backoff
@@ -245,6 +295,7 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
         summary = data.choices[0].message.content;
         break; // Success, exit retry loop
       } catch (error) {
+        lastError = error;
         if (retries >= maxRetries) {
           throw error; // Rethrow after all retries are exhausted
         }
@@ -260,7 +311,7 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
     summary = extractContentBetweenMarkers(summary);
     
     if (!summary || summary.trim().length < 10) {
-      throw new Error("Failed to generate a meaningful summary");
+      throw new Error("Failed to generate a meaningful summary. The AI model returned insufficient content.");
     }
     
     return summary;
@@ -270,7 +321,7 @@ async function summarizeContent(content: string, style: string, bulletCount?: nu
   }
 }
 
-async function processUrl(url: string, style: string, bulletCount?: number): Promise<{ originalContent: string; summary: string }> {
+async function processUrl(url: string, style: string, bulletCount?: number, apiKey?: string): Promise<{ originalContent: string; summary: string }> {
   try {
     // Normalize URL to ensure it has a proper protocol prefix
     let fullUrl = url.trim();
@@ -284,15 +335,36 @@ async function processUrl(url: string, style: string, bulletCount?: number): Pro
     
     console.log(`Processing URL: ${fullUrl} with style: ${style}, bullet count: ${bulletCount}`);
     
-    const content = await fetchContent(fullUrl);
+    let content: string;
+    try {
+      content = await fetchContent(fullUrl);
+    } catch (fetchError) {
+      // Create more user-friendly error messages
+      if (fetchError.message.includes("ENOTFOUND") || fetchError.message.includes("getaddrinfo")) {
+        throw new Error(`Could not resolve host: ${new URL(fullUrl).hostname}. Please check that the domain name is correct.`);
+      } else if (fetchError.message.includes("ECONNREFUSED")) {
+        throw new Error(`Connection refused by: ${new URL(fullUrl).hostname}. The website may be down or blocking our requests.`);
+      } else {
+        throw fetchError; // Rethrow original error if no specific handling
+      }
+    }
     
     if (!content || content.trim() === '') {
-      throw new Error("Content was empty after fetching and processing");
+      throw new Error("Content was empty after fetching and processing. The website may use techniques that prevent content extraction.");
     }
     
     console.log(`Successfully fetched content (${content.length} chars), summarizing...`);
     
-    const summary = await summarizeContent(content, style, bulletCount);
+    let summary: string;
+    try {
+      summary = await summarizeContent(content, style, bulletCount, apiKey);
+    } catch (summaryError) {
+      if (summaryError.message.includes("too short")) {
+        throw new Error("The extracted content is too short to summarize meaningfully. Please try a different URL with more text content.");
+      } else {
+        throw summaryError; // Rethrow original error
+      }
+    }
     
     return {
       originalContent: content,
@@ -316,18 +388,32 @@ serve(async (req) => {
     }
     
     // Parse request body
-    const { url, style, bulletCount, openRouterApiKey } = await req.json();
+    const requestData = await req.json().catch(e => {
+      throw new Error("Invalid JSON in request body");
+    });
     
-    if (!url) {
-      throw new Error("URL parameter is required");
+    const { url, content, style, bulletCount, openRouterApiKey } = requestData;
+    
+    if (!url && !content) {
+      throw new Error("Either URL or content parameter is required");
     }
     
-    console.log(`Received request to process URL: ${url} with style: ${style}`);
+    console.log(`Received request to process ${url ? 'URL: ' + url : 'direct content'} with style: ${style || 'standard'}`);
     
     // Use provided API key or fallback to public key
     const apiKey = openRouterApiKey || PUBLIC_API_KEY;
     
-    const result = await processUrl(url, style || 'standard', bulletCount);
+    let result;
+    if (url) {
+      result = await processUrl(url, style || 'standard', bulletCount, apiKey);
+    } else if (content) {
+      // Process direct content if provided
+      const summary = await summarizeContent(content, style || 'standard', bulletCount, apiKey);
+      result = {
+        originalContent: content,
+        summary: summary
+      };
+    }
     
     return new Response(
       JSON.stringify(result),
@@ -341,14 +427,30 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in edge function:", error);
     
+    // Create a user-friendly error message
+    let userMessage = error.message || "An unknown error occurred";
+    let errorCode = "PROCESSING_ERROR";
+    
+    // Categorize different error types
+    if (userMessage.includes("URL")) {
+      errorCode = "URL_ERROR";
+    } else if (userMessage.includes("fetch") || userMessage.includes("ENOTFOUND") || userMessage.includes("ECONNREFUSED")) {
+      errorCode = "CONNECTION_ERROR";
+    } else if (userMessage.includes("content") || userMessage.includes("extract")) {
+      errorCode = "CONTENT_ERROR";
+    } else if (userMessage.includes("API") || userMessage.includes("quota") || userMessage.includes("rate limit")) {
+      errorCode = "AI_SERVICE_ERROR";
+    }
+    
     return new Response(
       JSON.stringify({
-        error: error.message || "An unknown error occurred",
+        error: userMessage,
+        errorCode: errorCode,
         originalContent: "",
         summary: ""
       }),
       { 
-        status: 500,
+        status: 400, // Use 400 instead of 500 to indicate a client-side issue
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
