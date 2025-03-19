@@ -5,11 +5,14 @@ import { SummarizationStyle } from '@/components/SettingsModal';
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define the valid error code types to match the ErrorDisplay component
+export type ErrorCodeType = 'URL_ERROR' | 'CONNECTION_ERROR' | 'CONTENT_ERROR' | 'AI_SERVICE_ERROR' | 'PROCESSING_ERROR';
+
 interface ContentProcessorResult {
   originalContent: string;
   summary: string;
   isLoading: boolean;
-  error: Error & { errorCode?: string } | null;
+  error: Error & { errorCode?: ErrorCodeType } | null;
   progress: number;
 }
 
@@ -21,13 +24,13 @@ export const useContentProcessor = (
   const [originalContent, setOriginalContent] = useState<string>('');
   const [summary, setSummary] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error & { errorCode?: string } | null>(null);
+  const [error, setError] = useState<Error & { errorCode?: ErrorCodeType } | null>(null);
   const [progress, setProgress] = useState<number>(0);
 
   useEffect(() => {
     if (!url) {
       setIsLoading(false);
-      setError(Object.assign(new Error("No URL provided"), { errorCode: "URL_ERROR" }));
+      setError(Object.assign(new Error("No URL provided"), { errorCode: "URL_ERROR" as ErrorCodeType }));
       return;
     }
 
@@ -46,7 +49,7 @@ export const useContentProcessor = (
         decodedUrl = decodedUrl.trim();
         
         if (!decodedUrl) {
-          throw Object.assign(new Error("URL is empty after decoding"), { errorCode: "URL_ERROR" });
+          throw Object.assign(new Error("URL is empty after decoding"), { errorCode: "URL_ERROR" as ErrorCodeType });
         }
         
         // Ensure the URL has a protocol prefix
@@ -62,42 +65,49 @@ export const useContentProcessor = (
         
         // Add a timeout to detect long-running requests
         const timeoutDuration = 30000; // 30 seconds
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
+        
+        // Create a timeout mechanism using setTimeout
+        let timeoutId: NodeJS.Timeout | null = null;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error("Request timed out after 30 seconds. The service might be experiencing high load or the website may be very large."));
+          }, timeoutDuration);
+        });
         
         try {
-          const { data, error } = await supabase.functions.invoke('process-url', {
+          // Use Promise.race to implement timeout without using AbortController
+          const functionPromise = supabase.functions.invoke('process-url', {
             body: {
               url: fullUrl,
               style: style,
               bulletCount: bulletCount,
               openRouterApiKey: settings.openRouterApiKey
-            },
-            signal: controller.signal
+            }
           });
           
-          clearTimeout(timeoutId);
+          // Race between the function call and the timeout
+          const result = await Promise.race([
+            functionPromise,
+            timeoutPromise
+          ]);
+          
+          // Clear the timeout if the function returned before timeout
+          if (timeoutId) clearTimeout(timeoutId);
+          
+          const { data, error } = result as Awaited<typeof functionPromise>;
           
           if (error) {
             console.error('Error calling process-url function:', error);
-            // Handle specific error types based on the error message
-            if (error.message?.includes('AbortError') || error.message?.includes('timeout')) {
-              throw Object.assign(
-                new Error("Request timed out after 30 seconds. The service might be experiencing high load or the website may be very large."), 
-                { errorCode: "CONNECTION_ERROR" }
-              );
-            } else {
-              throw Object.assign(
-                new Error(`Edge function error: ${error.message || "Unknown error"}`),
-                { errorCode: "PROCESSING_ERROR" }
-              );
-            }
+            throw Object.assign(
+              new Error(`Edge function error: ${error.message || "Unknown error"}`),
+              { errorCode: "PROCESSING_ERROR" as ErrorCodeType }
+            );
           }
           
           if (!data) {
             throw Object.assign(
               new Error("No data returned from edge function"), 
-              { errorCode: "PROCESSING_ERROR" }
+              { errorCode: "PROCESSING_ERROR" as ErrorCodeType }
             );
           }
           
@@ -105,7 +115,7 @@ export const useContentProcessor = (
             // Use the error code if provided by the edge function
             throw Object.assign(
               new Error(data.error), 
-              { errorCode: data.errorCode || "PROCESSING_ERROR" }
+              { errorCode: (data.errorCode || "PROCESSING_ERROR") as ErrorCodeType }
             );
           }
           
@@ -114,7 +124,7 @@ export const useContentProcessor = (
           if (!data.summary || data.summary.trim() === '') {
             throw Object.assign(
               new Error("Received empty summary from AI service"), 
-              { errorCode: "AI_SERVICE_ERROR" }
+              { errorCode: "AI_SERVICE_ERROR" as ErrorCodeType }
             );
           }
           
@@ -122,14 +132,16 @@ export const useContentProcessor = (
           setOriginalContent(data.originalContent);
           setProgress(100);
         } catch (apiError: any) {
-          clearTimeout(timeoutId);
+          // Clear timeout if it exists
+          if (timeoutId) clearTimeout(timeoutId);
+          
           console.error('Error processing URL with edge function:', apiError);
           
-          // If the error is an AbortError from our timeout
-          if (apiError.name === 'AbortError') {
+          // If the error is a timeout error from our Promise.race
+          if (apiError.message && apiError.message.includes("timed out")) {
             throw Object.assign(
               new Error("The request took too long to complete. The website might be too large or our service is experiencing high load."),
-              { errorCode: "CONNECTION_ERROR" }
+              { errorCode: "CONNECTION_ERROR" as ErrorCodeType }
             );
           }
           
@@ -143,13 +155,13 @@ export const useContentProcessor = (
           error : 
           Object.assign(
             new Error(error.message || "Failed to process content"), 
-            { errorCode: determineErrorCodeFromMessage(error.message) }
+            { errorCode: determineErrorCodeFromMessage(error.message) as ErrorCodeType }
           );
         
         setError(enhancedError);
         
         toast({
-          title: getToastTitleForError(enhancedError.errorCode),
+          title: getToastTitleForError(enhancedError.errorCode as ErrorCodeType),
           description: enhancedError.message,
           variant: "destructive"
         });
@@ -165,7 +177,7 @@ export const useContentProcessor = (
 };
 
 // Helper function to determine error type based on message content
-function determineErrorCodeFromMessage(message: string): string {
+function determineErrorCodeFromMessage(message: string): ErrorCodeType {
   if (!message) return "PROCESSING_ERROR";
   
   if (message.includes("URL") || message.includes("url format") || message.includes("domain")) {
@@ -185,7 +197,7 @@ function determineErrorCodeFromMessage(message: string): string {
 }
 
 // Get user-friendly toast title based on error code
-function getToastTitleForError(errorCode: string): string {
+function getToastTitleForError(errorCode: ErrorCodeType): string {
   switch (errorCode) {
     case "URL_ERROR":
       return "Invalid URL";

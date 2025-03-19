@@ -3,10 +3,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Globe, Wifi, FileText, Cpu } from 'lucide-react';
+import { ErrorCodeType } from '@/hooks/useContentProcessor';
 
 interface ErrorDisplayProps {
   error: Error & { 
-    errorCode?: 'URL_ERROR' | 'CONNECTION_ERROR' | 'CONTENT_ERROR' | 'AI_SERVICE_ERROR' | 'PROCESSING_ERROR';
+    errorCode?: ErrorCodeType;
   };
 }
 
@@ -44,7 +45,7 @@ const ErrorDisplay = ({ error }: ErrorDisplayProps) => {
 };
 
 // Determine error type based on message content
-function determineErrorCodeFromMessage(message: string): string {
+function determineErrorCodeFromMessage(message: string): ErrorCodeType {
   if (message.includes("URL") || message.includes("url format") || message.includes("domain")) {
     return "URL_ERROR";
   } else if (message.includes("fetch") || message.includes("connection") || message.includes("timed out") || 
@@ -62,7 +63,7 @@ function determineErrorCodeFromMessage(message: string): string {
 }
 
 // Get error title based on error code
-function getErrorTitle(errorCode: string): string {
+function getErrorTitle(errorCode: ErrorCodeType): string {
   switch (errorCode) {
     case "URL_ERROR":
       return "Invalid URL";
@@ -78,7 +79,7 @@ function getErrorTitle(errorCode: string): string {
 }
 
 // Get appropriate icon based on error type
-function ErrorIcon({ errorCode }: { errorCode: string }) {
+function ErrorIcon({ errorCode }: { errorCode: ErrorCodeType }) {
   switch (errorCode) {
     case "URL_ERROR":
       return <Globe className="h-5 w-5" />;
@@ -94,7 +95,7 @@ function ErrorIcon({ errorCode }: { errorCode: string }) {
 }
 
 // Get helpful suggestion based on error type
-function getSuggestionForError(errorCode: string): string {
+function getSuggestionForError(errorCode: ErrorCodeType): string {
   switch (errorCode) {
     case "URL_ERROR":
       return "Make sure your URL is correctly formatted and includes 'https://' or 'http://'. Try removing any unusual characters or parameters.";
