@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import SettingsModal from "@/components/SettingsModal";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Settings, ArrowRight } from "lucide-react";
 
 const Index = () => {
   const [url, setUrl] = useState('');
@@ -13,6 +15,7 @@ const Index = () => {
   const [customStyle, setCustomStyle] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const path = location.pathname;
@@ -91,46 +94,68 @@ const Index = () => {
 
   return (
     <div className="min-h-screen font-sans bg-[#e4d5c2]">
-      <header className="px-6 py-4 flex justify-between items-center">
-        <div className="text-2xl font-bold text-[#221F26] font-serif">Distill</div>
-        <div className="flex items-center space-x-2">
+      <header className="px-4 sm:px-6 py-4 flex justify-between items-center">
+        <div className="text-xl sm:text-2xl font-bold text-[#221F26] font-serif">Distill</div>
+        <div className="flex items-center">
           <SettingsModal />
         </div>
       </header>
 
-      <section className="max-w-5xl mx-auto px-6 pt-16 pb-12 text-center">
-        <h1 className="text-5xl font-bold mb-4 text-[#5d4a1d] font-serif">Distill the web</h1>
-        <p className="text-2xl mb-8 max-w-3xl mx-auto text-[#a78a4e] font-sans">simple url based distiller</p>
+      <section className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-16 pb-8 sm:pb-12 text-center">
+        <h1 className="text-3xl sm:text-5xl font-bold mb-2 sm:mb-4 text-[#5d4a1d] font-serif">Distill the web</h1>
+        <p className="text-lg sm:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto text-[#a78a4e] font-sans">simple url based distiller</p>
         
-        <Card className="w-full max-w-2xl mx-auto shadow-lg border-0 bg-white">
-          <CardContent className="pt-6 bg-[#e9e9e5]/[0.66] rounded-xl">
+        <Card className="w-full max-w-xl mx-auto shadow-lg border-0 bg-white">
+          <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6 pb-4 sm:pb-6 bg-[#e9e9e5]/[0.66] rounded-xl">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input type="text" placeholder="Enter URL (e.g., example.com/article)" value={url} onChange={handleInputChange} className="flex-1 border-gray-300 focus:border-[#9b87f5] focus:ring-[#9b87f5] font-sans" />
-                  <Button type="submit" disabled={!isValidUrl} className="bg-[#221F26] hover:bg-[#403E43] font-sans">
+              <div className="space-y-3">
+                <div className={`flex ${isMobile ? 'flex-col gap-3' : 'flex-row gap-2'}`}>
+                  <Input 
+                    type="text" 
+                    placeholder="Enter URL (e.g., example.com/article)" 
+                    value={url} 
+                    onChange={handleInputChange} 
+                    className="flex-1 border-gray-300 focus:border-[#9b87f5] focus:ring-[#9b87f5] font-sans text-base h-12 sm:h-10" 
+                  />
+                  <Button 
+                    type="submit" 
+                    disabled={!isValidUrl} 
+                    className={`bg-[#221F26] hover:bg-[#403E43] font-sans ${isMobile ? 'w-full h-12' : 'h-10'} flex items-center justify-center`}
+                  >
                     Distill
+                    {isMobile && <ArrowRight className="ml-2 h-5 w-5" />}
                   </Button>
                 </div>
-                <div className="pt-4 py-0 px-[150px]">
+                
+                <div className="pt-1 sm:pt-4 sm:px-[150px] px-1">
                   <p className="text-sm mb-2 text-left text-orange-900 font-sans">
                     Optional: Apply a custom style or perspective
                   </p>
-                  <div className="flex gap-2">
-                    <Input type="text" placeholder="Custom style (e.g., clickbait, academic, etc.)" value={customStyle} onChange={handleStyleChange} className="flex-1 border-gray-300 font-sans" />
-                  </div>
+                  <Input 
+                    type="text" 
+                    placeholder="Custom style (e.g., clickbait, academic, etc.)" 
+                    value={customStyle} 
+                    onChange={handleStyleChange} 
+                    className="w-full border-gray-300 font-sans h-12 sm:h-10 text-base" 
+                  />
                 </div>
               </div>
               
               <div className="pt-1">
                 <p className="text-sm text-[#8A898C] mb-2 text-left font-sans">Try these styles:</p>
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('simple')} className="border-[#9b87f5] text-[#403E43] rounded-full font-sans">Simple</Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('eli5')} className="border-[#9b87f5] text-[#403E43] rounded-full font-sans">ELI5</Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('clickbait')} className="border-[#9b87f5] text-[#403E43] rounded-full font-sans">Clickbait</Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('tamil')} className="border-[#9b87f5] text-[#403E43] rounded-full font-sans">Tamil</Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('executivesummary')} className="border-[#9b87f5] text-[#403E43] rounded-full font-sans">Executive Summary</Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => handleStyleClick('5')} className="border-[#9b87f5] text-[#403E43] rounded-full font-sans">5 Bullets</Button>
+                  {['simple', 'eli5', 'clickbait', 'tamil', 'executivesummary', '5'].map((style) => (
+                    <Button
+                      key={style}
+                      type="button"
+                      variant="outline"
+                      size={isMobile ? "default" : "sm"}
+                      onClick={() => handleStyleClick(style)}
+                      className="border-[#9b87f5] text-[#403E43] rounded-full font-sans min-h-[40px] px-4"
+                    >
+                      {style === '5' ? '5 Bullets' : style}
+                    </Button>
+                  ))}
                 </div>
               </div>
             </form>
