@@ -4,11 +4,12 @@ import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
 import MinimalContentView from '@/components/MinimalContentView';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
+import { SummarizationStyle } from '@/types/settings';
 
 const Distill = () => {
   const { customStyle } = useParams<{ customStyle?: string }>();
   const location = useLocation();
-  const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<string>('standard');
+  const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<SummarizationStyle>('standard');
   const [bulletCount, setBulletCount] = useState<number | undefined>(undefined);
   const [fullUrl, setFullUrl] = useState<string>('');
   
@@ -16,7 +17,8 @@ const Distill = () => {
     // First, determine the style and bullet count
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
-      setCurrentSummarizationStyle(style);
+      // Ensure we're only using valid summarization styles
+      setCurrentSummarizationStyle(style as SummarizationStyle);
       setBulletCount(bulletCount);
       
       // If URL has a direct bullet count parameter
