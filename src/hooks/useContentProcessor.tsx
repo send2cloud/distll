@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from 'react';
-import { SummarizationStyle } from '@/components/SettingsModal';
+import { AIModel, SummarizationStyle } from '@/contexts/SettingsContext';
 import { toast } from "@/components/ui/use-toast";
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
+import { useSettings } from '@/contexts/SettingsContext';
 
 // Define the valid error code types to match the ErrorDisplay component
 export type ErrorCodeType = 'URL_ERROR' | 'CONNECTION_ERROR' | 'CONTENT_ERROR' | 'AI_SERVICE_ERROR' | 'PROCESSING_ERROR';
@@ -24,6 +26,7 @@ export const useContentProcessor = (
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error & { errorCode?: ErrorCodeType } | null>(null);
   const [progress, setProgress] = useState<number>(0);
+  const { settings } = useSettings();
 
   useEffect(() => {
     if (!url) {
@@ -32,7 +35,7 @@ export const useContentProcessor = (
       return;
     }
 
-    console.log("Processing content with style:", style, "and bullet count:", bulletCount);
+    console.log("Processing content with style:", style, "and bullet count:", bulletCount, "model:", settings.model);
 
     const processContent = async () => {
       setIsLoading(true);
@@ -55,7 +58,7 @@ export const useContentProcessor = (
         // Ensure the URL has a protocol prefix
         const fullUrl = hasProtocol ? processedUrl : `https://${processedUrl}`;
         
-        console.log("Processing URL:", fullUrl, "with style:", style, "and bullet count:", bulletCount);
+        console.log("Processing URL:", fullUrl, "with style:", style, "and bullet count:", bulletCount, "model:", settings.model);
         setProgress(20);
         
         setProgress(40);
@@ -71,7 +74,7 @@ export const useContentProcessor = (
         });
         
         try {
-          console.log("Calling Edge Function with params:", { url: fullUrl, style, bulletCount });
+          console.log("Calling Edge Function with params:", { url: fullUrl, style, bulletCount, model: settings.model });
           
           // Convert style to a string value, ensuring it's a valid SummarizationStyle or use 'standard' as fallback
           const styleValue = typeof style === 'string' ? style : 'standard';
@@ -80,7 +83,8 @@ export const useContentProcessor = (
           const data = await invokeProcessFunction({
             url: fullUrl,
             style: styleValue,
-            bulletCount: bulletCount
+            bulletCount: bulletCount,
+            model: settings.model
           });
           
           console.log("Received response from Edge Function:", data);
@@ -134,7 +138,7 @@ export const useContentProcessor = (
     };
     
     processContent();
-  }, [url, style, bulletCount]);
+  }, [url, style, bulletCount, settings.model]);
 
   return { originalContent, summary, isLoading, error, progress };
 };

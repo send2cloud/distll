@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -29,33 +28,9 @@ const ToggleSection: React.FC<ToggleSectionProps> = ({
 );
 
 export const ToggleSettings = () => {
-  const { settings, updateSettings } = useSettings();
-
   return (
-    <>
-      <ToggleSection 
-        id="direct-url"
-        title="Use Direct URL Summarization"
-        description="Send URLs directly to OpenRouter for summary without fetching content first"
-        checked={settings.useDirectUrlSummarization}
-        onCheckedChange={(checked) => updateSettings({ useDirectUrlSummarization: checked })}
-      />
-
-      <ToggleSection 
-        id="rich-results"
-        title="Use Rich Results"
-        description="Show results with rich formatting and UI elements"
-        checked={settings.useRichResults}
-        onCheckedChange={(checked) => updateSettings({ useRichResults: checked })}
-      />
-
-      <ToggleSection 
-        id="jina-proxy"
-        title="Use JINA Proxy"
-        description="Alternative content fetching method"
-        checked={settings.useJinaProxy}
-        onCheckedChange={(checked) => updateSettings({ useJinaProxy: checked })}
-      />
-    </>
+    <div className="space-y-4">
+      {/* Keep this empty for now, will add any new toggles we might need in future */}
+    </div>
   );
 };

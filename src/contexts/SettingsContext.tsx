@@ -9,21 +9,21 @@ export type SummarizationStyle =
   | "concise"
   | "tweet";
 
+export type AIModel = 
+  | "google/gemini-2.0-flash-thinking-exp:free"
+  | "mistralai/mistral-small-3.1-24b-instruct:free";
+
 export type SettingsData = {
   openRouterApiKey: string;
-  useDirectUrlSummarization: boolean;
   summarizationStyle: SummarizationStyle;
-  useRichResults: boolean;
-  useJinaProxy: boolean;
+  model: AIModel;
   bulletCount?: number;
 };
 
 const DEFAULT_SETTINGS: SettingsData = {
   openRouterApiKey: '',
-  useDirectUrlSummarization: false,
   summarizationStyle: 'standard',
-  useRichResults: false,
-  useJinaProxy: false,
+  model: 'google/gemini-2.0-flash-thinking-exp:free',
 };
 
 interface SettingsContextType {

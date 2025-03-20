@@ -14,11 +14,11 @@ import { Settings } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { ApiKeySettings } from "./settings/ApiKeySettings";
-import { ToggleSettings } from "./settings/ToggleSettings";
+import { ModelSelector } from "./settings/ModelSelector";
 import { SummarizationStyleSettings } from "./settings/SummarizationStyleSettings";
 
 // Re-export types from context
-export type { SummarizationStyle, SettingsData } from "@/contexts/SettingsContext";
+export type { SummarizationStyle, SettingsData, AIModel } from "@/contexts/SettingsContext";
 
 const SettingsModalContent = () => {
   const [open, setOpen] = useState(false);
@@ -51,7 +51,7 @@ const SettingsModalContent = () => {
         
         <div className="space-y-4 py-4">
           <ApiKeySettings />
-          <ToggleSettings />
+          <ModelSelector />
           <SummarizationStyleSettings />
         </div>
         
