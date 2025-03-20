@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { 
@@ -9,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSettings } from '@/contexts/SettingsContext';
-import { AIModel } from '@/contexts/SettingsContext';
+import { AIModel } from '@/types/settings';
 
 interface ModelOption {
   value: AIModel;

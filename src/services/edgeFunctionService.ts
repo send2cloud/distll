@@ -17,6 +17,7 @@ interface EdgeFunctionResponse {
  */
 interface ProcessParams {
   url?: string;
+  content?: string;
   style: string;
   bulletCount?: number;
   model: string;

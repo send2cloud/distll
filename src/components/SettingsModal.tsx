@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -16,8 +15,9 @@ import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { ApiKeySettings } from "./settings/ApiKeySettings";
 import { ModelSelector } from "./settings/ModelSelector";
 
-// Re-export types from context
-export type { SettingsData, AIModel } from "@/contexts/SettingsContext";
+// Re-export types from the types file
+export type { AIModel } from "@/types/settings";
+export type { SettingsData } from "@/contexts/SettingsContext";
 
 const SettingsModalContent = () => {
   const [open, setOpen] = useState(false);

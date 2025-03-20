@@ -1,9 +1,5 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
-
-export type AIModel = 
-  | "google/gemini-2.0-flash-thinking-exp:free"
-  | "mistralai/mistral-small-3.1-24b-instruct:free";
+import { AIModel } from '@/types/settings';
 
 export type SettingsData = {
   openRouterApiKey: string;
@@ -26,7 +22,6 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<SettingsData>(DEFAULT_SETTINGS);
   
-  // Load settings from localStorage on component mount
   useEffect(() => {
     const savedSettings = localStorage.getItem('distill-settings');
     if (savedSettings) {

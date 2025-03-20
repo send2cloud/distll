@@ -1,5 +1,4 @@
-
-import { SummarizationStyle, AIModel } from "@/contexts/SettingsContext";
+import { AIModel } from '@/types/settings';
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
 import { createAppError, enhanceError } from "@/utils/errorUtils";
 
@@ -13,7 +12,7 @@ import { createAppError, enhanceError } from "@/utils/errorUtils";
  */
 export const summarizeContent = async (
   content: string, 
-  style?: SummarizationStyle, 
+  style?: string, 
   bulletCount?: number,
   model?: AIModel
 ) => {
@@ -46,7 +45,7 @@ export const summarizeContent = async (
  */
 export const summarizeUrl = async (
   url: string, 
-  style?: SummarizationStyle, 
+  style?: string, 
   bulletCount?: number,
   model?: AIModel
 ) => {
