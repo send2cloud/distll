@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
-import { SummarizationStyle } from '@/components/SettingsModal';
 import MinimalContentView from '@/components/MinimalContentView';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
 
@@ -75,7 +74,7 @@ const Distill = () => {
     summary, 
     isLoading, 
     error 
-  } = useContentProcessor(fullUrl, currentSummarizationStyle as SummarizationStyle, bulletCount);
+  } = useContentProcessor(fullUrl, currentSummarizationStyle, bulletCount);
 
   // Always use the minimal view
   return (
@@ -83,7 +82,7 @@ const Distill = () => {
       content={summary} 
       isLoading={isLoading} 
       error={error} 
-      style={currentSummarizationStyle as SummarizationStyle}
+      style={currentSummarizationStyle}
     />
   );
 };

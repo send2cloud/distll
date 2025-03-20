@@ -1,28 +1,17 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export type SummarizationStyle = 
-  | "standard" 
-  | "simple" 
-  | "bullets" 
-  | "eli5" 
-  | "concise"
-  | "tweet";
-
 export type AIModel = 
   | "google/gemini-2.0-flash-thinking-exp:free"
   | "mistralai/mistral-small-3.1-24b-instruct:free";
 
 export type SettingsData = {
   openRouterApiKey: string;
-  summarizationStyle: SummarizationStyle;
   model: AIModel;
-  bulletCount?: number;
 };
 
 const DEFAULT_SETTINGS: SettingsData = {
   openRouterApiKey: '',
-  summarizationStyle: 'standard',
   model: 'google/gemini-2.0-flash-thinking-exp:free',
 };
 
@@ -61,12 +50,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const saveSettings = () => {
-    const settingsToSave: SettingsData = {
-      ...settings,
-      bulletCount: settings.summarizationStyle === "bullets" ? 5 : undefined
-    };
-    
-    localStorage.setItem('distill-settings', JSON.stringify(settingsToSave));
+    localStorage.setItem('distill-settings', JSON.stringify(settings));
   };
 
   return (

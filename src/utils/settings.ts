@@ -1,11 +1,8 @@
 
-import { SummarizationStyle, AIModel } from "@/contexts/SettingsContext";
-
 // Return fixed default settings without using localStorage
 export const getSettings = () => {
   return { 
-    summarizationStyle: 'standard' as SummarizationStyle,
-    model: 'google/gemini-2.0-flash-thinking-exp:free' as AIModel
+    model: 'google/gemini-2.0-flash-thinking-exp:free' 
   };
 };
 

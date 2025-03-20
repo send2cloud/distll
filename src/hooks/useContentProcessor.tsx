@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { AIModel, SummarizationStyle } from '@/contexts/SettingsContext';
 import { toast } from "@/components/ui/use-toast";
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
 import { useSettings } from '@/contexts/SettingsContext';
@@ -18,7 +17,7 @@ interface ContentProcessorResult {
 
 export const useContentProcessor = (
   url: string | undefined, 
-  style: string | SummarizationStyle,
+  style: string,
   bulletCount?: number
 ): ContentProcessorResult => {
   const [originalContent, setOriginalContent] = useState<string>('');
@@ -66,23 +65,13 @@ export const useContentProcessor = (
         // Add a timeout to detect long-running requests
         const timeoutDuration = 30000; // 30 seconds
         
-        // Create a timeout mechanism using setTimeout
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            reject(new Error("Request timed out after 30 seconds. The service might be experiencing high load or the website may be very large."));
-          }, timeoutDuration);
-        });
-        
         try {
           console.log("Calling Edge Function with params:", { url: fullUrl, style, bulletCount, model: settings.model });
-          
-          // Convert style to a string value, ensuring it's a valid SummarizationStyle or use 'standard' as fallback
-          const styleValue = typeof style === 'string' ? style : 'standard';
           
           // Use invokeProcessFunction instead of directly using supabase.functions.invoke
           const data = await invokeProcessFunction({
             url: fullUrl,
-            style: styleValue,
+            style: style,
             bulletCount: bulletCount,
             model: settings.model
           });

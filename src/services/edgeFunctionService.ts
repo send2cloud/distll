@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { createAppError } from "@/utils/errorUtils";
-import { AIModel, SummarizationStyle } from "@/contexts/SettingsContext";
 
 /**
  * Edge Function response interface
@@ -18,10 +17,9 @@ interface EdgeFunctionResponse {
  */
 interface ProcessParams {
   url?: string;
-  content?: string;
   style: string;
   bulletCount?: number;
-  model?: string;
+  model: string;
 }
 
 /**
