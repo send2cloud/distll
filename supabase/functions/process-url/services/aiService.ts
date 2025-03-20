@@ -10,17 +10,11 @@ const PUBLIC_API_KEY = "sk-or-v1-ff7a8499af9a6ce51a5075581ab8dce8bb83d1e43213c52
  * @param content Content to summarize
  * @param style Summarization style to use
  * @param bulletCount Number of bullet points for bullet-style summaries
- * @param model OpenRouter model to use for summarization
  * @returns Summarized content
  */
-export async function summarizeContent(
-  content: string, 
-  style: string, 
-  bulletCount?: number, 
-  model: string = "google/gemini-2.0-flash-thinking-exp:free"
-): Promise<string> {
+export async function summarizeContent(content: string, style: string, bulletCount?: number): Promise<string> {
   try {
-    console.log(`Summarizing content with style: ${style}, bullet count: ${bulletCount}, model: ${model}, content length: ${content.length} chars`);
+    console.log(`Summarizing content with style: ${style}, bullet count: ${bulletCount}, content length: ${content.length} chars`);
     
     if (!content || content.trim().length < 100) {
       throw new Error("Content is too short to summarize meaningfully (less than 100 characters)");
@@ -41,7 +35,7 @@ export async function summarizeContent(
             "X-Title": "Distill"
           },
           body: JSON.stringify({
-            model: model,
+            model: "google/gemini-2.0-flash-thinking-exp:free",
             messages: [
               {
                 role: "system",

@@ -1,14 +1,29 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { AIModel } from '@/types/settings';
+
+export type SummarizationStyle = 
+  | "standard" 
+  | "simple" 
+  | "bullets" 
+  | "eli5" 
+  | "concise"
+  | "tweet";
 
 export type SettingsData = {
   openRouterApiKey: string;
-  model: AIModel;
+  useDirectUrlSummarization: boolean;
+  summarizationStyle: SummarizationStyle;
+  useRichResults: boolean;
+  useJinaProxy: boolean;
+  bulletCount?: number;
 };
 
 const DEFAULT_SETTINGS: SettingsData = {
   openRouterApiKey: '',
-  model: 'google/gemini-2.0-flash-thinking-exp:free',
+  useDirectUrlSummarization: false,
+  summarizationStyle: 'standard',
+  useRichResults: false,
+  useJinaProxy: false,
 };
 
 interface SettingsContextType {
@@ -22,6 +37,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<SettingsData>(DEFAULT_SETTINGS);
   
+  // Load settings from localStorage on component mount
   useEffect(() => {
     const savedSettings = localStorage.getItem('distill-settings');
     if (savedSettings) {
@@ -45,7 +61,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const saveSettings = () => {
-    localStorage.setItem('distill-settings', JSON.stringify(settings));
+    const settingsToSave: SettingsData = {
+      ...settings,
+      bulletCount: settings.summarizationStyle === "bullets" ? 5 : undefined
+    };
+    
+    localStorage.setItem('distill-settings', JSON.stringify(settingsToSave));
   };
 
   return (

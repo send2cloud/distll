@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
+import { SummarizationStyle } from '@/components/SettingsModal';
 import MinimalContentView from '@/components/MinimalContentView';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
-import { SummarizationStyle } from '@/types/settings';
 
 const Distill = () => {
   const { customStyle } = useParams<{ customStyle?: string }>();
   const location = useLocation();
-  const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<SummarizationStyle>('standard');
+  const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<string>('standard');
   const [bulletCount, setBulletCount] = useState<number | undefined>(undefined);
   const [fullUrl, setFullUrl] = useState<string>('');
   
@@ -17,8 +17,7 @@ const Distill = () => {
     // First, determine the style and bullet count
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
-      // Ensure we're only using valid summarization styles
-      setCurrentSummarizationStyle(style as SummarizationStyle);
+      setCurrentSummarizationStyle(style);
       setBulletCount(bulletCount);
       
       // If URL has a direct bullet count parameter
@@ -76,7 +75,7 @@ const Distill = () => {
     summary, 
     isLoading, 
     error 
-  } = useContentProcessor(fullUrl, currentSummarizationStyle, bulletCount);
+  } = useContentProcessor(fullUrl, currentSummarizationStyle as SummarizationStyle, bulletCount);
 
   // Always use the minimal view
   return (
@@ -84,7 +83,7 @@ const Distill = () => {
       content={summary} 
       isLoading={isLoading} 
       error={error} 
-      style={currentSummarizationStyle}
+      style={currentSummarizationStyle as SummarizationStyle}
     />
   );
 };

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SummarizationStyle } from '@/types/settings';
+import { SummarizationStyle } from '@/components/SettingsModal';
 import PlainTextDisplay from '@/components/common/PlainTextDisplay';
 import ContentStateDisplay from '@/components/common/ContentStateDisplay';
 import { simplifyToPlainText } from '@/utils/textFormatting';

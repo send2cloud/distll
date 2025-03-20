@@ -20,20 +20,20 @@ serve(async (req) => {
       throw new Error("Invalid JSON in request body");
     });
     
-    const { url, content, style, bulletCount, model } = requestData;
+    const { url, content, style, bulletCount, openRouterApiKey } = requestData;
     
     if (!url && !content) {
       throw new Error("Either URL or content parameter is required");
     }
     
-    console.log(`Received request to process ${url ? 'URL: ' + url : 'direct content'} with style: ${style || 'standard'}, model: ${model || 'default'}`);
+    console.log(`Received request to process ${url ? 'URL: ' + url : 'direct content'} with style: ${style || 'standard'}`);
     
     let result;
     if (url) {
-      result = await processUrl(url, style || 'standard', bulletCount, model);
+      result = await processUrl(url, style || 'standard', bulletCount);
     } else if (content) {
       // Process direct content if provided
-      result = await processDirectContent(content, style || 'standard', bulletCount, model);
+      result = await processDirectContent(content, style || 'standard', bulletCount);
     }
     
     return new Response(

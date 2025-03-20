@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
+import { SummarizationStyle } from '@/components/SettingsModal';
 import { toast } from "@/components/ui/use-toast";
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
-import { useSettings } from '@/contexts/SettingsContext';
 
 // Define the valid error code types to match the ErrorDisplay component
 export type ErrorCodeType = 'URL_ERROR' | 'CONNECTION_ERROR' | 'CONTENT_ERROR' | 'AI_SERVICE_ERROR' | 'PROCESSING_ERROR';
@@ -17,7 +16,7 @@ interface ContentProcessorResult {
 
 export const useContentProcessor = (
   url: string | undefined, 
-  style: string,
+  style: string | SummarizationStyle,
   bulletCount?: number
 ): ContentProcessorResult => {
   const [originalContent, setOriginalContent] = useState<string>('');
@@ -25,7 +24,6 @@ export const useContentProcessor = (
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error & { errorCode?: ErrorCodeType } | null>(null);
   const [progress, setProgress] = useState<number>(0);
-  const { settings } = useSettings();
 
   useEffect(() => {
     if (!url) {
@@ -34,7 +32,7 @@ export const useContentProcessor = (
       return;
     }
 
-    console.log("Processing content with style:", style, "and bullet count:", bulletCount, "model:", settings.model);
+    console.log("Processing content with style:", style, "and bullet count:", bulletCount);
 
     const processContent = async () => {
       setIsLoading(true);
@@ -57,7 +55,7 @@ export const useContentProcessor = (
         // Ensure the URL has a protocol prefix
         const fullUrl = hasProtocol ? processedUrl : `https://${processedUrl}`;
         
-        console.log("Processing URL:", fullUrl, "with style:", style, "and bullet count:", bulletCount, "model:", settings.model);
+        console.log("Processing URL:", fullUrl, "with style:", style, "and bullet count:", bulletCount);
         setProgress(20);
         
         setProgress(40);
@@ -65,15 +63,24 @@ export const useContentProcessor = (
         // Add a timeout to detect long-running requests
         const timeoutDuration = 30000; // 30 seconds
         
+        // Create a timeout mechanism using setTimeout
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(new Error("Request timed out after 30 seconds. The service might be experiencing high load or the website may be very large."));
+          }, timeoutDuration);
+        });
+        
         try {
-          console.log("Calling Edge Function with params:", { url: fullUrl, style, bulletCount, model: settings.model });
+          console.log("Calling Edge Function with params:", { url: fullUrl, style, bulletCount });
+          
+          // Convert style to a string value, ensuring it's a valid SummarizationStyle or use 'standard' as fallback
+          const styleValue = typeof style === 'string' ? style : 'standard';
           
           // Use invokeProcessFunction instead of directly using supabase.functions.invoke
           const data = await invokeProcessFunction({
             url: fullUrl,
-            style: style,
-            bulletCount: bulletCount,
-            model: settings.model
+            style: styleValue,
+            bulletCount: bulletCount
           });
           
           console.log("Received response from Edge Function:", data);
@@ -127,7 +134,7 @@ export const useContentProcessor = (
     };
     
     processContent();
-  }, [url, style, bulletCount, settings.model]);
+  }, [url, style, bulletCount]);
 
   return { originalContent, summary, isLoading, error, progress };
 };

@@ -1,4 +1,5 @@
-import { AIModel } from '@/types/settings';
+
+import { SummarizationStyle } from "@/components/SettingsModal";
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
 import { createAppError, enhanceError } from "@/utils/errorUtils";
 
@@ -7,15 +8,9 @@ import { createAppError, enhanceError } from "@/utils/errorUtils";
  * @param content Content to summarize
  * @param style Summarization style
  * @param bulletCount Number of bullet points for bullet-style summaries
- * @param model AI model to use for summarization
  * @returns Summarized content
  */
-export const summarizeContent = async (
-  content: string, 
-  style?: string, 
-  bulletCount?: number,
-  model?: AIModel
-) => {
+export const summarizeContent = async (content: string, style?: SummarizationStyle, bulletCount?: number) => {
   if (!content) {
     throw createAppError("No content provided for summarization", "CONTENT_ERROR");
   }
@@ -24,8 +19,7 @@ export const summarizeContent = async (
     const data = await invokeProcessFunction({
       content: content,
       style: style || 'standard',
-      bulletCount: bulletCount,
-      model: model
+      bulletCount: bulletCount
     });
     
     return data.summary;
@@ -40,15 +34,9 @@ export const summarizeContent = async (
  * @param url URL to summarize
  * @param style Summarization style
  * @param bulletCount Number of bullet points for bullet-style summaries
- * @param model AI model to use for summarization
  * @returns Summarized content
  */
-export const summarizeUrl = async (
-  url: string, 
-  style?: string, 
-  bulletCount?: number,
-  model?: AIModel
-) => {
+export const summarizeUrl = async (url: string, style?: SummarizationStyle, bulletCount?: number) => {
   if (!url) {
     throw createAppError("No URL provided for summarization", "URL_ERROR");
   }
@@ -63,8 +51,7 @@ export const summarizeUrl = async (
     const data = await invokeProcessFunction({
       url: fullUrl,
       style: style || 'standard',
-      bulletCount: bulletCount,
-      model: model
+      bulletCount: bulletCount
     });
     
     return data.summary;
