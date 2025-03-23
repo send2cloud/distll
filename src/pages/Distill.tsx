@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
-import { SummarizationStyle } from '@/components/SettingsModal';
+import { SummarizationStyle } from '@/types/settings';
 import MinimalContentView from '@/components/MinimalContentView';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
 
 const Distill = () => {
   const { customStyle } = useParams<{ customStyle?: string }>();
   const location = useLocation();
-  const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<string>('standard');
+  const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<SummarizationStyle>('standard');
   const [bulletCount, setBulletCount] = useState<number | undefined>(undefined);
   const [fullUrl, setFullUrl] = useState<string>('');
   
@@ -17,7 +17,12 @@ const Distill = () => {
     // First, determine the style and bullet count
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
-      setCurrentSummarizationStyle(style);
+      
+      // Ensure style is a valid SummarizationStyle
+      if (isValidSummarizationStyle(style)) {
+        setCurrentSummarizationStyle(style);
+      }
+      
       setBulletCount(bulletCount);
       
       // If URL has a direct bullet count parameter
@@ -75,7 +80,7 @@ const Distill = () => {
     summary, 
     isLoading, 
     error 
-  } = useContentProcessor(fullUrl, currentSummarizationStyle as SummarizationStyle, bulletCount);
+  } = useContentProcessor(fullUrl, currentSummarizationStyle, bulletCount);
 
   // Always use the minimal view
   return (
@@ -83,9 +88,14 @@ const Distill = () => {
       content={summary} 
       isLoading={isLoading} 
       error={error} 
-      style={currentSummarizationStyle as SummarizationStyle}
+      style={currentSummarizationStyle}
     />
   );
 };
+
+// Helper function to validate if a string is a valid SummarizationStyle
+function isValidSummarizationStyle(style: string): style is SummarizationStyle {
+  return ['standard', 'simple', 'bullets', 'eli5', 'concise', 'tweet'].includes(style);
+}
 
 export default Distill;

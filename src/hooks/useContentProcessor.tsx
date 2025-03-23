@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { SummarizationStyle } from '@/components/SettingsModal';
+import { SummarizationStyle } from '@/types/settings';
 import { toast } from "@/components/ui/use-toast";
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
 
@@ -16,7 +17,7 @@ interface ContentProcessorResult {
 
 export const useContentProcessor = (
   url: string | undefined, 
-  style: string | SummarizationStyle,
+  style: SummarizationStyle,
   bulletCount?: number
 ): ContentProcessorResult => {
   const [originalContent, setOriginalContent] = useState<string>('');
@@ -60,23 +61,13 @@ export const useContentProcessor = (
         
         setProgress(40);
         
-        // Add a timeout to detect long-running requests
-        const timeoutDuration = 30000; // 30 seconds
-        
-        // Create a timeout mechanism using setTimeout
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            reject(new Error("Request timed out after 30 seconds. The service might be experiencing high load or the website may be very large."));
-          }, timeoutDuration);
-        });
-        
         try {
           console.log("Calling Edge Function with params:", { url: fullUrl, style, bulletCount });
           
-          // Convert style to a string value, ensuring it's a valid SummarizationStyle or use 'standard' as fallback
-          const styleValue = typeof style === 'string' ? style : 'standard';
+          // Convert style to a string value
+          const styleValue = style || 'standard';
           
-          // Use invokeProcessFunction instead of directly using supabase.functions.invoke
+          // Use invokeProcessFunction to call the process-url edge function
           const data = await invokeProcessFunction({
             url: fullUrl,
             style: styleValue,
@@ -99,15 +90,6 @@ export const useContentProcessor = (
           setProgress(100);
         } catch (apiError: any) {
           console.error('Error processing URL with edge function:', apiError);
-          
-          // If the error is a timeout error from our Promise.race
-          if (apiError.message && apiError.message.includes("timed out")) {
-            throw Object.assign(
-              new Error("The request took too long to complete. The website might be too large or our service is experiencing high load."),
-              { errorCode: "CONNECTION_ERROR" as ErrorCodeType }
-            );
-          }
-          
           throw apiError;
         }
       } catch (error: any) {

@@ -20,7 +20,7 @@ export async function processUrl(url: string, style: string, bulletCount?: numbe
     
     // Ensure the URL has a protocol prefix
     if (!fullUrl.startsWith('http')) {
-      fullUrl = `http://${fullUrl}`;
+      fullUrl = `https://${fullUrl}`;
     }
     
     // Add Jina AI proxy prefix to the URL
@@ -59,7 +59,14 @@ export async function processUrl(url: string, style: string, bulletCount?: numbe
  */
 export async function processDirectContent(content: string, style: string, bulletCount?: number): Promise<{ originalContent: string; summary: string }> {
   try {
+    if (!content || content.trim() === '') {
+      throw new Error("Content is empty after processing");
+    }
+    
+    console.log(`Processing direct content (${content.length} chars), style: ${style}`);
+    
     const summary = await summarizeContent(content, style || 'standard', bulletCount);
+    
     return {
       originalContent: content,
       summary: summary

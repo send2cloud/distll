@@ -20,7 +20,9 @@ serve(async (req) => {
       throw new Error("Invalid JSON in request body");
     });
     
-    const { url, content, style, bulletCount, openRouterApiKey } = requestData;
+    console.log("Request data:", JSON.stringify(requestData));
+    
+    const { url, content, style, bulletCount } = requestData;
     
     if (!url && !content) {
       throw new Error("Either URL or content parameter is required");
@@ -34,6 +36,8 @@ serve(async (req) => {
     } else if (content) {
       // Process direct content if provided
       result = await processDirectContent(content, style || 'standard', bulletCount);
+    } else {
+      throw new Error("No valid input provided");
     }
     
     return new Response(
@@ -63,8 +67,6 @@ serve(async (req) => {
       errorCode = "AI_SERVICE_ERROR";
     }
     
-    // IMPORTANT CHANGE: Return a 200 status with error in the body
-    // This ensures our client code can properly process the error
     return new Response(
       JSON.stringify({
         error: userMessage,
@@ -73,7 +75,7 @@ serve(async (req) => {
         summary: ""
       }),
       { 
-        status: 200, // Changed from 400 to 200
+        status: 200, // Using 200 to ensure the client can process the error
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'

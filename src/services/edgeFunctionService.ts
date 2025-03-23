@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { createAppError } from "@/utils/errorUtils";
-import { SummarizationStyle } from "@/components/SettingsModal";
+import { SummarizationStyle } from "@/types/settings";
 
 /**
  * Edge Function response interface
@@ -30,8 +30,9 @@ interface ProcessParams {
  */
 export const invokeProcessFunction = async (params: ProcessParams): Promise<EdgeFunctionResponse> => {
   try {
+    console.log("Invoking process function with params:", params);
+    
     // Use the style as provided - we're enforcing that style is a string at this point
-    // SummarizationStyle is a TypeScript enum, not a runtime value, so we can't check against it here
     const { data, error } = await supabase.functions.invoke('process-url', {
       body: params
     });

@@ -1,5 +1,5 @@
 
-import { SummarizationStyle } from "@/components/SettingsModal";
+import { SummarizationStyle } from "@/types/settings";
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
 import { createAppError, enhanceError } from "@/utils/errorUtils";
 
@@ -45,7 +45,7 @@ export const summarizeUrl = async (url: string, style?: SummarizationStyle, bull
     // Ensure URL has protocol prefix
     let fullUrl = url.trim();
     if (!fullUrl.startsWith('http')) {
-      fullUrl = `http://${fullUrl}`;
+      fullUrl = `https://${fullUrl}`;
     }
     
     const data = await invokeProcessFunction({
