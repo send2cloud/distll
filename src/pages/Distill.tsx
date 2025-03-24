@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
-import { SummarizationStyle } from '@/types/settings';
 import MinimalContentView from '@/components/MinimalContentView';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
+import { SummarizationStyle } from '@/types/settings';
 
 const Distill = () => {
   const { customStyle } = useParams<{ customStyle?: string }>();
@@ -17,12 +17,8 @@ const Distill = () => {
     // First, determine the style and bullet count
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
-      
-      // Ensure style is a valid SummarizationStyle
-      if (isValidSummarizationStyle(style)) {
-        setCurrentSummarizationStyle(style);
-      }
-      
+      // Ensure we're only using valid summarization styles
+      setCurrentSummarizationStyle(style as SummarizationStyle);
       setBulletCount(bulletCount);
       
       // If URL has a direct bullet count parameter
@@ -92,10 +88,5 @@ const Distill = () => {
     />
   );
 };
-
-// Helper function to validate if a string is a valid SummarizationStyle
-function isValidSummarizationStyle(style: string): style is SummarizationStyle {
-  return ['standard', 'simple', 'bullets', 'eli5', 'concise', 'tweet'].includes(style);
-}
 
 export default Distill;

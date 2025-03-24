@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -14,11 +13,11 @@ import { Settings } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { ApiKeySettings } from "./settings/ApiKeySettings";
-import { ToggleSettings } from "./settings/ToggleSettings";
-import { SummarizationStyleSettings } from "./settings/SummarizationStyleSettings";
+import { ModelSelector } from "./settings/ModelSelector";
 
-// Re-export types from context
-export type { SummarizationStyle, SettingsData } from "@/contexts/SettingsContext";
+// Re-export types from the types file
+export type { AIModel } from "@/types/settings";
+export type { SettingsData } from "@/contexts/SettingsContext";
 
 const SettingsModalContent = () => {
   const [open, setOpen] = useState(false);
@@ -45,14 +44,13 @@ const SettingsModalContent = () => {
         <DialogHeader>
           <DialogTitle>Distill Settings</DialogTitle>
           <DialogDescription>
-            Configure your API keys and preferences for content distillation.
+            Configure your API keys and model preferences for content distillation.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <ApiKeySettings />
-          <ToggleSettings />
-          <SummarizationStyleSettings />
+          <ModelSelector />
         </div>
         
         <DialogFooter>

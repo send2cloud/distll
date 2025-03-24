@@ -1,95 +1,98 @@
 
-# Rewrite.Page User Guide
+# Distill User Guide
 
 ## Introduction
 
-Rewrite.Page is a streamlined web tool that transforms any web page content into concise, customizable summaries. It uses advanced AI to extract and summarize content directly from URLs, delivering plain text results.
+Distill is a powerful web tool that extracts and summarizes content from any web page. It's designed to help you quickly understand the key points of articles, blog posts, or any text-based web content without having to read the entire page.
 
 ## Getting Started
 
-### How to Use Rewrite.Page
+### Accessing Distill
 
-Rewrite.Page uses a simple URL pattern system. Simply construct a URL in one of these formats:
+You can access Distill directly through your web browser at the application URL.
 
-- `rewrite.page/{url}` - Standard summary of the target URL
-- `rewrite.page/{style}/{url}` - Styled summary of the target URL
-- `rewrite.page/{number}/{url}` - Summary with specified number of bullet points
+### Basic Usage
 
-### Examples
+1. **Enter a URL**: On the homepage, input the web page URL you want to process in the URL field
+2. **Select a Style** (Optional): Choose from predefined styles or enter a custom style
+3. **Click "Distill"**: Process the URL to extract and summarize its content
+4. **View Results**: Review the summarized content and original text in separate tabs
 
-- `rewrite.page/example.com/article` - Standard summary of example.com/article
-- `rewrite.page/academic/example.com/article` - Academic-style summary
-- `rewrite.page/5/example.com/article` - 5 bullet points summary
-- `rewrite.page/tweet/example.com/article` - Tweet-style (140 character) summary
-- `rewrite.page/eli5/example.com/article` - Explain Like I'm 5 summary
+## URL Format
 
-## URL Format Guidelines
-
-- Target URLs can be provided with or without `http://` or `https://` (https:// will be added automatically)
-- The style or bullet count should be placed between `rewrite.page/` and the target URL
-- For multi-word styles, use hyphens (e.g., `rewrite.page/executive-summary/example.com`)
+Distill accepts URLs in various formats:
+- With protocol prefix: `https://example.com/article`
+- Without protocol prefix: `example.com/article` (https:// will be added automatically)
 
 ## Summarization Styles
 
-Rewrite.Page supports flexible, AI-interpreted summarization styles:
+Distill offers different summarization styles to suit your needs:
 
-- **Numbers (e.g., "5")**: Creates a summary with exactly that number of bullet points
-- **Standard**: Default balanced summary when no style is specified
-- **Any text string**: Interpreted by the AI model for creative flexibility:
-  - Languages: "tamil", "spanish", "japanese", etc.
-  - Writing styles: "academic", "poetic", "technical", etc.
-  - Character voices: "pirate", "shakespeare", "yoda", etc.
-  - Formats: "haiku", "sonnet", "tweet", etc.
-  - Complexity levels: "simple", "advanced", "eli5", etc.
-  - Perspectives: "leftbias", "rightbias", "neutral", etc.
+- **Simple**: A straightforward, concise summary of the main points
+- **ELI5** (Explain Like I'm 5): Simplifies complex topics into easy-to-understand language
+- **Clickbait**: Presents information in an attention-grabbing style
+- **Tamil**: Translates and summarizes content in Tamil language
+- **Executive Summary**: Formal, business-oriented summary of key points
+- **5 Bullets**: Summarizes content in 5 bullet points (number can be customized)
 
-The AI model uses its understanding of the requested style to adapt the summary accordingly.
+You can also enter a custom style in the "Custom style" field to get specialized summaries.
 
-## Output Format
+## URL Shortcuts
 
-Results are displayed as plain text without any UI elements or formatting. This makes it easy to:
-- Read quickly
-- Copy and paste into other applications
-- Use browser's built-in features (like text selection and copying)
+Distill supports direct URL patterns for quick access to specific styles:
+- `distill.app/{style}/{url}` - Apply a specific style to a URL
+- `distill.app/{url}` - Use the default style for a URL
 
-## Error Messages
+Examples:
+- `distill.app/executivesummary/example.com/article`
+- `distill.app/5/example.com/article` (5 bullet points)
 
-If something goes wrong, you'll see a plain text error message explaining the issue:
+## Features
 
-- Invalid URL format
-- Connection problems
-- Website access issues
-- Content extraction problems
-- AI processing errors
+### Content Tabs
 
-## Tips for Best Results
+The result page provides two tabs:
+- **Summary**: Shows the AI-generated summary of the content
+- **Original**: Displays the extracted original content
 
-- **URL Accuracy**: Ensure the target URL is correct and accessible
-- **Content Types**: Works best with articles, blog posts, and text-heavy pages
-- **Style Instructions**: Be specific with style instructions for better results
-- **Mobile Devices**: Works on all devices with a web browser
+### Copy Functionality
+
+Each tab includes a copy button allowing you to easily copy the content to your clipboard.
+
+### Progress Indicator
+
+During processing, a progress bar shows the current stage of content extraction and summarization.
+
+## Troubleshooting
+
+### Common Errors
+
+- **Invalid URL**: Check that your URL is correctly formatted
+- **Connection Problem**: The website might be down or blocking access
+- **Content Issue**: The page might have no meaningful text content
+- **AI Service Issue**: There might be a temporary problem with the AI service
+
+### Solutions
+
+- Verify the URL is correct and accessible
+- Try a different URL from the same website
+- Check if the website allows content extraction
+- Try again later if there are service issues
+
+## Settings
+
+Access the settings modal from the top-right corner of the application to:
+- Customize default summarization style
+- Adjust display preferences
+- Configure other application settings
 
 ## Privacy and Data Security
 
+Distill processes content securely using edge functions:
 - No content is stored permanently
-- No user data is collected
-- All processing happens securely through edge functions
+- API interactions are handled securely server-side
+- No user data is collected beyond what's necessary for the service
 
-## Technical Limitations
+## Support
 
-- Some websites may block content extraction
-- Very large pages may take longer to process
-- Dynamic JavaScript-heavy pages may have limited extraction
-- Heavily paywalled content may not be accessible
-
-## Quick Reference
-
-| URL Pattern | Description |
-|-------------|-------------|
-| `rewrite.page/{url}` | Standard summary |
-| `rewrite.page/{number}/{url}` | Bullet points (number specified) |
-| `rewrite.page/{style}/{url}` | Custom style summary |
-
-## Design Philosophy
-
-Rewrite.Page is intentionally minimal, focusing exclusively on delivering high-quality content summaries without unnecessary UI elements or distractions. The plain text response format ensures maximum compatibility and simplicity.
+If you encounter issues or have questions about using Distill, please refer to our FAQ or contact support through the application.

@@ -20,24 +20,20 @@ serve(async (req) => {
       throw new Error("Invalid JSON in request body");
     });
     
-    console.log("Request data:", JSON.stringify(requestData));
-    
-    const { url, content, style, bulletCount } = requestData;
+    const { url, content, style, bulletCount, model } = requestData;
     
     if (!url && !content) {
       throw new Error("Either URL or content parameter is required");
     }
     
-    console.log(`Received request to process ${url ? 'URL: ' + url : 'direct content'} with style: ${style || 'standard'}`);
+    console.log(`Received request to process ${url ? 'URL: ' + url : 'direct content'} with style: ${style || 'standard'}, model: ${model || 'default'}`);
     
     let result;
     if (url) {
-      result = await processUrl(url, style || 'standard', bulletCount);
+      result = await processUrl(url, style || 'standard', bulletCount, model);
     } else if (content) {
       // Process direct content if provided
-      result = await processDirectContent(content, style || 'standard', bulletCount);
-    } else {
-      throw new Error("No valid input provided");
+      result = await processDirectContent(content, style || 'standard', bulletCount, model);
     }
     
     return new Response(
@@ -67,6 +63,8 @@ serve(async (req) => {
       errorCode = "AI_SERVICE_ERROR";
     }
     
+    // IMPORTANT CHANGE: Return a 200 status with error in the body
+    // This ensures our client code can properly process the error
     return new Response(
       JSON.stringify({
         error: userMessage,
@@ -75,7 +73,7 @@ serve(async (req) => {
         summary: ""
       }),
       { 
-        status: 200, // Using 200 to ensure the client can process the error
+        status: 200, // Changed from 400 to 200
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'

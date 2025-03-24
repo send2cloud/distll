@@ -1,10 +1,10 @@
 
-import { SummarizationStyle } from "@/types/settings";
+import { SummarizationStyle, AIModel } from '@/types/settings';
 
 // Return fixed default settings without using localStorage
 export const getSettings = () => {
   return { 
-    summarizationStyle: 'standard' as SummarizationStyle
+    model: 'google/gemini-2.0-flash-thinking-exp:free' as AIModel
   };
 };
 
@@ -21,17 +21,14 @@ export const getSummarizationStyleFromPath = (pathname: string): {style: Summari
   if (customStyleMatch) {
     const customStyle = customStyleMatch[1].toLowerCase();
     
-    // Validate that the style is one of the allowed SummarizationStyle values
-    if (isValidSummarizationStyle(customStyle)) {
-      return { style: customStyle };
+    // Validate that the style is a valid SummarizationStyle
+    const validStyles: SummarizationStyle[] = ['standard', 'simple', 'bullets', 'eli5', 'concise', 'tweet'];
+    
+    if (validStyles.includes(customStyle as SummarizationStyle)) {
+      return { style: customStyle as SummarizationStyle };
     }
   }
   
   // Default to standard style
   return { style: 'standard' };
 };
-
-// Helper function to validate if a string is a valid SummarizationStyle
-function isValidSummarizationStyle(style: string): style is SummarizationStyle {
-  return ['standard', 'simple', 'bullets', 'eli5', 'concise', 'tweet'].includes(style);
-}

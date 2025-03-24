@@ -8,7 +8,10 @@ Distill is built with the following technologies:
 - **Frontend**:
   - React 18.3+ with TypeScript
   - Vite for build tooling
-  - Minimal UI for plain text display
+  - Tailwind CSS for styling
+  - shadcn/ui component library
+  - React Router for navigation
+  - React Query for data fetching
 
 - **Backend**:
   - Supabase Edge Functions (Deno runtime)
@@ -31,7 +34,6 @@ distill/
 │   ├── lib/                 # Utility libraries
 │   ├── pages/               # Application pages
 │   ├── services/            # API service wrappers
-│   ├── types/               # TypeScript type definitions
 │   └── utils/               # Helper functions
 └── supabase/
     └── functions/           # Edge Functions
@@ -44,12 +46,21 @@ distill/
 
 ### Frontend Components
 
-- **MinimalContentView.tsx**: Plain text display component
-- **PlainTextDisplay.tsx**: Renders text without formatting
-- **ContentStateDisplay.tsx**: Error and loading state handler
+- **Index.tsx**: Main landing page with URL input form
+- **Distill.tsx**: Results page displaying processed content
+- **ContentTabs.tsx**: Tabs for switching between summary and original content
+- **ErrorDisplay.tsx**: Error handling and user feedback
+- **LoadingIndicator.tsx**: Progress indication during processing
+- **SettingsModal.tsx**: User configuration options
 
-### Edge Function Services
+### Custom Hooks
 
+- **useContentProcessor.tsx**: Manages content processing state and API communication
+- **useMobile.tsx**: Responsive design helper
+
+### Services
+
+- **edgeFunctionService.ts**: Frontend service for invoking Edge Functions
 - **contentProcessor.ts**: Edge function for orchestrating content processing
 - **contentFetcher.ts**: Edge function for URL validation and content fetching
 - **aiService.ts**: Edge function for AI model integration
@@ -57,40 +68,13 @@ distill/
 
 ## Data Flow
 
-### Detailed Request Flow Diagram
-
-```
-┌─────────────┐     ┌────────────────┐     ┌─────────────────┐
-│ URL Request │────>│ URL Parsing    │────>│ Edge Function   │
-└─────────────┘     │ path/style/url │     │ Invocation      │
-                    └────────────────┘     └────────┬────────┘
-                                                    │
-                                                    ▼
-┌─────────────┐     ┌────────────────┐     ┌─────────────────┐
-│ Plain Text  │<────│ Frontend       │<────│ Content         │
-│ Display     │     │ Processing     │     │ Processing      │
-└─────────────┘     └────────────────┘     └────────┬────────┘
-                                                    │
-                                                    ▼
-                                           ┌─────────────────┐
-                                           │ Jina Content    │
-                                           │ Extraction      │
-                                           └────────┬────────┘
-                                                    │
-                                                    ▼
-                                           ┌─────────────────┐
-                                           │ OpenRouter      │
-                                           │ Summarization   │
-                                           └─────────────────┘
-```
-
-1. User enters URL in the pattern `rewrite.page/{style}/{url}`
-2. Frontend parses the URL to extract style and target URL
-3. Edge Function is invoked with style and URL parameters
-4. Content is fetched using Jina AI proxy
-5. Content is summarized by OpenRouter API using the specified style
-6. Plain text result is returned to the frontend
-7. Plain text is displayed directly without UI elements
+1. User enters a URL in the frontend (Index.tsx)
+2. The URL is validated and normalized
+3. The frontend calls the Edge Function via `invokeProcessFunction`
+4. The Edge Function fetches content using Jina AI proxy
+5. The content is processed by OpenRouter API with the selected style
+6. The results are returned to the frontend
+7. Content is displayed in the appropriate tabs
 
 ## Edge Function Architecture
 
@@ -107,83 +91,42 @@ process-url/
     └── text.ts               # Text processing utilities
 ```
 
-### Edge Function Processing Flow
+### Edge Function Request Flow
 
 ```
-┌─────────────┐     ┌────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│ HTTP        │────>│ Request         │────>│ CORS            │────>│ Request         │
-│ Request     │     │ Parsing        │     │ Validation      │     │ Parameter       │
-└─────────────┘     └────────────────┘     └─────────────────┘     │ Extraction      │
-                                                                   └────────┬────────┘
-                                                                            │
-                    ┌────────────────┐     ┌─────────────────┐              │
-                    │ Error          │<────│ URL             │<─────────────┘
-                    │ Response       │     │ Validation      │
-                    └────────────────┘     └─────────────────┘
-                                                   │
-                                                   │ Valid URL
-                                                   ▼
-                    ┌────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-                    │ Response       │<────│ AI              │<────│ Jina Content    │
-                    │ Formatting     │     │ Summarization   │     │ Extraction      │
-                    └────────────────┘     └─────────────────┘     └─────────────────┘
-                            │
-                            ▼
-                    ┌─────────────┐
-                    │ HTTP        │
-                    │ Response    │
-                    └─────────────┘
+Client Request
+    ↓
+CORS Validation
+    ↓
+Request Parsing
+    ↓
+Content Processing
+    ↓   ↙                  ↘
+    URL Processing      Direct Content Processing
+        ↓                   ↓
+    Fetch Content           |
+        ↓                   ↓
+    AI Summarization ←-----┘
+        ↓
+    Response Formatting
+        ↓
+Client Response
 ```
-
-### SummarizationPromptFactory Behavior
-
-The `SummarizationPromptFactory` class dynamically generates prompts based on the input style:
-
-1. If style is 'bullets' and a number is provided:
-   - Creates a prompt for extracting exactly that number of bullet points
-
-2. If style is empty or 'standard':
-   - Uses a general summarization prompt
-
-3. For any other style string:
-   - Passes the string directly to the LLM with instructions for interpretation
-   - LLM determines how to interpret the style (language, writing style, persona, etc.)
-
-## URL Pattern Structure
-
-```
-rewrite.page/{style}/{url}
-```
-
-- **{style}**: 
-  - Optional style parameter
-  - If numeric (e.g., "5"), interpreted as bullet count
-  - If text, interpreted as style instruction by the LLM
-  - If omitted, defaults to 'standard'
-
-- **{url}**: 
-  - Target URL to summarize
-  - Can be with or without protocol prefix
-  - Will have https:// added if missing
 
 ## Error Handling Strategy
 
 Distill implements a comprehensive error handling strategy:
 
-1. **Error Categorization**:
-   - URL_ERROR: Invalid URL format, empty URL
-   - CONNECTION_ERROR: Network issues, timeouts, blocked websites
-   - CONTENT_ERROR: Empty content, extraction failures
-   - AI_SERVICE_ERROR: OpenRouter API issues, token limits
-   - PROCESSING_ERROR: General/uncategorized errors
-
-2. **User-Friendly Messages**:
-   - Technical errors are translated into plain text user-friendly messages
-   - Messages provide clear guidance on how to resolve the issue
-
-3. **Error Propagation**:
-   - Errors from Edge Functions include appropriate HTTP status codes
-   - Frontend displays error messages as plain text
+1. **Frontend Validation**: Basic URL validation before submission
+2. **Error Categorization**: Errors are categorized into specific types:
+   - URL_ERROR
+   - CONNECTION_ERROR
+   - CONTENT_ERROR
+   - AI_SERVICE_ERROR
+   - PROCESSING_ERROR
+3. **User-Friendly Messages**: Technical errors are translated into user-friendly messages
+4. **Toast Notifications**: Important errors are displayed as toast notifications
+5. **Error Component**: Dedicated component for displaying errors with guidance
 
 ## Security Considerations
 
@@ -195,48 +138,50 @@ Distill implements a comprehensive error handling strategy:
 ## Performance Optimizations
 
 - Single request flow to reduce network overhead
-- Minimal UI for faster rendering
-- Plain text output eliminates rendering overhead
-- Error handling to provide immediate feedback on failures
+- Progress indicators to improve perceived performance
+- Error handling to provide feedback on failures
+- Timeout handling for long-running requests
 
 ## Development Guidelines
 
-### Adding Additional Edge Function Features
+### Adding New Summarization Styles
 
-1. Modify the relevant service in the Edge Function
-2. Update the error handling to account for new error types
-3. Test with various URL types and edge cases
+1. Update `promptService.ts` to include the new style prompt
+2. Add the style to the UI components in the frontend
+3. Update type definitions if necessary
 
-### Modifying Front-End Components
+### Modifying Content Processing
 
-1. Keep the UI minimal with focus on plain text display
-2. Ensure the component handles loading and error states gracefully
-3. Maintain the URL pattern parsing logic
+1. Update the relevant service in the Edge Function
+2. Test thoroughly with various URL types
+3. Ensure proper error handling
 
-## Testing and Deployment
+### UI Modifications
 
-### Testing Strategy
+1. Use the existing shadcn/ui components for consistency
+2. Follow the established design patterns
+3. Ensure responsive design for all screen sizes
 
-- Test with various URL formats and content types
-- Verify error handling for different error scenarios
-- Check performance with different-sized content
+## Deployment
 
-### Deployment Process
+The application is deployed using Lovable's built-in deployment pipeline, which handles:
 
-The application is deployed using the built-in deployment pipeline, which handles:
 1. Building the frontend assets
 2. Deploying Edge Functions
 3. Setting up routes and hosting
 
-## LLM Style Interpretation
+## SOLID Principles Implementation
 
-The LLM dynamically interprets style instructions passed in the URL:
+Distill follows SOLID principles in its architecture:
 
-- **Language/Culture**: "tamil", "spanish", "japanese"
-- **Writing Style**: "academic", "poetic", "technical"
-- **Character Voice**: "pirate", "shakespeare", "yoda"
-- **Format**: "haiku", "sonnet", "tweet"
-- **Complexity**: "simple", "advanced", "eli5"
-- **Perspective**: "conservative", "progressive", "neutral"
+- **Single Responsibility**: Each component and service has a specific, well-defined responsibility
+- **Open-Closed**: The architecture is extensible without requiring modification of existing code
+- **Liskov Substitution**: Services follow clear interfaces allowing for implementation swapping
+- **Interface Segregation**: Components depend only on the interfaces they need
+- **Dependency Inversion**: High-level modules depend on abstractions, not implementations
 
-The LLM uses its training to determine the appropriate way to adapt the content to the requested style.
+## Monitoring and Debugging
+
+- Edge Function logs are available in the Supabase dashboard
+- Frontend errors are captured and displayed to users
+- Console logging is used throughout the application for debugging

@@ -1,11 +1,12 @@
 
 /**
- * Available summarization styles for content
- * Can be any string that will be interpreted by the LLM
+ * Common types used across the application
  */
-export type SummarizationStyle = string;
 
-/**
- * Available AI models for content processing
- */
-export type AIModel = 'gpt-3.5-turbo' | 'gpt-4' | 'claude-instant' | 'claude-2' | 'mistral';
+// Type for summarization styles
+export type SummarizationStyle = 'standard' | 'simple' | 'bullets' | 'eli5' | 'concise' | 'tweet';
+
+// Type for AI models
+export type AIModel = 
+  | "google/gemini-2.0-flash-thinking-exp:free"
+  | "mistralai/mistral-small-3.1-24b-instruct:free";

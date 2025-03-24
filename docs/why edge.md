@@ -51,24 +51,12 @@ Our content processing system leverages a modern edge computing architecture:
 - **Maintainable Structure**: Well-organized services for different aspects of processing
 - **Scalability**: Edge Functions can scale according to demand
 
-## Request Flow Diagram
+## Request Flow
+
+### Current Edge Function Flow
 
 ```
-┌───────────┐     ┌─────────────┐     ┌──────────────┐
-│           │     │             │     │              │
-│  Browser  │────>│ Edge        │────>│ Jina         │
-│           │     │ Function    │<────│ Proxy        │
-│           │     │             │     │              │
-└───────────┘     └──────┬──────┘     └──────────────┘
-      ▲                  │
-      │                  │
-      │                  ▼
-      │            ┌─────────────┐
-      │            │             │
-      └────────────│ OpenRouter  │
-                   │ API         │
-                   │             │
-                   └─────────────┘
+Browser → Edge Function → [Jina Proxy + OpenRouter API] → Browser
 ```
 
 1. Client sends a single request with URL and style preferences
@@ -76,7 +64,7 @@ Our content processing system leverages a modern edge computing architecture:
 3. Edge Function fetches content through Jina proxy
 4. Edge Function sends content to OpenRouter AI
 5. Edge Function returns both original and summarized content
-6. Client displays the results as plain text
+6. Client displays the results
 
 ## Implementation Details
 
@@ -98,31 +86,7 @@ We've implemented a comprehensive error handling system:
 - **User-Friendly Messages**: Technical errors translated to understandable language
 - **Proper Status Codes**: Appropriate HTTP status codes for different errors
 - **Detailed Logging**: Comprehensive logging for debugging
-- **Client Error Display**: Informative error display in plain text
-
-## Processing Flow Diagram
-
-```
-┌───────────────────────────────────────────────────────────┐
-│                   Edge Function Processing                 │
-│                                                           │
-│  ┌─────────┐     ┌─────────┐     ┌─────────────────────┐  │
-│  │         │     │         │     │                     │  │
-│  │ Request │────>│ Extract │────>│ Validate &          │  │
-│  │ Parsing │     │ Params  │     │ Normalize URL       │  │
-│  │         │     │         │     │                     │  │
-│  └─────────┘     └─────────┘     └──────────┬──────────┘  │
-│                                             │              │
-│                                             ▼              │
-│  ┌─────────────────┐     ┌─────────┐     ┌─────────┐      │
-│  │                 │     │         │     │         │      │
-│  │ Return Response │<────│ Process │<────│ Fetch   │      │
-│  │                 │     │ Content │     │ Content │      │
-│  │                 │     │         │     │         │      │
-│  └─────────────────┘     └─────────┘     └─────────┘      │
-│                                                           │
-└───────────────────────────────────────────────────────────┘
-```
+- **Client Error Display**: Informative error components in the UI
 
 ## Conclusion
 
