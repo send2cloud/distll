@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
 import MinimalContentView from '@/components/MinimalContentView';
@@ -9,11 +9,11 @@ import { SummarizationStyle } from '@/types/settings';
 const Distill = () => {
   const { customStyle } = useParams<{ customStyle?: string }>();
   const location = useLocation();
-  const [currentSummarizationStyle, setCurrentSummarizationStyle] = useState<SummarizationStyle>('standard');
-  const [bulletCount, setBulletCount] = useState<number | undefined>(undefined);
-  const [fullUrl, setFullUrl] = useState<string>('');
+  const [currentSummarizationStyle, setCurrentSummarizationStyle] = React.useState<SummarizationStyle>('standard');
+  const [bulletCount, setBulletCount] = React.useState<number | undefined>(undefined);
+  const [fullUrl, setFullUrl] = React.useState<string>('');
   
-  useEffect(() => {
+  React.useEffect(() => {
     // First, determine the style and bullet count
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
@@ -68,7 +68,7 @@ const Distill = () => {
   }, [location.pathname, customStyle]);
   
   // Set plain text title
-  useEffect(() => {
+  React.useEffect(() => {
     document.title = "Distill Summary";
   }, []);
   

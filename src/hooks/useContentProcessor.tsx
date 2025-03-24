@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
 import { useSettings } from '@/contexts/SettingsContext';
@@ -20,14 +20,14 @@ export const useContentProcessor = (
   style: string,
   bulletCount?: number
 ): ContentProcessorResult => {
-  const [originalContent, setOriginalContent] = useState<string>('');
-  const [summary, setSummary] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error & { errorCode?: ErrorCodeType } | null>(null);
-  const [progress, setProgress] = useState<number>(0);
+  const [originalContent, setOriginalContent] = React.useState<string>('');
+  const [summary, setSummary] = React.useState<string>('');
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<Error & { errorCode?: ErrorCodeType } | null>(null);
+  const [progress, setProgress] = React.useState<number>(0);
   const { settings } = useSettings();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!url) {
       setIsLoading(false);
       setError(Object.assign(new Error("No URL provided"), { errorCode: "URL_ERROR" as ErrorCodeType }));

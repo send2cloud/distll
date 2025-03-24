@@ -8,7 +8,7 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import Index from "./pages/Index";
 import Distill from "./pages/Distill";
 import NotFound from "./pages/NotFound";
-import React from 'react';
+import * as React from 'react';
 
 // Create a new QueryClient instance outside the component
 const queryClient = new QueryClient({

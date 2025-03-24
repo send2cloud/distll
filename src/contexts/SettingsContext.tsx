@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+
+import * as React from 'react';
 import { AIModel } from '@/types/settings';
 
 export type SettingsData = {
@@ -17,12 +18,12 @@ interface SettingsContextType {
   saveSettings: () => void;
 }
 
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const SettingsContext = React.createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState<SettingsData>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = React.useState<SettingsData>(DEFAULT_SETTINGS);
   
-  useEffect(() => {
+  React.useEffect(() => {
     const savedSettings = localStorage.getItem('distill-settings');
     if (savedSettings) {
       try {
@@ -56,7 +57,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 };
 
 export const useSettings = (): SettingsContextType => {
-  const context = useContext(SettingsContext);
+  const context = React.useContext(SettingsContext);
   if (context === undefined) {
     throw new Error('useSettings must be used within a SettingsProvider');
   }
