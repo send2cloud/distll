@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ArrowRight } from "lucide-react";
-
 const Index = () => {
   const [url, setUrl] = useState('');
   const [isValidUrl, setIsValidUrl] = useState(false);
@@ -14,7 +13,6 @@ const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
-
   useEffect(() => {
     const path = location.pathname;
     if (path.length > 1) {
@@ -22,7 +20,6 @@ const Index = () => {
       processUrl(targetUrl);
     }
   }, [location.pathname]);
-
   const validateUrl = (input: string) => {
     try {
       const urlToCheck = input.startsWith('http') ? input : `http://${input}`;
@@ -32,17 +29,14 @@ const Index = () => {
       return false;
     }
   };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     setUrl(input);
     setIsValidUrl(validateUrl(input));
   };
-
   const handleStyleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCustomStyle(e.target.value);
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValidUrl) {
@@ -65,11 +59,9 @@ const Index = () => {
       navigate(`/${processableUrl}`);
     }
   };
-
   const processUrl = (targetUrl: string) => {
     navigate(`/${encodeURIComponent(targetUrl)}`);
   };
-
   const handleStyleClick = (style: string) => {
     if (isValidUrl) {
       let processableUrl = url;
@@ -87,16 +79,11 @@ const Index = () => {
       });
     }
   };
-
   return <div className="min-h-screen font-sans bg-[#e4d5c2]">
       <header className="px-4 sm:px-6 py-4 flex justify-between items-center">
         <div className="text-xl sm:text-2xl font-bold text-[#221F26] font-serif"> </div>
         <div className="flex items-center">
-          <Button 
-            variant="link" 
-            onClick={() => navigate('/settings')} 
-            className="text-[#221F26] hover:text-[#403E43]"
-          >
+          <Button variant="link" onClick={() => navigate('/settings')} className="text-[#221F26] hover:text-[#403E43]">
             Settings
           </Button>
         </div>
@@ -119,8 +106,8 @@ const Index = () => {
                 </div>
                 
                 <div className="pt-1 sm:pt-4 px-1 py-0 my-0 sm:px-[104px]">
-                  <p className="text-sm mb-2 text-left text-orange-900 font-sans">optional modifier</p>
-                  <Input type="text" placeholder="Custom style (e.g., clickbait, academic, etc.)" value={customStyle} onChange={handleStyleChange} className="w-full border-gray-300 font-sans h-12 sm:h-10 text-base" />
+                  <p className="text-sm mb-2 text-left text-orange-900 font-sans">Optional Style</p>
+                  <Input type="text" placeholder="Custom style (e.g., clickbait, academic, etc.)" value={customStyle} onChange={handleStyleChange} className="w-full border-gray-300 font-sans h-12 sm:h-10 text-base rounded-full" />
                 </div>
               </div>
               
@@ -138,5 +125,4 @@ const Index = () => {
       </section>
     </div>;
 };
-
 export default Index;
