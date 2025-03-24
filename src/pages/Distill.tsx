@@ -8,7 +8,7 @@ import { useContentProcessor } from '@/hooks/useContentProcessor';
 const Distill = () => {
   const { customStyle } = useParams<{ customStyle?: string }>();
   const location = useLocation();
-  // Change type to string instead of SummarizationStyle to support custom styles
+  // Use string type to support custom styles
   const [currentSummarizationStyle, setCurrentSummarizationStyle] = React.useState<string>('standard');
   const [bulletCount, setBulletCount] = React.useState<number | undefined>(undefined);
   const [fullUrl, setFullUrl] = React.useState<string>('');
@@ -22,7 +22,7 @@ const Distill = () => {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
       console.log("Extracted style and bulletCount:", style, bulletCount);
       
-      // Set the style as a string without casting to SummarizationStyle
+      // Set the style as a string without casting
       setCurrentSummarizationStyle(style);
       setBulletCount(bulletCount);
       

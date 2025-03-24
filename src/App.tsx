@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,9 +7,9 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import Index from "./pages/Index";
 import Distill from "./pages/Distill";
 import NotFound from "./pages/NotFound";
+import Settings from "@/pages/Settings";
 import * as React from 'react';
 
-// Create a new QueryClient instance outside the component
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -29,13 +28,15 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                {/* Custom style modifier and bullet count routes */}
-                <Route path="/:customStyle/*" element={<Distill />} />
-                {/* Direct URL summarization - this will catch any other path */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <div className="app">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/:customStyle/*" element={<Distill />} />
+                  <Route path="/*" element={<Distill />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
             </BrowserRouter>
           </TooltipProvider>
         </SettingsProvider>

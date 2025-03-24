@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SummarizationStyle } from '@/types/settings';
 import PlainTextDisplay from '@/components/common/PlainTextDisplay';
@@ -8,8 +7,8 @@ import { simplifyToPlainText } from '@/utils/textFormatting';
 interface MinimalContentViewProps {
   content: string;
   isLoading: boolean;
-  error: Error | null;
-  style?: SummarizationStyle;
+  error: Error & { errorCode?: string } | null;
+  style: string;
 }
 
 /**
