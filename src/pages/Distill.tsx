@@ -4,21 +4,25 @@ import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
 import MinimalContentView from '@/components/MinimalContentView';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
-import { SummarizationStyle } from '@/types/settings';
 
 const Distill = () => {
   const { customStyle } = useParams<{ customStyle?: string }>();
   const location = useLocation();
-  const [currentSummarizationStyle, setCurrentSummarizationStyle] = React.useState<SummarizationStyle>('standard');
+  const [currentSummarizationStyle, setCurrentSummarizationStyle] = React.useState<string>('standard');
   const [bulletCount, setBulletCount] = React.useState<number | undefined>(undefined);
   const [fullUrl, setFullUrl] = React.useState<string>('');
   
   React.useEffect(() => {
+    console.log("Current path:", location.pathname);
+    console.log("Custom style param:", customStyle);
+    
     // First, determine the style and bullet count
     if (location.pathname) {
       const { style, bulletCount } = getSummarizationStyleFromPath(location.pathname);
-      // Ensure we're only using valid summarization styles
-      setCurrentSummarizationStyle(style as SummarizationStyle);
+      console.log("Extracted style and bulletCount:", style, bulletCount);
+      
+      // Set the style as a string without casting to SummarizationStyle
+      setCurrentSummarizationStyle(style);
       setBulletCount(bulletCount);
       
       // If URL has a direct bullet count parameter
@@ -59,6 +63,7 @@ const Distill = () => {
         }
         
         setFullUrl(decodedUrl);
+        console.log("Extracted and decoded URL:", decodedUrl);
       } catch (e) {
         console.error("Error decoding URL:", e);
         // Fallback to raw URL if decoding fails
@@ -77,6 +82,15 @@ const Distill = () => {
     isLoading, 
     error 
   } = useContentProcessor(fullUrl, currentSummarizationStyle, bulletCount);
+
+  // Log what's being sent to the content processor
+  React.useEffect(() => {
+    console.log("Sending to content processor:", {
+      url: fullUrl,
+      style: currentSummarizationStyle,
+      bulletCount: bulletCount
+    });
+  }, [fullUrl, currentSummarizationStyle, bulletCount]);
 
   // Always use the minimal view
   return (
