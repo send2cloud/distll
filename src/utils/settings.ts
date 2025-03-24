@@ -8,7 +8,7 @@ export const getSettings = () => {
   };
 };
 
-export const getSummarizationStyleFromPath = (pathname: string): {style: SummarizationStyle, bulletCount?: number} => {
+export const getSummarizationStyleFromPath = (pathname: string): {style: string, bulletCount?: number} => {
   // Check for bullet point number in URL path
   const bulletMatch = pathname.match(/^\/(\d+)\//);
   if (bulletMatch) {
@@ -24,9 +24,13 @@ export const getSummarizationStyleFromPath = (pathname: string): {style: Summari
     // Validate that the style is a valid SummarizationStyle
     const validStyles: SummarizationStyle[] = ['standard', 'simple', 'bullets', 'eli5', 'concise', 'tweet'];
     
+    // If it's a predefined style, return it
     if (validStyles.includes(customStyle as SummarizationStyle)) {
-      return { style: customStyle as SummarizationStyle };
+      return { style: customStyle };
     }
+    
+    // If it's a custom style not in the predefined list, return the custom style
+    return { style: customStyle };
   }
   
   // Default to standard style
