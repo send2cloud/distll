@@ -113,7 +113,7 @@ const Index = () => {
                 <div className={`flex ${isMobile ? 'flex-col gap-3' : 'flex-row gap-2'}`}>
                   <Input type="text" placeholder="Enter URL (e.g., example.com/article)" value={url} onChange={handleInputChange} className="flex-1 border-gray-300 focus:border-[#9b87f5] focus:ring-[#9b87f5] font-sans text-base h-12 sm:h-10" />
                   <Button type="submit" disabled={!isValidUrl} className={`bg-[#221F26] hover:bg-[#403E43] font-sans ${isMobile ? 'w-full h-12' : 'h-10'} flex items-center justify-center`}>
-                    Distill
+                    Rewrite
                     {isMobile && <ArrowRight className="ml-2 h-5 w-5" />}
                   </Button>
                 </div>
