@@ -2,7 +2,7 @@
 /**
  * Available summarization styles for content
  */
-export type SummarizationStyle = 'standard' | 'simple' | 'bullets' | 'eli5' | 'concise' | 'tweet';
+export type SummarizationStyle = string;
 
 /**
  * Available AI models for content processing
