@@ -8,28 +8,39 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import Index from "./pages/Index";
 import Distill from "./pages/Distill";
 import NotFound from "./pages/NotFound";
+import React from 'react';
 
-const queryClient = new QueryClient();
+// Create a new QueryClient instance outside the component
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <SettingsProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              {/* Custom style modifier and bullet count routes */}
-              <Route path="/:customStyle/*" element={<Distill />} />
-              {/* Direct URL summarization - this will catch any other path */}
-              <Route path="*" element={<Distill />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </SettingsProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <SettingsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                {/* Custom style modifier and bullet count routes */}
+                <Route path="/:customStyle/*" element={<Distill />} />
+                {/* Direct URL summarization - this will catch any other path */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </SettingsProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 
