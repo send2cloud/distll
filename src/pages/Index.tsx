@@ -82,15 +82,15 @@ const Index = () => {
   };
   return <div className="min-h-screen font-sans bg-[#e4d5c2]">
       <header className="px-4 sm:px-6 py-4 flex justify-between items-center">
-        <div className="text-xl sm:text-2xl font-bold text-[#221F26] font-serif">Distill</div>
+        <div className="text-xl sm:text-2xl font-bold text-[#221F26] font-serif"> </div>
         <div className="flex items-center">
           <SettingsModal />
         </div>
       </header>
 
       <section className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-16 pb-8 sm:pb-12 text-center">
-        <h1 className="text-3xl sm:text-5xl font-bold mb-2 sm:mb-4 text-[#5d4a1d] font-serif">Distill the web</h1>
-        <p className="text-lg sm:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto text-[#a78a4e] font-sans">simple url based distiller</p>
+        <h1 className="text-3xl sm:text-5xl font-bold mb-2 sm:mb-4 text-[#5d4a1d] font-serif">Rewrite the web</h1>
+        <p className="text-lg sm:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto text-[#a78a4e] font-sans">just add rewrite.page in front of any article</p>
         
         <Card className="w-full max-w-xl mx-auto shadow-lg border-0 bg-white">
           <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6 pb-4 sm:pb-6 bg-[#e9e9e5]/[0.66] rounded-xl">
