@@ -1,6 +1,7 @@
 
 /**
  * Available summarization styles for content
+ * Can be any string that will be interpreted by the LLM
  */
 export type SummarizationStyle = string;
 
