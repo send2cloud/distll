@@ -38,7 +38,7 @@ const MinimalContentView = ({
         {/* Content area */}
         <div className="w-full">
           {isLoading ? (
-            <LoadingIndicator message="Summarizing content..." progress={progress} />
+            <LoadingIndicator message={`Rewriting content in ${styleDef.name}...`} progress={progress} />
           ) : error ? (
             <ErrorDisplay error={error} onRetry={onRetry} />
           ) : (
