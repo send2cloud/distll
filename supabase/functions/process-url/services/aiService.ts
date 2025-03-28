@@ -77,6 +77,19 @@ export async function summarizeWithJinaProxiedUrl(
         }
 
         const data = await response.json();
+        
+        // Add defensive check for data.choices being undefined or empty
+        if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+          console.error("Invalid API response structure:", JSON.stringify(data));
+          throw new Error("Invalid response from OpenRouter API - missing choices array");
+        }
+        
+        // Add defensive check for message content
+        if (!data.choices[0].message || !data.choices[0].message.content) {
+          console.error("Invalid message structure in response:", JSON.stringify(data.choices[0]));
+          throw new Error("Invalid response structure - missing message content");
+        }
+        
         const summary = data.choices[0].message.content;
         
         // Simple cleanup - no complex processing
@@ -182,6 +195,19 @@ export async function summarizeContent(
         }
 
         const data = await response.json();
+        
+        // Add defensive check for data.choices being undefined or empty
+        if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+          console.error("Invalid API response structure:", JSON.stringify(data));
+          throw new Error("Invalid response from OpenRouter API - missing choices array");
+        }
+        
+        // Add defensive check for message content
+        if (!data.choices[0].message || !data.choices[0].message.content) {
+          console.error("Invalid message structure in response:", JSON.stringify(data.choices[0]));
+          throw new Error("Invalid response structure - missing message content");
+        }
+        
         const summary = data.choices[0].message.content;
         
         // Simple cleanup - no complex processing
