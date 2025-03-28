@@ -14,7 +14,7 @@ export async function processUrl(
   url: string, 
   style: string, 
   bulletCount?: number, 
-  model: string = "google/gemini-2.5-pro-exp-03-25:free",
+  model: string = "google/gemma-3-4b-it",
   apiKey?: string
 ): Promise<{ originalContent: string; summary: string }> {
   try {
@@ -61,7 +61,7 @@ export async function processDirectContent(
   content: string, 
   style: string, 
   bulletCount?: number,
-  model: string = "google/gemini-2.5-pro-exp-03-25:free",
+  model: string = "google/gemma-3-4b-it",
   apiKey?: string
 ): Promise<{ originalContent: string; summary: string }> {
   try {

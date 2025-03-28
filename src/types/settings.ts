@@ -8,6 +8,8 @@ export type SummarizationStyle = 'standard' | 'simple' | 'bullets' | 'eli5' | 'c
 
 // Type for AI models
 export type AIModel = 
+  | "google/gemma-3-4b-it"
+  | "google/gemma-3-4b-it:free"
   | "google/gemini-2.5-pro-exp-03-25:free"
   | "google/gemini-2.0-flash-thinking-exp:free"
   | "google/gemini-2.0-flash-lite-preview-02-05:free"

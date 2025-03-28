@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { parseStyleFromPath } from "../process-url/services/styles/pathParser.ts";
@@ -95,10 +96,10 @@ serve(async (req) => {
     console.log(`Final processed target URL: ${targetUrl} with style: ${styleId}`);
     
     // Generate a cache key for this request
-    const cacheKey = `${targetUrl}|${styleId}|${bulletCount || ''}|default-model`;
+    const cacheKey = `${targetUrl}|${styleId}|${bulletCount || ''}|google/gemma-3-4b-it`;
     
     // Process the URL to get the summary
-    const model = "google/gemini-2.0-flash-lite-preview-02-05:free"; // Default model
+    const model = "google/gemma-3-4b-it"; // Default model
     const result = await processUrl(targetUrl, styleId, bulletCount, model);
     
     // Clean up the summary for display

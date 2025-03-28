@@ -6,7 +6,7 @@ import { SummarizationPromptFactory } from "./promptService.ts";
 const PUBLIC_API_KEY = "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";
 
 // Define fallback model to use when the primary model fails
-const FALLBACK_MODEL = "google/gemma-3-4b-it:free";
+const FALLBACK_MODEL = "google/gemma-3-4b-it";
 
 /**
  * Summarizes content using an AI model with a direct Jina-proxied URL
@@ -14,13 +14,15 @@ const FALLBACK_MODEL = "google/gemma-3-4b-it:free";
  * @param style Summarization style to use
  * @param bulletCount Number of bullet points for bullet-style summaries
  * @param model OpenRouter model to use for summarization
+ * @param apiKey Optional user-provided OpenRouter API key
  * @returns Summarized content
  */
 export async function summarizeWithJinaProxiedUrl(
   jinaProxyUrl: string,
   style: string,
   bulletCount?: number,
-  model: string = "google/gemini-2.0-flash-lite-preview-02-05:free"
+  model: string = "google/gemma-3-4b-it",
+  apiKey?: string
 ): Promise<string> {
   try {
     console.log(`Summarizing URL with style: ${style}, bullet count: ${bulletCount}, model: ${model}`);
@@ -181,13 +183,15 @@ export async function summarizeWithJinaProxiedUrl(
  * @param style Summarization style to use
  * @param bulletCount Number of bullet points for bullet-style summaries
  * @param model OpenRouter model to use for summarization
+ * @param apiKey Optional user-provided OpenRouter API key
  * @returns Summarized content
  */
 export async function summarizeContent(
   content: string, 
   style: string, 
-  bulletCount?: number, 
-  model: string = "google/gemini-2.0-flash-lite-preview-02-05:free"
+  bulletCount?: number,
+  model: string = "google/gemma-3-4b-it",
+  apiKey?: string
 ): Promise<string> {
   try {
     console.log(`Summarizing content with style: ${style}, bullet count: ${bulletCount}, model: ${model}, content length: ${content.length} chars`);

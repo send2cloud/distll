@@ -42,7 +42,7 @@ serve(async (req) => {
       content, 
       style || 'standard',
       bulletCount,
-      model || 'google/gemini-2.5-pro-exp-03-25:free'
+      model || 'google/gemma-3-4b-it'
     );
     
     let result;
