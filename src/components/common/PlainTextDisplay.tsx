@@ -1,5 +1,6 @@
 
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface PlainTextDisplayProps {
   content: string;
@@ -8,8 +9,8 @@ interface PlainTextDisplayProps {
 }
 
 /**
- * A component that displays content with basic formatting elements preserved.
- * Can display with minimal styling or as completely plain text.
+ * A component that displays content with markdown formatting.
+ * Can display with markdown styling or as completely plain text.
  */
 const PlainTextDisplay = ({ content, className = '', asPlainText = false }: PlainTextDisplayProps) => {
   // Check if we have any content to display
@@ -45,54 +46,24 @@ const PlainTextDisplay = ({ content, className = '', asPlainText = false }: Plai
     );
   }
   
-  // Process content to add proper formatting for React
-  const formatContent = () => {
-    // First, normalize line endings and ensure consistent spacing
-    const normalizedContent = content.replace(/\r\n/g, '\n');
-    
-    // Split by double newlines for paragraphs
-    const paragraphs = normalizedContent.split(/\n\n+/);
-    
-    return paragraphs.map((paragraph, index) => {
-      // Enhanced detection for bullet and numbered lists
-      const isBulletList = paragraph.includes('\n• ') || paragraph.trim().startsWith('• ');
-      const isNumberedList = /\d+\.\s/.test(paragraph) || paragraph.includes('\n1. ');
-      
-      if (isBulletList || isNumberedList) {
-        // Split the paragraph into individual list items
-        const listItems = paragraph
-          .split('\n')
-          .filter(item => item.trim().length > 0)
-          .map((item, itemIndex) => {
-            // Extract the actual content without the bullet or number
-            const content = item.replace(/^[•\s]+|^\d+\.\s+/, '').trim();
-            return (
-              <li key={`item-${index}-${itemIndex}`} className="ml-5 mb-2">
-                {content}
-              </li>
-            );
-          });
-        
-        return isNumberedList ? (
-          <ol key={`list-${index}`} className="list-decimal mb-6 pl-4 space-y-1">
-            {listItems}
-          </ol>
-        ) : (
-          <ul key={`list-${index}`} className="list-disc mb-6 pl-4 space-y-1">
-            {listItems}
-          </ul>
-        );
-      }
-      
-      // Regular paragraph
-      return <p key={`para-${index}`} className="mb-4">{paragraph}</p>;
-    });
-  };
-  
-  // Render with formatting
+  // Render using ReactMarkdown to handle the markdown formatting
   return (
     <div className={`font-sans text-base leading-relaxed ${className}`}>
-      {formatContent()}
+      <ReactMarkdown
+        components={{
+          // Customize rendering of different markdown elements
+          h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 mt-6" {...props} />,
+          h2: ({ node, ...props }) => <h2 className="text-xl font-bold mb-3 mt-5" {...props} />,
+          h3: ({ node, ...props }) => <h3 className="text-lg font-bold mb-2 mt-4" {...props} />,
+          p: ({ node, ...props }) => <p className="mb-4" {...props} />,
+          ul: ({ node, ...props }) => <ul className="list-disc mb-6 pl-6 space-y-1" {...props} />,
+          ol: ({ node, ...props }) => <ol className="list-decimal mb-6 pl-6 space-y-1" {...props} />,
+          li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+          blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4" {...props} />,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 };

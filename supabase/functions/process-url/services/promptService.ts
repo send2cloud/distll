@@ -10,8 +10,8 @@ export class SummarizationPromptFactory {
    * @returns The prompt to use for the summarization
    */
   static getPrompt(style: string, bulletCount?: number): string {
-    // Updated instruction to allow some basic formatting while maintaining clean content
-    const baseInstruction = "IMPORTANT: Output in a readable format with clear paragraph breaks. You MUST use proper formatting: paragraph breaks, bullet points (•), numbered lists (1., 2., etc). For numbered lists, format each point on its own line starting with the number followed by a period (e.g., '1. First point'). NO markdown syntax like **, #, or ```code blocks```. NO introduction or conclusion phrases like 'here's a summary' or 'in summary'. NO sign-offs like 'let me know if you need more information'. Start DIRECTLY with content. END immediately after content. Format your output with a ### START ### tag at the beginning and ### END ### tag at the end.";
+    // Updated instruction to request markdown formatting which is natural for LLMs
+    const baseInstruction = "IMPORTANT: Format your response using markdown. Use proper paragraph breaks, bullet points, and numbered lists. For numbered lists, use standard markdown format (1. First point). Use markdown headers (##, ###) for section titles if needed. NO introduction or conclusion phrases like 'here's a summary' or 'in summary'. NO sign-offs like 'let me know if you need more information'. Start DIRECTLY with content. END immediately after content. To help extraction, format your output with a ### START ### tag at the beginning and ### END ### tag at the end.";
     
     // Important instruction to focus only on the content, not the URL
     const contentFocusInstruction = "CRITICAL: Base your summary ONLY on the actual CONTENT of the page that has been fetched. DO NOT make assumptions about the content based on the URL or domain name. If the content differs from what the URL might suggest, prioritize what's actually in the content.";
@@ -19,7 +19,7 @@ export class SummarizationPromptFactory {
     // Check for special cases that need specific handling
     if (style === 'bullets' || style.includes('bullet')) {
       const count = bulletCount || 5;
-      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. IMPORTANT: Present them as a properly formatted numbered list (1., 2., etc.) with one point per line and clear breaks between items. Make each point concise but complete. ${contentFocusInstruction} ${baseInstruction}`;
+      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. Format them as a properly numbered markdown list (1. First point, etc.) with one point per line. Make each point concise but complete. ${contentFocusInstruction} ${baseInstruction}`;
     }
     
     // For any other style, provide a general instruction that interprets the style from context
@@ -31,7 +31,7 @@ export class SummarizationPromptFactory {
     - If it's a format request (like "bullets" or "tweet"), follow that structural constraint.
     - If it's an audience specification (like "eli5" or "executive"), tailor complexity accordingly.
     
-    IMPORTANT: If the style indicates a list format or multiple points, always use proper list formatting with clear line breaks between items.
+    IMPORTANT: If the style indicates a list format or multiple points, use proper markdown list formatting.
     
     ${contentFocusInstruction} ${baseInstruction}`;
   }
