@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Distill from "./pages/Distill";
 import * as React from 'react';
 
 // Create the QueryClient outside of the render function
@@ -28,6 +29,8 @@ const App = () => {
           <div className="app">
             <Routes>
               <Route path="/" element={<Index />} />
+              {/* Added routes for handling custom styles and direct URL patterns */}
+              <Route path="/:customStyle/*" element={<Distill />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

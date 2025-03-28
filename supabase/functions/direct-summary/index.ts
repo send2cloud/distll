@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { parseStyleFromPath } from "../process-url/services/styles/pathParser.ts";
@@ -22,25 +21,20 @@ serve(async (req) => {
     
     console.log(`Received direct summary request for path: ${path}`);
     
-    // Skip the leading slash and the "direct-summary" part
-    let processPath = path.replace(/^\/direct-summary\/?/, '');
+    // Get the path without the leading slash
+    let processPath = path.startsWith('/') ? path.substring(1) : path;
     
     if (!processPath) {
-      throw new Error("No URL provided. Format should be /direct-summary/{style}/{url}");
+      throw new Error("No URL provided. Format should be /{style}/{url}");
     }
     
-    // Check for and remove any unexpected path segments like "/poem/"
-    processPath = processPath.replace(/^\/poem\//, '');
-    processPath = processPath.replace(/^poem\//, '');
-    
-    console.log(`Cleaned process path: ${processPath}`);
+    console.log(`Processing path: ${processPath}`);
     
     // Parse the style from the path
     const { styleId, bulletCount, isBulletStyle } = parseStyleFromPath('/' + processPath);
     console.log(`Parsed style: ${styleId}, bulletCount: ${bulletCount}, isBulletStyle: ${isBulletStyle}`);
     
     // Extract the target URL from the path
-    // Remove the style prefix from the path
     let targetUrl;
     
     if (styleId !== 'standard') {
