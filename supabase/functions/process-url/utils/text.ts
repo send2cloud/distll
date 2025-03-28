@@ -16,7 +16,26 @@ export function extractContentBetweenMarkers(text: string): string {
     }
   }
   
-  // If no markers or invalid markers, return the original text with some basic cleanup
+  // Try other common marker patterns
+  const markerPatterns = [
+    { start: '```markdown', end: '```' },
+    { start: 'Summary:', end: null },
+    { start: 'Here is the summary:', end: null },
+    { start: 'Here\'s your', end: null }
+  ];
+  
+  for (const pattern of markerPatterns) {
+    if (text.includes(pattern.start)) {
+      const startIdx = text.indexOf(pattern.start) + pattern.start.length;
+      const endIdx = pattern.end ? text.indexOf(pattern.end, startIdx) : text.length;
+      
+      if (endIdx > startIdx) {
+        return text.substring(startIdx, endIdx).trim();
+      }
+    }
+  }
+  
+  // If no markers found, return the original text with some basic cleanup
   // but preserve markdown formatting and do not force list format
   return text.replace(/^(\s*Here|I'll|This is|The following|Summary:|In summary)/i, '')
             .replace(/Let me know if you need.*$/i, '')

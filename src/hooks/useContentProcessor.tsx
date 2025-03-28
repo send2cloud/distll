@@ -33,6 +33,7 @@ export const useContentProcessor = (
   const urlRef = React.useRef(url);
   const styleRef = React.useRef(style);
   const bulletCountRef = React.useRef(bulletCount);
+  const initializationAttemptedRef = React.useRef(false);
   
   // Update refs when props change
   React.useEffect(() => {
@@ -66,6 +67,14 @@ export const useContentProcessor = (
       
       if (!processedUrl) {
         throw createAppError("URL is empty after processing", "URL_ERROR");
+      }
+      
+      // Clean up URLs with nested prefixes like "rewrite.page/"
+      if (processedUrl.includes('rewrite.page/')) {
+        const matches = processedUrl.match(/rewrite\.page\/(\d+)?\/?(.+)/);
+        if (matches && matches[2]) {
+          processedUrl = matches[2];
+        }
       }
       
       // Detect if URL contains protocol
@@ -114,6 +123,7 @@ export const useContentProcessor = (
         setSummary(data.summary);
         setOriginalContent(data.originalContent);
         setProgress(100);
+        initializationAttemptedRef.current = true;
       } catch (apiError: any) {
         console.error('Error processing URL with edge function:', apiError);
         
@@ -160,6 +170,7 @@ export const useContentProcessor = (
         enhanceError(error);
       
       setError(enhancedError);
+      initializationAttemptedRef.current = true;
       
       toast({
         title: getToastTitleForError(enhancedError.errorCode as ErrorCodeType),
@@ -173,7 +184,9 @@ export const useContentProcessor = (
 
   // Effect to process content when URL changes
   React.useEffect(() => {
-    processContent();
+    if (url && !initializationAttemptedRef.current) {
+      processContent();
+    }
   }, [url, style, bulletCount, settings.model, processContent]);
 
   // Return the retry function that calls processContent again

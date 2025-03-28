@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
@@ -63,6 +64,14 @@ const Distill = () => {
           }
         }
         
+        // Clean up URLs with rewrite.page prefix
+        if (decodedUrl.includes('rewrite.page/')) {
+          const matches = decodedUrl.match(/rewrite\.page\/(\d+)?\/?(.+)/);
+          if (matches && matches[2]) {
+            decodedUrl = matches[2];
+          }
+        }
+        
         setFullUrl(decodedUrl);
         console.log("Extracted and decoded URL:", decodedUrl);
       } catch (e) {
@@ -99,6 +108,18 @@ const Distill = () => {
     progress,
     retry
   } = useContentProcessor(fullUrl, currentSummarizationStyle, bulletCount);
+
+  // If we don't have a URL and aren't showing an error yet, show a message
+  if (!fullUrl && !isLoading && !error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-white p-4">
+        <div className="max-w-md text-center">
+          <h2 className="text-2xl font-bold mb-4">No URL Provided</h2>
+          <p className="mb-4">Please enter a URL to summarize or use the homepage to start.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Always use the minimal view
   return (
