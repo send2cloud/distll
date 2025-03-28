@@ -49,4 +49,4 @@ export const parseStyleFromPath = (pathname: string): {
   };
 };
 
-import { normalizeStyleId } from './styleNormalizer';
+import { normalizeStyleId } from './styleNormalizer.ts';
