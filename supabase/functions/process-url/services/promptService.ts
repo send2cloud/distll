@@ -10,16 +10,16 @@ export class SummarizationPromptFactory {
    * @returns The prompt to use for the summarization
    */
   static getPrompt(style: string, bulletCount?: number): string {
-    // Base instruction to avoid preambles and postambles, emphasizing PLAIN TEXT output
-    const baseInstruction = "CRITICAL: Output ONLY plain text format. NO markdown. NO formatting. Do NOT include ANY introduction or conclusion. NO phrases like 'here's a summary', 'in summary', or 'here are the key points'. NO sign-offs like 'let me know if you need more information'. Start DIRECTLY with content. END immediately after content. Use only basic ASCII characters, no unicode, emojis, or special characters. Format your output with a ### START ### tag at the beginning and ### END ### tag at the end.";
+    // Updated instruction to allow some basic formatting while maintaining clean content
+    const baseInstruction = "IMPORTANT: Output in a readable format with clear paragraph breaks. You MAY use simple formatting: paragraph breaks, bullet points (•), numbered lists (1., 2., etc), but NO markdown syntax like **, #, or ```code blocks```. NO introduction or conclusion phrases like 'here's a summary' or 'in summary'. NO sign-offs like 'let me know if you need more information'. Start DIRECTLY with content. END immediately after content. Format your output with a ### START ### tag at the beginning and ### END ### tag at the end.";
     
     // Important instruction to focus only on the content, not the URL
-    const contentFocusInstruction = "IMPORTANT: Base your summary ONLY on the actual CONTENT of the page that has been fetched. DO NOT make assumptions about the content based on the URL or domain name. If the content differs from what the URL might suggest, prioritize what's actually in the content.";
+    const contentFocusInstruction = "CRITICAL: Base your summary ONLY on the actual CONTENT of the page that has been fetched. DO NOT make assumptions about the content based on the URL or domain name. If the content differs from what the URL might suggest, prioritize what's actually in the content.";
     
     // Check for special cases that need specific handling
     if (style === 'bullets' || style.includes('bullet')) {
       const count = bulletCount || 5;
-      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. Present them as numbered items (ex: 1. Point one). Make each point concise and informative. Do not use any special characters or formatting. ${contentFocusInstruction} ${baseInstruction}`;
+      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. Present them as numbered items (1., 2., etc.) or bullet points (•). Make each point concise and informative. Use paragraph breaks between points for readability. ${contentFocusInstruction} ${baseInstruction}`;
     }
     
     // For any other style, provide a general instruction that interprets the style from context

@@ -1,8 +1,8 @@
 
 /**
- * Extract content between markdown markers
+ * Extract content between markdown markers, preserving basic formatting
  * @param text Text that may contain markdown markers
- * @returns Cleaned text without markdown markers
+ * @returns Cleaned text without markdown markers but with basic formatting preserved
  */
 export function extractContentBetweenMarkers(text: string): string {
   // Check if text has the START/END markers
@@ -15,6 +15,7 @@ export function extractContentBetweenMarkers(text: string): string {
   }
   
   // If no markers or invalid markers, return the original text with some basic cleanup
+  // but preserve paragraph breaks, bullet points, and numbered lists
   return text.replace(/^(\s*Here|I'll|This is|The following|Summary:|In summary)/i, '')
             .replace(/Let me know if you need.*$/i, '')
             .replace(/I hope this (helps|summary is helpful).*$/i, '')

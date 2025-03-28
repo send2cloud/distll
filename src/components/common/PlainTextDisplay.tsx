@@ -8,8 +8,8 @@ interface PlainTextDisplayProps {
 }
 
 /**
- * A component that displays content as plain text without any special formatting.
- * Can display as true plain text (no styling at all) or with minimal styling.
+ * A component that displays content with basic formatting elements preserved.
+ * Can display with minimal styling or as completely plain text.
  */
 const PlainTextDisplay = ({ content, className = '', asPlainText = false }: PlainTextDisplayProps) => {
   // Check if we have any content to display
@@ -45,13 +45,42 @@ const PlainTextDisplay = ({ content, className = '', asPlainText = false }: Plai
     );
   }
   
-  // Minimal styling approach
+  // Process content to add proper formatting for React
+  const formatContent = () => {
+    // Split by double newlines for paragraphs
+    const paragraphs = content.split(/\n\n+/);
+    
+    return paragraphs.map((paragraph, index) => {
+      // Check if paragraph is a bullet list
+      if (paragraph.trim().startsWith('•') || /^\d+\./.test(paragraph.trim())) {
+        // Split the paragraph into individual bullet points
+        const listItems = paragraph
+          .split('\n')
+          .filter(item => item.trim().length > 0)
+          .map((item, itemIndex) => (
+            <li key={`item-${index}-${itemIndex}`} className="ml-5 mb-1">{item.replace(/^[•\s]+|^\d+\.\s+/, '')}</li>
+          ));
+        
+        // Determine if this is a numbered or bullet list
+        const isNumberedList = /^\d+\./.test(paragraph.trim());
+        
+        return isNumberedList ? (
+          <ol key={`list-${index}`} className="list-decimal mb-4 pl-4">{listItems}</ol>
+        ) : (
+          <ul key={`list-${index}`} className="list-disc mb-4 pl-4">{listItems}</ul>
+        );
+      }
+      
+      // Regular paragraph
+      return <p key={`para-${index}`} className="mb-4">{paragraph}</p>;
+    });
+  };
+  
+  // Render with formatting
   return (
-    <pre 
-      className={`whitespace-pre-wrap break-words font-sans text-base leading-relaxed p-0 m-0 ${className}`}
-    >
-      {content}
-    </pre>
+    <div className={`font-sans text-base leading-relaxed ${className}`}>
+      {formatContent()}
+    </div>
   );
 };
 
