@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,7 +55,6 @@ const Index = () => {
     
     const normalizedStyle = customStyle.trim() ? styleFacade.normalizeStyleId(customStyle.trim()) : '';
     
-    // Build direct URL to the edge function
     let directUrl = `${window.location.origin}/direct-summary/`;
     
     if (normalizedStyle) {
@@ -65,7 +63,8 @@ const Index = () => {
     
     directUrl += processableUrl;
     
-    // Navigate to the direct-summary URL
+    console.log("Redirecting to:", directUrl);
+    
     window.location.href = directUrl;
   };
   

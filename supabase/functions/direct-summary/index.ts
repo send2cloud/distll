@@ -58,6 +58,18 @@ serve(async (req) => {
       targetUrl = processPath;
     }
     
+    // Handle case where targetUrl wasn't extracted properly
+    if (!targetUrl) {
+      // Fallback: treat everything after the style part as the URL
+      const parts = processPath.split('/');
+      if (parts.length > 1) {
+        // Skip the first part (style) and join the rest as URL
+        targetUrl = parts.slice(1).join('/');
+      } else {
+        throw new Error("Could not extract target URL from path. Please check format.");
+      }
+    }
+    
     // Decode the URL if needed
     try {
       targetUrl = decodeURIComponent(targetUrl);
