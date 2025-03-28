@@ -10,7 +10,7 @@ export type SettingsData = {
 
 const DEFAULT_SETTINGS: SettingsData = {
   openRouterApiKey: '',
-  model: 'google/gemini-2.0-flash-thinking-exp:free',
+  model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
   darkMode: false,
 };
 

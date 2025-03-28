@@ -1,4 +1,3 @@
-
 import { extractContentBetweenMarkers } from "../utils/text.ts";
 import { SummarizationPromptFactory } from "./promptService.ts";
 
@@ -6,7 +5,7 @@ import { SummarizationPromptFactory } from "./promptService.ts";
 const PUBLIC_API_KEY = "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";
 
 // Define fallback model to use when the primary model fails
-const FALLBACK_MODEL = "anthropic/claude-3-haiku-20240307";
+const FALLBACK_MODEL = "google/gemini-2.0-flash-thinking-exp:free";
 
 /**
  * Summarizes content using an AI model with a direct Jina-proxied URL
@@ -20,7 +19,7 @@ export async function summarizeWithJinaProxiedUrl(
   jinaProxyUrl: string,
   style: string,
   bulletCount?: number,
-  model: string = "google/gemini-2.0-flash-thinking-exp:free"
+  model: string = "google/gemini-2.0-flash-lite-preview-02-05:free"
 ): Promise<string> {
   try {
     console.log(`Summarizing URL with style: ${style}, bullet count: ${bulletCount}, model: ${model}`);
@@ -186,7 +185,7 @@ export async function summarizeContent(
   content: string, 
   style: string, 
   bulletCount?: number, 
-  model: string = "google/gemini-2.0-flash-thinking-exp:free"
+  model: string = "google/gemini-2.0-flash-lite-preview-02-05:free"
 ): Promise<string> {
   try {
     console.log(`Summarizing content with style: ${style}, bullet count: ${bulletCount}, model: ${model}, content length: ${content.length} chars`);

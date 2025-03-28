@@ -46,7 +46,7 @@ const MinimalContentView = ({ content, isLoading, error, style, onRetry }: Minim
                 {content ? (
                   <PlainTextDisplay content={content} />
                 ) : (
-                  <ContentStateDisplay message="No content to display" />
+                  <ContentStateDisplay state="empty" />
                 )}
               </CardContent>
             </Card>

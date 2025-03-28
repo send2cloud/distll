@@ -24,6 +24,11 @@ const models: ModelOption[] = [
     description: 'Latest and most capable AI model from Google'
   },
   {
+    value: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+    label: 'Gemini 2.0 Flash Lite (Google)',
+    description: 'Fast and lightweight AI model from Google'
+  },
+  {
     value: 'google/gemini-2.0-flash-thinking-exp:free',
     label: 'Gemini 2.0 (Google)',
     description: 'Fast and efficient AI model from Google'
