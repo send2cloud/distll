@@ -96,15 +96,10 @@ const Distill = () => {
   const { 
     summary, 
     isLoading, 
-    error 
+    error,
+    progress,
+    retry
   } = useContentProcessor(fullUrl, currentSummarizationStyle, bulletCount);
-
-  // Handle retry functionality
-  const handleRetry = () => {
-    // Force a re-render by setting the URL to the same value
-    // This will trigger the useEffect in useContentProcessor
-    setFullUrl(prev => prev);
-  };
 
   // Always use the minimal view
   return (
@@ -113,7 +108,8 @@ const Distill = () => {
       isLoading={isLoading} 
       error={error} 
       style={currentSummarizationStyle}
-      onRetry={handleRetry}
+      progress={progress}
+      onRetry={retry}
     />
   );
 };
