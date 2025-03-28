@@ -1,25 +1,27 @@
+
 import * as React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { getRecommendedStyles, getAllStyles, StyleDefinition } from '@/services/styles/styleService';
+import { styleFacade } from '@/services/styles';
 
 interface StyleShowcaseProps {
   onStyleSelect: (styleId: string) => void;
 }
 
 export const StyleShowcase: React.FC<StyleShowcaseProps> = ({ onStyleSelect }) => {
-  const recommendedStyles = getRecommendedStyles();
-  const allStyles = getAllStyles();
+  const recommendedStyles = styleFacade.getRecommendedStyles();
+  const allStyles = styleFacade.getAllStyles();
   
-  const formatStyles = allStyles.filter(style => style.category === 'format');
-  const toneStyles = allStyles.filter(style => style.category === 'tone');
+  const formatStyles = styleFacade.getAllStyles('format');
+  const toneStyles = styleFacade.getAllStyles('tone');
   const specialStyles = allStyles.filter(style => 
     style.category === 'special' || 
-    style.category === 'language'
+    style.category === 'language' ||
+    style.category === 'custom'
   );
   
-  const StyleButton: React.FC<{ style: StyleDefinition }> = ({ style }) => (
+  const StyleButton: React.FC<{ style: any }> = ({ style }) => (
     <Button 
       key={style.id} 
       variant="outline" 

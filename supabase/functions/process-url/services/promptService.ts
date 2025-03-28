@@ -46,9 +46,23 @@ export class SummarizationPromptFactory {
       case 'seinfeld-standup':
         return `You are a helpful assistant that specializes in summarizing content in the style of Jerry Seinfeld doing observational comedy standup. Use Jerry's characteristic "What's the deal with..." format, exaggerated observations, and witty tone. Include his signature rhetorical questions and observations about everyday things. Imagine Jerry is doing a standup bit about this content on stage. ${baseInstruction}`;
       
+      case 'tamil':
+        return `You are a helpful assistant that specializes in summarizing content in Tamil language. Use proper Tamil grammar and vocabulary. Keep the summary clear and concise. ${baseInstruction}`;
+      
+      case 'executivesummary':
+        return `You are a helpful assistant that specializes in creating professional executive summaries suitable for business leaders. Focus on key business implications, strategic insights, and actionable information. Structure it with clear sections including context, findings, implications, and recommendations if appropriate. ${baseInstruction}`;
+      
       case 'standard':
         return `You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in a plain text format. If content contains rankings or lists (like top 10), format them as proper numbered items. ${baseInstruction}`;
       
+      // New case for pirate talk
+      case 'piratetalk':
+        return `You are a helpful assistant that specializes in summarizing content in the style of a pirate. Use pirate slang, expressions, and vocabulary (like "Arr", "matey", "ye", "avast", "booty", etc.). Maintain a swashbuckling personality throughout. Occasionally mention nautical references. Keep the facts accurate while using colorful pirate language. ${baseInstruction}`;
+      
+      // New case for Vairamuthu's poetic style
+      case 'vairamuthu-poem':
+        return `You are a helpful assistant that specializes in summarizing content in the style of Tamil poet Vairamuthu. Your summary should have poetic qualities with rich metaphors, nature imagery, and philosophical reflections. Use elegant, flowing language with emotional depth. Maintain the factual content while transforming it into a poetic form that resembles Vairamuthu's lyrical style. If appropriate, include subtle references to Tamil culture and traditions. ${baseInstruction}`;
+        
       default:
         // Handle custom style modifiers (including languages and other formats)
         if (normalizedStyle && normalizedStyle !== 'standard') {
@@ -104,6 +118,18 @@ export class SummarizationPromptFactory {
       'exec-summary': 'executivesummary',
       'executive-summary': 'executivesummary',
       'business-summary': 'executivesummary',
+      
+      // Pirate talk variations
+      'pirate': 'piratetalk',
+      'pirate-speak': 'piratetalk',
+      'pirate-language': 'piratetalk',
+      'arr': 'piratetalk',
+      
+      // Vairamuthu poem variations
+      'vairamuthu': 'vairamuthu-poem',
+      'tamil-poem': 'vairamuthu-poem',
+      'vairamuthu-poetry': 'vairamuthu-poem',
+      'vairamuthu-style': 'vairamuthu-poem',
     };
     
     // Replace hyphens and underscores with spaces for normalization
@@ -124,7 +150,11 @@ export class SummarizationPromptFactory {
       
       'tamil': 'Your task is to summarize the content in Tamil language. Use proper Tamil grammar and vocabulary. Keep the summary clear and concise.',
       
-      'executivesummary': 'Your task is to create a professional executive summary suitable for business leaders. Focus on key business implications, strategic insights, and actionable information. Structure it with clear sections including context, findings, implications, and recommendations if appropriate.'
+      'executivesummary': 'Your task is to create a professional executive summary suitable for business leaders. Focus on key business implications, strategic insights, and actionable information. Structure it with clear sections including context, findings, implications, and recommendations if appropriate.',
+      
+      'piratetalk': 'Your task is to summarize the content in the style of a pirate. Use pirate slang, expressions, and vocabulary (like "Arr", "matey", "ye", "avast", "booty", etc.). Maintain a swashbuckling personality throughout. Occasionally mention nautical references. Keep the facts accurate while using colorful pirate language.',
+      
+      'vairamuthu-poem': 'Your task is to summarize the content in the style of Tamil poet Vairamuthu. Your summary should have poetic qualities with rich metaphors, nature imagery, and philosophical reflections. Use elegant, flowing language with emotional depth. Maintain the factual content while transforming it into a poetic form that resembles Vairamuthu\'s lyrical style.'
     };
     
     return customModifiers[style];

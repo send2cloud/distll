@@ -1,3 +1,4 @@
+
 import { SummarizationStyle, AIModel } from '@/types/settings';
 import { parseStyleFromPath } from '@/services/styles/pathParser';
 

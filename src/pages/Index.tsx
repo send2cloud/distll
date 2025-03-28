@@ -8,7 +8,7 @@ import { toast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ArrowRight } from "lucide-react";
 import { StyleShowcase } from "@/components/StyleShowcase";
-import { normalizeStyleId, getStyleDefinition } from "@/services/styleService";
+import { styleFacade } from '@/services/styles';
 
 const Index = () => {
   const [url, setUrl] = useState('');
@@ -65,7 +65,7 @@ const Index = () => {
       processableUrl = processableUrl.substring(8);
     }
     
-    const normalizedStyle = customStyle.trim() ? normalizeStyleId(customStyle.trim()) : '';
+    const normalizedStyle = customStyle.trim() ? styleFacade.normalizeStyleId(customStyle.trim()) : '';
     
     if (normalizedStyle) {
       navigate(`/${normalizedStyle}/${processableUrl}`);
@@ -90,7 +90,7 @@ const Index = () => {
     } else {
       setCustomStyle(styleId);
       
-      const styleDef = getStyleDefinition(styleId);
+      const styleDef = styleFacade.getStyle(styleId);
       toast({
         title: `${styleDef.name} Style Selected`,
         description: styleDef.description,
@@ -161,7 +161,7 @@ const Index = () => {
                 <div className="pt-1">
                   <p className="text-sm text-[#8A898C] mb-2 text-left font-sans">Try these styles:</p>
                   <div className="flex flex-wrap gap-2">
-                    {['simple', 'eli5', 'clickbait', 'seinfeld-standup', 'tamil', '5'].map(style => (
+                    {['simple', 'eli5', 'clickbait', 'seinfeld-standup', 'piratetalk', '5'].map(style => (
                       <Button 
                         key={style} 
                         type="button" 

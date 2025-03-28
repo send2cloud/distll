@@ -1,8 +1,13 @@
 
 import { StyleDefinition, StyleCategory } from './types';
-import { STYLE_DEFINITIONS } from './styleDefinitions';
+import { StyleService, defaultStyleService } from './StyleService';
 import { normalizeStyleId, formatStyleName } from './styleNormalizer';
 import { parseStyleFromPath } from './pathParser';
+
+// Re-export everything for backward compatibility
+export * from './types';
+export * from './styleNormalizer';
+export * from './pathParser';
 
 /**
  * Get style definition by ID
@@ -10,17 +15,7 @@ import { parseStyleFromPath } from './pathParser';
  * @returns Style definition or undefined if not found
  */
 export const getStyleDefinition = (styleId: string): StyleDefinition => {
-  // Normalize the styleId first
-  const normalizedId = normalizeStyleId(styleId);
-  
-  // Return the definition if it exists
-  return STYLE_DEFINITIONS[normalizedId] || {
-    id: normalizedId,
-    name: formatStyleName(normalizedId),
-    description: `Custom ${formatStyleName(normalizedId)} style`,
-    category: 'custom',
-    isPreset: false
-  };
+  return defaultStyleService.getStyleDefinition(styleId);
 };
 
 /**
@@ -29,8 +24,7 @@ export const getStyleDefinition = (styleId: string): StyleDefinition => {
  * @returns Prompt modifier string or undefined
  */
 export const getPromptModifier = (styleId: string): string | undefined => {
-  const definition = getStyleDefinition(styleId);
-  return definition?.promptModifier;
+  return defaultStyleService.getPromptModifier(styleId);
 };
 
 /**
@@ -39,13 +33,7 @@ export const getPromptModifier = (styleId: string): string | undefined => {
  * @returns Array of style definitions
  */
 export const getAllStyles = (categoryFilter?: StyleCategory): StyleDefinition[] => {
-  const styles = Object.values(STYLE_DEFINITIONS);
-  
-  if (categoryFilter) {
-    return styles.filter(style => style.category === categoryFilter);
-  }
-  
-  return styles;
+  return defaultStyleService.getAllStyles(categoryFilter);
 };
 
 /**
@@ -53,18 +41,8 @@ export const getAllStyles = (categoryFilter?: StyleCategory): StyleDefinition[] 
  * @returns Array of recommended style definitions
  */
 export const getRecommendedStyles = (): StyleDefinition[] => {
-  // These are the styles we want to promote in the UI
-  const recommendedStyleIds = [
-    'simple', 'eli5', 'bullets', 'concise', 'tweet', 
-    'clickbait', 'seinfeld-standup', 'tamil', 'executivesummary'
-  ];
-  
-  return recommendedStyleIds
-    .map(id => STYLE_DEFINITIONS[id])
-    .filter(Boolean);
+  return defaultStyleService.getRecommendedStyles();
 };
 
-// Export everything from the module for backward compatibility
-export * from './types';
-export * from './styleNormalizer';
-export * from './pathParser';
+// Export the StyleService class for direct usage
+export { StyleService };
