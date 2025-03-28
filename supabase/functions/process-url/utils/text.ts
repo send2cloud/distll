@@ -37,9 +37,20 @@ export function extractContentBetweenMarkers(text: string): string {
   
   // If no markers found, return the original text with some basic cleanup
   // but preserve markdown formatting and do not force list format
-  return text.replace(/^(\s*Here|I'll|This is|The following|Summary:|In summary)/i, '')
+  let cleanedText = text.replace(/^(\s*Here|I'll|This is|The following|Summary:|In summary)/i, '')
             .replace(/Let me know if you need.*$/i, '')
             .replace(/I hope this (helps|summary is helpful).*$/i, '')
             .replace(/^\s*#+\s*Summary\s*#+\s*/i, '')
             .trim();
+  
+  // Make sure any leftover START/END markers are removed
+  cleanedText = cleanedText
+    .replace(/#{1,3}\s*START\s*#{1,3}/gi, '')
+    .replace(/#{1,3}\s*END\s*#{1,3}/gi, '')
+    .replace(/\bSTART\b\s*#{1,3}/gi, '')
+    .replace(/\bEND\b\s*#{1,3}/gi, '')
+    .replace(/^START\s+/gi, '')
+    .replace(/\s+END$/gi, '');
+    
+  return cleanedText.trim();
 }

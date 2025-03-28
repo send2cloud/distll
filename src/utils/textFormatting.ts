@@ -19,7 +19,9 @@ export const preserveBasicFormatting = (content: string): string => {
     .replace(/\bSTART\b\s*#{1,3}/gi, '')
     .replace(/\bEND\b\s*#{1,3}/gi, '')
     .replace(/^START\s+/gi, '')
-    .replace(/\s+END$/gi, '');
+    .replace(/\s+END$/gi, '')
+    .replace(/\s*#{1,3}\s*START\s*#{1,3}\s*/gi, '') // Additional pattern to catch "### START ###"
+    .replace(/\s*#{1,3}\s*END\s*#{1,3}\s*/gi, '');  // Additional pattern to catch "### END ###"
   
   return cleaned.trim();
 };
