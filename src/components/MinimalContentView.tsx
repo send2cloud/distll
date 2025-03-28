@@ -25,7 +25,7 @@ const MinimalContentView = ({ content, isLoading, error, style, onRetry }: Minim
         {error && <ErrorDisplay error={error} onRetry={onRetry} />}
         
         {/* Show loading state */}
-        {isLoading && !error && <LoadingIndicator />}
+        {isLoading && !error && <LoadingIndicator progress={0} />}
         
         {/* Show content when available */}
         {!isLoading && !error && (
@@ -33,7 +33,7 @@ const MinimalContentView = ({ content, isLoading, error, style, onRetry }: Minim
             <Card className="mb-6 border-gray-200">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl font-semibold flex items-center text-gray-800">
-                  <styleDef.icon className="w-5 h-5 mr-2 text-gray-600" />
+                  {styleDef.icon && <styleDef.icon className="w-5 h-5 mr-2 text-gray-600" />}
                   {styleDef.name} Summary
                 </CardTitle>
                 {styleDef.description && (
@@ -44,7 +44,7 @@ const MinimalContentView = ({ content, isLoading, error, style, onRetry }: Minim
               </CardHeader>
               <CardContent>
                 {content ? (
-                  <PlainTextDisplay text={content} />
+                  <PlainTextDisplay content={content} />
                 ) : (
                   <ContentStateDisplay message="No content to display" />
                 )}

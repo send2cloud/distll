@@ -20,7 +20,7 @@ export async function summarizeWithJinaProxiedUrl(
   jinaProxyUrl: string,
   style: string,
   bulletCount?: number,
-  model: string = "google/gemini-2.5-pro-exp-03-25:free"
+  model: string = "google/gemini-2.0-flash-thinking-exp:free"
 ): Promise<string> {
   try {
     console.log(`Summarizing URL with style: ${style}, bullet count: ${bulletCount}, model: ${model}`);
@@ -186,7 +186,7 @@ export async function summarizeContent(
   content: string, 
   style: string, 
   bulletCount?: number, 
-  model: string = "google/gemini-2.5-pro-exp-03-25:free"
+  model: string = "google/gemini-2.0-flash-thinking-exp:free"
 ): Promise<string> {
   try {
     console.log(`Summarizing content with style: ${style}, bullet count: ${bulletCount}, model: ${model}, content length: ${content.length} chars`);
