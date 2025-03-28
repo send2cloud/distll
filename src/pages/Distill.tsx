@@ -1,9 +1,10 @@
+
 import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
 import MinimalContentView from '@/components/MinimalContentView';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
-import { getStyleDefinition } from '@/services/styles/styleService';
+import { styleFacade } from '@/services/styles';
 
 const Distill = () => {
   const { customStyle } = useParams<{ customStyle?: string }>();
@@ -76,7 +77,7 @@ const Distill = () => {
   // Set page title based on the style
   React.useEffect(() => {
     if (currentSummarizationStyle) {
-      const styleDef = getStyleDefinition(currentSummarizationStyle);
+      const styleDef = styleFacade.getStyle(currentSummarizationStyle);
       document.title = `${styleDef.name} Summary`;
     } else {
       document.title = "Distill Summary";
