@@ -62,9 +62,6 @@ export const useContentProcessor = (
         
         setProgress(40);
         
-        // Add a timeout to detect long-running requests
-        const timeoutDuration = 30000; // 30 seconds
-        
         try {
           console.log("Calling Edge Function with params:", { url: fullUrl, style, bulletCount, model: settings.model });
           

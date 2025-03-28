@@ -30,6 +30,8 @@ interface ProcessParams {
  */
 export const invokeProcessFunction = async (params: ProcessParams): Promise<EdgeFunctionResponse> => {
   try {
+    console.log("Invoking edge function with params:", params);
+    
     // Use the style as provided - we're enforcing that style is a string at this point
     const { data, error } = await supabase.functions.invoke('process-url', {
       body: params

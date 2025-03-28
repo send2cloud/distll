@@ -78,12 +78,6 @@ const Distill = () => {
     document.title = "Distill Summary";
   }, []);
   
-  const { 
-    summary, 
-    isLoading, 
-    error 
-  } = useContentProcessor(fullUrl, currentSummarizationStyle, bulletCount);
-
   // Log what's being sent to the content processor
   React.useEffect(() => {
     console.log("Sending to content processor:", {
@@ -92,6 +86,12 @@ const Distill = () => {
       bulletCount: bulletCount
     });
   }, [fullUrl, currentSummarizationStyle, bulletCount]);
+  
+  const { 
+    summary, 
+    isLoading, 
+    error 
+  } = useContentProcessor(fullUrl, currentSummarizationStyle, bulletCount);
 
   // Always use the minimal view
   return (

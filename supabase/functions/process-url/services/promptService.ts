@@ -31,6 +31,9 @@ export class SummarizationPromptFactory {
       case 'tweet':
         return `You are a helpful assistant that specializes in creating tweet-sized summaries. Your task is to distill the content into exactly 140 characters or less. Be extremely concise while capturing the most essential point. Don't use hashtags. ${baseInstruction}`;
       
+      case 'clickbait':
+        return `You are a helpful assistant that specializes in creating clickbait-style headlines and teasers. Your task is to rewrite the content in an exaggerated, sensationalist style with CAPITALIZED words for emphasis, excessive punctuation (!!!), rhetorical questions, and dramatic claims. Use phrases like "YOU WON'T BELIEVE", "SHOCKING", "MIND-BLOWING", etc. Make it sound like the most exciting thing ever, but still cover the actual content. ${baseInstruction}`;
+      
       case 'standard':
         return `You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in a plain text format. If content contains rankings or lists (like top 10), format them as proper numbered items. ${baseInstruction}`;
       

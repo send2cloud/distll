@@ -1,21 +1,23 @@
 
 /**
- * Basic text cleaning function - minimal processing as Jina proxy already provides clean content
- * @param text The text to process
- * @returns The cleaned text
+ * Extract content between markdown markers
+ * @param text Text that may contain markdown markers
+ * @returns Cleaned text without markdown markers
  */
 export function extractContentBetweenMarkers(text: string): string {
-  if (!text) return '';
+  // Check if text has the START/END markers
+  if (text.includes('### START ###') && text.includes('### END ###')) {
+    const start = text.indexOf('### START ###') + '### START ###'.length;
+    const end = text.indexOf('### END ###');
+    if (start < end) {
+      return text.substring(start, end).trim();
+    }
+  }
   
-  // Basic cleanup only - Jina proxy content is already well-formed
-  let cleaned = text.trim();
-  
-  // Remove any common AI model preambles or postambles that might be present
-  cleaned = cleaned
-    .replace(/^(Here is|I've created|Below is|This is|The following is|Here's)[^]*?:/i, '')
-    .replace(/^(\*\*|\*|#|##|###)\s*[a-zA-Z\s]+(Summary|Content|Text|Analysis)(\*\*|\*|#|##|###)/i, '')
-    .replace(/(\*\*|\*|#|##|###)\s*(End|Conclusion|Summary|That's it)([^]*?)$/i, '')
-    .trim();
-  
-  return cleaned || text;
+  // If no markers or invalid markers, return the original text with some basic cleanup
+  return text.replace(/^(\s*Here|I'll|This is|The following|Summary:|In summary)/i, '')
+            .replace(/Let me know if you need.*$/i, '')
+            .replace(/I hope this (helps|summary is helpful).*$/i, '')
+            .replace(/^\s*#+\s*Summary\s*#+\s*/i, '')
+            .trim();
 }
