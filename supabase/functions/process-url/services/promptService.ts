@@ -10,156 +10,27 @@ export class SummarizationPromptFactory {
    * @returns The prompt to use for the summarization
    */
   static getPrompt(style: string, bulletCount?: number): string {
-    // Normalize style name (future integration with frontend StyleService)
-    const normalizedStyle = this.normalizeStyleName(style);
-    
     // Base instruction to avoid preambles and postambles, emphasizing PLAIN TEXT output
     const baseInstruction = "CRITICAL: Output ONLY plain text format. NO markdown. NO formatting. Do NOT include ANY introduction or conclusion. NO phrases like 'here's a summary', 'in summary', or 'here are the key points'. NO sign-offs like 'let me know if you need more information'. Start DIRECTLY with content. END immediately after content. Use only basic ASCII characters, no unicode, emojis, or special characters. Format your output with a ### START ### tag at the beginning and ### END ### tag at the end.";
     
     // Important instruction to focus only on the content, not the URL
     const contentFocusInstruction = "IMPORTANT: Base your summary ONLY on the actual CONTENT of the page that has been fetched. DO NOT make assumptions about the content based on the URL or domain name. If the content differs from what the URL might suggest, prioritize what's actually in the content.";
     
-    // Check for special cases with custom prompt modifiers
-    const customPromptModifier = this.getCustomPromptModifier(normalizedStyle);
-    if (customPromptModifier) {
-      return `You are a helpful assistant that specializes in summarizing content in a specific style. ${customPromptModifier} ${contentFocusInstruction} ${baseInstruction}`;
+    // Check for special cases that need specific handling
+    if (style === 'bullets' || style.includes('bullet')) {
+      const count = bulletCount || 5;
+      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. Present them as numbered items (ex: 1. Point one). Make each point concise and informative. Do not use any special characters or formatting. ${contentFocusInstruction} ${baseInstruction}`;
     }
     
-    // Check for standard predefined styles
-    switch (normalizedStyle) {
-      case 'simple':
-        return `You are a helpful assistant that specializes in simplifying complex content. Your task is to rewrite the provided text in simple, easy-to-understand English with short sentences and common words. Avoid jargon and technical terms when possible. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      case 'bullets':
-        const count = bulletCount || 5;
-        return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. Present them as numbered items (ex: 1. Point one). Make each point concise and informative. Do not use any special characters or formatting. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      case 'eli5':
-        return `You are a helpful assistant that explains complex topics as if to a 5-year-old child. Use ONLY very simple language. Short sentences. Common words. Avoid ANY complex terms. Keep paragraphs to 2-3 simple sentences. Pretend the audience knows nothing about the topic. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      case 'concise':
-        return `You are a helpful assistant that specializes in creating extremely concise summaries. Your task is to distill the content down to its absolute essence in as few words as possible while retaining all key information. Use short sentences and be very economical with language. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      case 'tweet':
-        return `You are a helpful assistant that specializes in creating tweet-sized summaries. Your task is to distill the content into exactly 140 characters or less. Be extremely concise while capturing the most essential point. Don't use hashtags. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      case 'clickbait':
-        return `You are a helpful assistant that specializes in creating clickbait-style headlines and teasers. Your task is to rewrite the content in an exaggerated, sensationalist style with CAPITALIZED words for emphasis, excessive punctuation (!!!), rhetorical questions, and dramatic claims. Use phrases like "YOU WON'T BELIEVE", "SHOCKING", "MIND-BLOWING", etc. Make it sound like the most exciting thing ever, but still cover the actual content. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      case 'seinfeld-standup':
-        return `You are a helpful assistant that specializes in summarizing content in the style of Jerry Seinfeld doing observational comedy standup. Use Jerry's characteristic "What's the deal with..." format, exaggerated observations, and witty tone. Include his signature rhetorical questions and observations about everyday things. Imagine Jerry is doing a standup bit about this content on stage. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      case 'tamil':
-        return `You are a helpful assistant that specializes in summarizing content in Tamil language. Use proper Tamil grammar and vocabulary. Keep the summary clear and concise. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      case 'executivesummary':
-        return `You are a helpful assistant that specializes in creating professional executive summaries suitable for business leaders. Focus on key business implications, strategic insights, and actionable information. Structure it with clear sections including context, findings, implications, and recommendations if appropriate. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      case 'standard':
-        return `You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in a plain text format. If content contains rankings or lists (like top 10), format them as proper numbered items. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      // New case for pirate talk
-      case 'piratetalk':
-        return `You are a helpful assistant that specializes in summarizing content in the style of a pirate. Use pirate slang, expressions, and vocabulary (like "Arr", "matey", "ye", "avast", "booty", etc.). Maintain a swashbuckling personality throughout. Occasionally mention nautical references. Keep the facts accurate while using colorful pirate language. ${contentFocusInstruction} ${baseInstruction}`;
-      
-      // New case for Vairamuthu's poetic style
-      case 'vairamuthu-poem':
-        return `You are a helpful assistant that specializes in summarizing content in the style of Tamil poet Vairamuthu. Your summary should have poetic qualities with rich metaphors, nature imagery, and philosophical reflections. Use elegant, flowing language with emotional depth. Maintain the factual content while transforming it into a poetic form that resembles Vairamuthu's lyrical style. If appropriate, include subtle references to Tamil culture and traditions. ${contentFocusInstruction} ${baseInstruction}`;
-        
-      default:
-        // Handle custom style modifiers (including languages and other formats)
-        if (normalizedStyle && normalizedStyle !== 'standard') {
-          return `You are a helpful assistant that specializes in creating summaries tailored to specific styles or perspectives. The user has requested a summary in the style of "${normalizedStyle}". Use your understanding of this style modifier to adapt your approach. For example, if it's a language or cultural reference (like "tamil" or "spanish"), adapt to that cultural or linguistic context. If it's a writing style (like "clickbait" or "academic"), adapt the tone and format accordingly. If it's a bias or perspective (like "leftbias" or "rightbias"), present the content from that perspective while making it clear you're following a style instruction. If it's a business format (like "executivesummary"), follow established conventions for that format. If you don't understand the style, default to a clear, concise summary. ${contentFocusInstruction} ${baseInstruction}`;
-        }
-        
-        // If nothing matches, use standard prompt
-        return `You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in a plain text format. If content contains rankings or lists (like top 10), format them as proper numbered items. ${contentFocusInstruction} ${baseInstruction}`;
-    }
-  }
-
-  /**
-   * Normalizes a style name for better compatibility
-   * @param style Original style name
-   * @returns Normalized style name
-   */
-  private static normalizeStyleName(style: string): string {
-    if (!style) return 'standard';
+    // For any other style, provide a general instruction that interprets the style from context
+    return `You are a helpful assistant that specializes in creating summaries tailored to specific styles or perspectives. The user has requested a summary in the style of "${style}". Use your understanding of this style to adapt your approach. For example:
     
-    // Convert to lowercase and trim
-    let normalized = style.toLowerCase().trim();
+    - If it's a common summarization style (like "standard" or "concise"), focus on delivering appropriate length and detail.
+    - If it's a tone or voice instruction (like "clickbait" or "seinfeld-standup"), adopt that tone while keeping the content accurate.
+    - If it's a language request (like "tamil" or "spanish"), translate appropriately.
+    - If it's a format request (like "bullets" or "tweet"), follow that structural constraint.
+    - If it's an audience specification (like "eli5" or "executive"), tailor complexity accordingly.
     
-    // Handle common aliases and variations
-    const commonAliases: Record<string, string> = {
-      // Format variations
-      'bullet': 'bullets',
-      'bulletpoints': 'bullets',
-      'bullet-points': 'bullets',
-      'bulletpoint': 'bullets',
-      
-      // ELI5 variations
-      'explain-like-im-5': 'eli5',
-      'explainlikeimfive': 'eli5',
-      'explain-like-im-five': 'eli5',
-      'explainlikeim5': 'eli5',
-      
-      // Tweet variations
-      'twitter': 'tweet',
-      'twitter-style': 'tweet',
-      'tweet-style': 'tweet',
-      'tweetstyle': 'tweet',
-      
-      // Special case for Seinfeld standup
-      'seinfieldstandupjoke': 'seinfeld-standup',
-      'seinfield-standup-joke': 'seinfeld-standup',
-      'seinfeld-joke': 'seinfeld-standup',
-      'seinfeld-standup-joke': 'seinfeld-standup',
-      'seinfeld': 'seinfeld-standup',
-      'jerry-seinfeld': 'seinfeld-standup',
-      
-      // Exec summary variations
-      'executive': 'executivesummary',
-      'exec-summary': 'executivesummary',
-      'executive-summary': 'executivesummary',
-      'business-summary': 'executivesummary',
-      
-      // Pirate talk variations
-      'pirate': 'piratetalk',
-      'pirate-speak': 'piratetalk',
-      'pirate-language': 'piratetalk',
-      'arr': 'piratetalk',
-      
-      // Vairamuthu poem variations
-      'vairamuthu': 'vairamuthu-poem',
-      'tamil-poem': 'vairamuthu-poem',
-      'vairamuthu-poetry': 'vairamuthu-poem',
-      'vairamuthu-style': 'vairamuthu-poem',
-    };
-    
-    // Replace hyphens and underscores with spaces for normalization
-    normalized = normalized.replace(/[-_]/g, '');
-    
-    // Check if we have a match after normalizing
-    return commonAliases[normalized] || style;
-  }
-
-  /**
-   * Gets a custom prompt modifier for special styles
-   * @param style Normalized style name
-   * @returns Custom prompt modifier or undefined
-   */
-  private static getCustomPromptModifier(style: string): string | undefined {
-    const customModifiers: Record<string, string> = {
-      'seinfeld-standup': 'Your task is to summarize the content in the style of Jerry Seinfeld doing observational comedy standup. Use Jerry\'s characteristic "What\'s the deal with..." format, exaggerated observations, and witty tone. Include his signature rhetorical questions and observations about everyday things.',
-      
-      'tamil': 'Your task is to summarize the content in Tamil language. Use proper Tamil grammar and vocabulary. Keep the summary clear and concise.',
-      
-      'executivesummary': 'Your task is to create a professional executive summary suitable for business leaders. Focus on key business implications, strategic insights, and actionable information. Structure it with clear sections including context, findings, implications, and recommendations if appropriate.',
-      
-      'piratetalk': 'Your task is to summarize the content in the style of a pirate. Use pirate slang, expressions, and vocabulary (like "Arr", "matey", "ye", "avast", "booty", etc.). Maintain a swashbuckling personality throughout. Occasionally mention nautical references. Keep the facts accurate while using colorful pirate language.',
-      
-      'vairamuthu-poem': 'Your task is to summarize the content in the style of Tamil poet Vairamuthu. Your summary should have poetic qualities with rich metaphors, nature imagery, and philosophical reflections. Use elegant, flowing language with emotional depth. Maintain the factual content while transforming it into a poetic form that resembles Vairamuthu\'s lyrical style.'
-    };
-    
-    return customModifiers[style];
+    ${contentFocusInstruction} ${baseInstruction}`;
   }
 }

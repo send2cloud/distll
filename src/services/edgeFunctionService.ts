@@ -32,7 +32,7 @@ export const invokeProcessFunction = async (params: ProcessParams): Promise<Edge
   try {
     console.log("Invoking edge function with params:", params);
     
-    // Use the style as provided - we're enforcing that style is a string at this point
+    // Pass the style directly - no normalization needed as the edge function will handle interpretation
     const { data, error } = await supabase.functions.invoke('process-url', {
       body: params
     });
