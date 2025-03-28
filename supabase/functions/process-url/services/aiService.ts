@@ -50,7 +50,7 @@ export async function summarizeWithJinaProxiedUrl(
               },
               {
                 role: "user",
-                content: `Visit this URL and summarize the ACTUAL CONTENT you find there according to the style specified in my system message. Remember: Base your summary ONLY on the actual content, NOT what you might guess from the URL. Start directly with content. No preamble. No postamble. PLAIN TEXT ONLY - NO MARKDOWN.\n\nURL: ${jinaProxyUrl}`
+                content: `Visit this URL and summarize the ACTUAL CONTENT you find there according to the style specified in my system message. IMPORTANT: You MUST focus EXCLUSIVELY on the actual content found at this URL, NOT what you might guess from the URL itself. The URL and its domain name could be misleading, so ONLY summarize what you actually read. Start directly with content. No preamble. No postamble. PLAIN TEXT ONLY - NO MARKDOWN.\n\nURL: ${jinaProxyUrl}`
               }
             ],
             max_tokens: 1000
@@ -220,7 +220,7 @@ export async function summarizeContent(
               },
               {
                 role: "user",
-                content: `Summarize the following content according to the style specified in my system message. Remember: Focus ONLY on the content provided below. Start directly with content. No preamble. No postamble. PLAIN TEXT ONLY - NO MARKDOWN.\n\n${content}`
+                content: `Summarize the following content according to the style specified in my system message. FOCUS EXCLUSIVELY on the actual content provided below. Ignore any preconceptions about what the content might be about. Start directly with content. No preamble. No postamble. PLAIN TEXT ONLY - NO MARKDOWN.\n\n${content}`
               }
             ],
             max_tokens: 1000

@@ -84,6 +84,14 @@ export const useContentProcessor = (
             );
           }
           
+          // Add additional logging to help diagnose URL vs content issues
+          console.log("Content context check:", {
+            url: fullUrl,
+            originalContentLength: data.originalContent ? data.originalContent.length : 0,
+            summaryContentLength: data.summary ? data.summary.length : 0,
+            summaryFirstWords: data.summary ? data.summary.substring(0, 100) + "..." : "N/A"
+          });
+          
           setSummary(data.summary);
           setOriginalContent(data.originalContent);
           setProgress(100);
