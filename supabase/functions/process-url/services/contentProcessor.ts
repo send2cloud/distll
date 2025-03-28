@@ -13,7 +13,7 @@ export async function processUrl(
   url: string, 
   style: string, 
   bulletCount?: number, 
-  model: string = "google/gemini-2.0-flash-thinking-exp:free"
+  model: string = "google/gemini-2.5-pro-exp-03-25:free"
 ): Promise<{ originalContent: string; summary: string }> {
   try {
     // Normalize URL to ensure it has a proper protocol prefix
@@ -58,7 +58,7 @@ export async function processDirectContent(
   content: string, 
   style: string, 
   bulletCount?: number,
-  model: string = "google/gemini-2.0-flash-thinking-exp:free"
+  model: string = "google/gemini-2.5-pro-exp-03-25:free"
 ): Promise<{ originalContent: string; summary: string }> {
   try {
     const summary = await summarizeContent(content, style || 'standard', bulletCount, model);

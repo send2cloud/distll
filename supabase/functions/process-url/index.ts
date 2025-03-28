@@ -42,7 +42,7 @@ serve(async (req) => {
       content, 
       style || 'standard',
       bulletCount,
-      model || 'google/gemini-2.0-flash-thinking-exp:free'
+      model || 'google/gemini-2.5-pro-exp-03-25:free'
     );
     
     let result;
@@ -88,7 +88,7 @@ serve(async (req) => {
       errorCode = "AI_SERVICE_ERROR";
     }
     
-    // IMPORTANT CHANGE: Return a 200 status with error in the body
+    // IMPORTANT: Return a 200 status with error in the body
     // This ensures our client code can properly process the error
     return new Response(
       JSON.stringify({
@@ -98,7 +98,7 @@ serve(async (req) => {
         summary: ""
       }),
       { 
-        status: 200, // Changed from 400 to 200
+        status: 200,
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json',

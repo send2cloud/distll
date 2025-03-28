@@ -4,7 +4,7 @@ import { SummarizationStyle, AIModel } from '@/types/settings';
 // Return fixed default settings without using localStorage
 export const getSettings = () => {
   return { 
-    model: 'google/gemini-2.0-flash-thinking-exp:free' as AIModel
+    model: 'google/gemini-2.5-pro-exp-03-25:free' as AIModel
   };
 };
 
