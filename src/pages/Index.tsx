@@ -1,6 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,17 +14,7 @@ const Index = () => {
   const [isValidUrl, setIsValidUrl] = useState(false);
   const [customStyle, setCustomStyle] = useState('');
   const [isStyleSelectorOpen, setIsStyleSelectorOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
   const isMobile = useIsMobile();
-  
-  useEffect(() => {
-    const path = location.pathname;
-    if (path.length > 1) {
-      const targetUrl = path.substring(1);
-      processUrl(targetUrl);
-    }
-  }, [location.pathname]);
   
   const validateUrl = (input: string) => {
     try {
@@ -67,35 +56,27 @@ const Index = () => {
     
     const normalizedStyle = customStyle.trim() ? styleFacade.normalizeStyleId(customStyle.trim()) : '';
     
+    // Build direct URL to the edge function
+    let directUrl = `${window.location.origin}/direct-summary/`;
+    
     if (normalizedStyle) {
-      navigate(`/${normalizedStyle}/${processableUrl}`);
-    } else {
-      navigate(`/${processableUrl}`);
+      directUrl += `${normalizedStyle}/`;
     }
-  };
-  
-  const processUrl = (targetUrl: string) => {
-    navigate(`/${encodeURIComponent(targetUrl)}`);
+    
+    directUrl += processableUrl;
+    
+    // Navigate to the direct-summary URL
+    window.location.href = directUrl;
   };
   
   const handleStyleSelect = (styleId: string) => {
-    if (isValidUrl) {
-      let processableUrl = url;
-      if (processableUrl.startsWith('http://')) {
-        processableUrl = processableUrl.substring(7);
-      } else if (processableUrl.startsWith('https://')) {
-        processableUrl = processableUrl.substring(8);
-      }
-      navigate(`/${styleId}/${processableUrl}`);
-    } else {
-      setCustomStyle(styleId);
-      
-      const styleDef = styleFacade.getStyle(styleId);
-      toast({
-        title: `${styleDef.name} Style Selected`,
-        description: styleDef.description,
-      });
-    }
+    setCustomStyle(styleId);
+    
+    const styleDef = styleFacade.getStyle(styleId);
+    toast({
+      title: `${styleDef.name} Style Selected`,
+      description: styleDef.description,
+    });
   };
   
   const toggleStyleSelector = () => {
@@ -105,11 +86,6 @@ const Index = () => {
   return <div className="min-h-screen font-sans bg-[#e4d5c2]">
       <header className="px-4 sm:px-6 py-4 flex justify-between items-center">
         <div className="text-xl sm:text-2xl font-bold text-[#221F26] font-serif"> </div>
-        <div className="flex items-center">
-          <Button variant="link" onClick={() => navigate('/settings')} className="text-[#221F26] hover:text-[#403E43]">
-            Settings
-          </Button>
-        </div>
       </header>
 
       <section className="w-full max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-16 pb-8 sm:pb-12 text-center">
