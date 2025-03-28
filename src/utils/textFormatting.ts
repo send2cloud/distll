@@ -23,8 +23,8 @@ export const preserveBasicFormatting = (content: string): string => {
     .replace(/\n\s*[-*]\s+/g, '\n• ')          // Standardize bullet points
     .replace(/\n\s*(\d+)\.\s+/g, '\n$1. ')     // Preserve numbered lists
     
-    // Basic cleanup
-    .replace(/\n{3,}/g, '\n\n')                // Normalize multiple line breaks (max 2)
+    // Basic cleanup - preserve reasonable line breaks
+    .replace(/\n{4,}/g, '\n\n\n')              // Normalize multiple line breaks (max 3)
     .replace(/\s{2,}/g, ' ');                  // Normalize spaces
   
   // Clean up any artifacts from JSON or other formatting

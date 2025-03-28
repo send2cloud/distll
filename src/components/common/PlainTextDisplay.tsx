@@ -47,13 +47,16 @@ const PlainTextDisplay = ({ content, className = '', asPlainText = false }: Plai
   
   // Process content to add proper formatting for React
   const formatContent = () => {
+    // First, normalize line endings and ensure consistent spacing
+    const normalizedContent = content.replace(/\r\n/g, '\n');
+    
     // Split by double newlines for paragraphs
-    const paragraphs = content.split(/\n\n+/);
+    const paragraphs = normalizedContent.split(/\n\n+/);
     
     return paragraphs.map((paragraph, index) => {
       // Enhanced detection for bullet and numbered lists
       const isBulletList = paragraph.includes('\n• ') || paragraph.trim().startsWith('• ');
-      const isNumberedList = paragraph.includes('\n1. ') || /^\d+\./.test(paragraph.trim());
+      const isNumberedList = /\d+\.\s/.test(paragraph) || paragraph.includes('\n1. ');
       
       if (isBulletList || isNumberedList) {
         // Split the paragraph into individual list items

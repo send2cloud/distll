@@ -5,6 +5,8 @@
  * @returns Cleaned text without markdown markers but with basic formatting preserved
  */
 export function extractContentBetweenMarkers(text: string): string {
+  if (!text) return '';
+  
   // Check if text has the START/END markers
   if (text.includes('### START ###') && text.includes('### END ###')) {
     const start = text.indexOf('### START ###') + '### START ###'.length;
