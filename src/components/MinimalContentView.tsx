@@ -1,57 +1,71 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import ContentStateDisplay from '@/components/common/ContentStateDisplay';
+import * as React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PlainTextDisplay from '@/components/common/PlainTextDisplay';
 import ErrorDisplay from '@/components/distill/ErrorDisplay';
 import LoadingIndicator from '@/components/distill/LoadingIndicator';
 import { styleFacade } from '@/services/styles';
+import ContentStateDisplay from './common/ContentStateDisplay';
 
 interface MinimalContentViewProps {
   content: string;
   isLoading: boolean;
   error: Error | null;
-  style: string;
+  style?: string;
+  progress?: number;
   onRetry?: () => void;
 }
 
-const MinimalContentView = ({ content, isLoading, error, style, onRetry }: MinimalContentViewProps) => {
+/**
+ * A minimal view for displaying content with loading and error states
+ */
+const MinimalContentView = ({ 
+  content, 
+  isLoading, 
+  error, 
+  style = 'standard',
+  progress = 0,
+  onRetry 
+}: MinimalContentViewProps) => {
+  // Get style definition from the style service
   const styleDef = styleFacade.getStyle(style);
   
   return (
-    <div className="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        {/* Show error state */}
-        {error && <ErrorDisplay error={error} onRetry={onRetry} />}
+    <div className="flex flex-col items-center p-4 h-full bg-white">
+      <div className="flex flex-col w-full max-w-2xl mx-auto mt-6">
+        {/* Title area */}
+        <div className="mb-6 flex items-center">
+          <h1 className="text-2xl font-semibold text-gray-800">
+            {styleDef.name} Summary
+          </h1>
+        </div>
         
-        {/* Show loading state */}
-        {isLoading && !error && <LoadingIndicator progress={0} />}
-        
-        {/* Show content when available */}
-        {!isLoading && !error && (
-          <>
-            <Card className="mb-6 border-gray-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl font-semibold flex items-center text-gray-800">
-                  {styleDef.icon && <styleDef.icon className="w-5 h-5 mr-2 text-gray-600" />}
-                  {styleDef.name} Summary
-                </CardTitle>
-                {styleDef.description && (
-                  <CardDescription className="text-gray-500">
-                    {styleDef.description}
-                  </CardDescription>
-                )}
+        {/* Content area */}
+        <div className="w-full">
+          {isLoading ? (
+            <LoadingIndicator message="Summarizing content..." progress={progress} />
+          ) : error ? (
+            <ErrorDisplay error={error} onRetry={onRetry} />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>{styleDef.name}</CardTitle>
               </CardHeader>
               <CardContent>
                 {content ? (
                   <PlainTextDisplay content={content} />
                 ) : (
-                  <ContentStateDisplay state="empty" />
+                  <ContentStateDisplay 
+                    isLoading={false} 
+                    error={null} 
+                    hasContent={false} 
+                    emptyMessage="No content to display" 
+                  />
                 )}
               </CardContent>
             </Card>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
