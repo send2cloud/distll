@@ -29,6 +29,12 @@ serve(async (req) => {
       throw new Error("No URL provided. Format should be /direct-summary/{style}/{url}");
     }
     
+    // Check for and remove any unexpected path segments like "/poem/"
+    processPath = processPath.replace(/^\/poem\//, '');
+    processPath = processPath.replace(/^poem\//, '');
+    
+    console.log(`Cleaned process path: ${processPath}`);
+    
     // Parse the style from the path
     const { styleId, bulletCount, isBulletStyle } = parseStyleFromPath('/' + processPath);
     console.log(`Parsed style: ${styleId}, bulletCount: ${bulletCount}, isBulletStyle: ${isBulletStyle}`);
@@ -39,14 +45,14 @@ serve(async (req) => {
     
     if (styleId !== 'standard') {
       // For custom styles, remove the style prefix
-      const stylePrefix = `/${styleId}/`;
+      const stylePrefix = `${styleId}/`;
       const styleIndex = processPath.indexOf(stylePrefix);
       
       if (styleIndex !== -1) {
         targetUrl = processPath.substring(styleIndex + stylePrefix.length);
       } else if (isBulletStyle && bulletCount) {
         // For numeric bullet counts
-        const bulletPrefix = `/${bulletCount}/`;
+        const bulletPrefix = `${bulletCount}/`;
         const bulletIndex = processPath.indexOf(bulletPrefix);
         
         if (bulletIndex !== -1) {
@@ -70,6 +76,8 @@ serve(async (req) => {
       }
     }
     
+    console.log(`Initial target URL extraction: ${targetUrl}`);
+    
     // Decode the URL if needed
     try {
       targetUrl = decodeURIComponent(targetUrl);
@@ -90,7 +98,7 @@ serve(async (req) => {
       targetUrl = 'https://' + targetUrl;
     }
     
-    console.log(`Processing target URL: ${targetUrl} with style: ${styleId}`);
+    console.log(`Final processed target URL: ${targetUrl} with style: ${styleId}`);
     
     // Generate a cache key for this request
     const cacheKey = `${targetUrl}|${styleId}|${bulletCount || ''}|default-model`;
