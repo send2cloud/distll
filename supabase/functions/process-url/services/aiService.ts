@@ -5,6 +5,9 @@ import { SummarizationPromptFactory } from "./promptService.ts";
 // Fixed public API key with $5 limit that will be used for all requests
 const PUBLIC_API_KEY = "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";
 
+// Define fallback model to use when the primary model fails
+const FALLBACK_MODEL = "anthropic/claude-3-haiku-20240307";
+
 /**
  * Summarizes content using an AI model with a direct Jina-proxied URL
  * @param jinaProxyUrl The Jina-proxied URL to summarize
@@ -25,9 +28,12 @@ export async function summarizeWithJinaProxiedUrl(
     // Single retry for API calls
     let retries = 0;
     const maxRetries = 1;
+    let currentModel = model;
     
     while (retries <= maxRetries) {
       try {
+        console.log(`Attempting summarization with model: ${currentModel}`);
+        
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -37,7 +43,7 @@ export async function summarizeWithJinaProxiedUrl(
             "X-Title": "Distill"
           },
           body: JSON.stringify({
-            model: model,
+            model: currentModel,
             messages: [
               {
                 role: "system",
@@ -61,14 +67,34 @@ export async function summarizeWithJinaProxiedUrl(
             if (errorData.error?.message) {
               errorMessage = errorData.error.message;
             }
+            
+            // Check if error is rate limit related
+            const isRateLimitError = 
+              errorMessage.includes("quota") || 
+              errorMessage.includes("rate limit") || 
+              errorMessage.includes("capacity") ||
+              errorMessage.includes("429") ||
+              response.status === 429;
+            
+            // If it's a rate limit error and we have retries left, try with fallback model
+            if (isRateLimitError && retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+              console.log(`Rate limit error with model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
+              currentModel = FALLBACK_MODEL;
+              retries++;
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              continue;
+            }
           } catch (e) {
             // If we can't parse the error, use the default message
+            console.error("Error parsing API error response:", e);
           }
           
-          if (retries < maxRetries) {
-            console.log(`Retrying after error: ${errorMessage}`);
+          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+            console.log(`Retrying after error: ${errorMessage} with fallback model: ${FALLBACK_MODEL}`);
+            currentModel = FALLBACK_MODEL;
             retries++;
-            // Wait 1 second before retry
+            // Wait before retry
             await new Promise(resolve => setTimeout(resolve, 1000));
             continue;
           }
@@ -80,13 +106,31 @@ export async function summarizeWithJinaProxiedUrl(
         
         // Add defensive check for data.choices being undefined or empty
         if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-          console.error("Invalid API response structure:", JSON.stringify(data));
-          throw new Error("Invalid response from OpenRouter API - missing choices array");
+          console.error("Invalid API response structure:", JSON.stringify(data, null, 2));
+          
+          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+            console.log(`Invalid response from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
+            currentModel = FALLBACK_MODEL;
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+          
+          throw new Error("Invalid response from OpenRouter API - missing or empty choices array");
         }
         
         // Add defensive check for message content
         if (!data.choices[0].message || !data.choices[0].message.content) {
-          console.error("Invalid message structure in response:", JSON.stringify(data.choices[0]));
+          console.error("Invalid message structure in response:", JSON.stringify(data.choices[0], null, 2));
+          
+          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+            console.log(`Missing content from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
+            currentModel = FALLBACK_MODEL;
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+          
           throw new Error("Invalid response structure - missing message content");
         }
         
@@ -96,14 +140,25 @@ export async function summarizeWithJinaProxiedUrl(
         const cleanedSummary = extractContentBetweenMarkers(summary);
         
         if (!cleanedSummary || cleanedSummary.trim().length < 10) {
+          console.error("Generated summary is too short or empty:", cleanedSummary);
+          
+          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+            console.log(`Empty summary from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
+            currentModel = FALLBACK_MODEL;
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+          
           throw new Error("Failed to generate a meaningful summary");
         }
         
         // Basic text cleanup
         return cleanedSummary.replace(/\s+/g, ' ').trim();
       } catch (error) {
-        if (retries < maxRetries) {
-          console.log(`Retry ${retries + 1} after error:`, error);
+        if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+          console.log(`Retry ${retries + 1} after error with model ${currentModel}:`, error);
+          currentModel = FALLBACK_MODEL;
           retries++;
           await new Promise(resolve => setTimeout(resolve, 1000));
         } else {
@@ -143,9 +198,12 @@ export async function summarizeContent(
     // Single retry for API calls
     let retries = 0;
     const maxRetries = 1;
+    let currentModel = model;
     
     while (retries <= maxRetries) {
       try {
+        console.log(`Attempting content summarization with model: ${currentModel}`);
+        
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -155,7 +213,7 @@ export async function summarizeContent(
             "X-Title": "Distill"
           },
           body: JSON.stringify({
-            model: model,
+            model: currentModel,
             messages: [
               {
                 role: "system",
@@ -179,14 +237,34 @@ export async function summarizeContent(
             if (errorData.error?.message) {
               errorMessage = errorData.error.message;
             }
+            
+            // Check if error is rate limit related
+            const isRateLimitError = 
+              errorMessage.includes("quota") || 
+              errorMessage.includes("rate limit") || 
+              errorMessage.includes("capacity") ||
+              errorMessage.includes("429") ||
+              response.status === 429;
+            
+            // If it's a rate limit error and we have retries left, try with fallback model
+            if (isRateLimitError && retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+              console.log(`Rate limit error with model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
+              currentModel = FALLBACK_MODEL;
+              retries++;
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              continue;
+            }
           } catch (e) {
             // If we can't parse the error, use the default message
+            console.error("Error parsing API error response:", e);
           }
           
-          if (retries < maxRetries) {
-            console.log(`Retrying after error: ${errorMessage}`);
+          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+            console.log(`Retrying after error: ${errorMessage} with fallback model: ${FALLBACK_MODEL}`);
+            currentModel = FALLBACK_MODEL;
             retries++;
-            // Wait 1 second before retry
+            // Wait before retry
             await new Promise(resolve => setTimeout(resolve, 1000));
             continue;
           }
@@ -198,13 +276,31 @@ export async function summarizeContent(
         
         // Add defensive check for data.choices being undefined or empty
         if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-          console.error("Invalid API response structure:", JSON.stringify(data));
-          throw new Error("Invalid response from OpenRouter API - missing choices array");
+          console.error("Invalid API response structure:", JSON.stringify(data, null, 2));
+          
+          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+            console.log(`Invalid response from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
+            currentModel = FALLBACK_MODEL;
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+          
+          throw new Error("Invalid response from OpenRouter API - missing or empty choices array");
         }
         
         // Add defensive check for message content
         if (!data.choices[0].message || !data.choices[0].message.content) {
-          console.error("Invalid message structure in response:", JSON.stringify(data.choices[0]));
+          console.error("Invalid message structure in response:", JSON.stringify(data.choices[0], null, 2));
+          
+          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+            console.log(`Missing content from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
+            currentModel = FALLBACK_MODEL;
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+          
           throw new Error("Invalid response structure - missing message content");
         }
         
@@ -214,14 +310,25 @@ export async function summarizeContent(
         const cleanedSummary = extractContentBetweenMarkers(summary);
         
         if (!cleanedSummary || cleanedSummary.trim().length < 10) {
+          console.error("Generated summary is too short or empty:", cleanedSummary);
+          
+          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+            console.log(`Empty summary from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
+            currentModel = FALLBACK_MODEL;
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+          
           throw new Error("Failed to generate a meaningful summary");
         }
         
         // Basic text cleanup
         return cleanedSummary.replace(/\s+/g, ' ').trim();
       } catch (error) {
-        if (retries < maxRetries) {
-          console.log(`Retry ${retries + 1} after error:`, error);
+        if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
+          console.log(`Retry ${retries + 1} after error with model ${currentModel}:`, error);
+          currentModel = FALLBACK_MODEL;
           retries++;
           await new Promise(resolve => setTimeout(resolve, 1000));
         } else {

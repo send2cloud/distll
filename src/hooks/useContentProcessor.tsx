@@ -98,6 +98,17 @@ export const useContentProcessor = (
             );
           }
           
+          // If the error is an AI service error about rate limiting or quota
+          if (apiError.errorCode === "AI_SERVICE_ERROR" && 
+             (apiError.message.includes("quota") || 
+              apiError.message.includes("rate limit") || 
+              apiError.message.includes("capacity"))) {
+            throw Object.assign(
+              new Error("Our AI service has reached its rate limit. Please try again in a few minutes or try a different URL."),
+              { errorCode: "AI_SERVICE_ERROR" as ErrorCodeType }
+            );
+          }
+          
           throw apiError;
         }
       } catch (error: any) {

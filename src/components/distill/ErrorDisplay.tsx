@@ -2,16 +2,18 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Globe, Wifi, FileText, Cpu } from 'lucide-react';
+import { AlertTriangle, Globe, Wifi, FileText, Cpu, RefreshCw } from 'lucide-react';
 import { ErrorCodeType } from '@/hooks/useContentProcessor';
+import { Button } from "@/components/ui/button";
 
 interface ErrorDisplayProps {
   error: Error & { 
     errorCode?: ErrorCodeType;
   };
+  onRetry?: () => void;
 }
 
-const ErrorDisplay = ({ error }: ErrorDisplayProps) => {
+const ErrorDisplay = ({ error, onRetry }: ErrorDisplayProps) => {
   // Determine error type from error message or errorCode if available
   const errorCode = error.errorCode || determineErrorCodeFromMessage(error.message);
   
@@ -33,6 +35,20 @@ const ErrorDisplay = ({ error }: ErrorDisplayProps) => {
           </AlertDescription>
         </Alert>
         
+        {onRetry && (
+          <div className="mt-4 flex justify-end">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onRetry}
+              className="bg-white hover:bg-gray-100"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+          </div>
+        )}
+        
         <details className="mt-4">
           <summary className="cursor-pointer text-sm text-red-500">Technical Details</summary>
           <pre className="mt-2 p-4 bg-gray-100 rounded text-xs overflow-auto">
@@ -46,6 +62,8 @@ const ErrorDisplay = ({ error }: ErrorDisplayProps) => {
 
 // Determine error type based on message content
 function determineErrorCodeFromMessage(message: string): ErrorCodeType {
+  if (!message) return "PROCESSING_ERROR";
+  
   if (message.includes("URL") || message.includes("url format") || message.includes("domain")) {
     return "URL_ERROR";
   } else if (message.includes("fetch") || message.includes("connection") || message.includes("timed out") || 
@@ -104,7 +122,7 @@ function getSuggestionForError(errorCode: ErrorCodeType): string {
     case "CONTENT_ERROR":
       return "We couldn't extract meaningful content from this page. This often happens with dynamic sites, login-protected content, or pages with minimal text. Try a different page with more text content.";
     case "AI_SERVICE_ERROR":
-      return "There was an issue with the AI summarization service. This could be due to high demand or service limitations. Try again in a few moments or with a different summarization style.";
+      return "There was an issue with the AI summarization service. This could be due to high demand or service limitations. Try again in a few minutes or with a different summarization style.";
     default:
       return "Something unexpected happened. Try refreshing the page or using a different URL. If the problem persists, the service might be experiencing technical difficulties.";
   }
