@@ -2,7 +2,6 @@
 import * as React from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
-import { useSettings } from '@/contexts/SettingsContext';
 import { createAppError, enhanceError, determineErrorCodeFromMessage } from "@/utils/errorUtils";
 
 // Define the valid error code types to match the ErrorDisplay component
@@ -27,7 +26,6 @@ export const useContentProcessor = (
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<Error & { errorCode?: ErrorCodeType } | null>(null);
   const [progress, setProgress] = React.useState<number>(0);
-  const { settings } = useSettings();
   
   // Store the latest parameters in refs to use in the retry function
   const urlRef = React.useRef(url);
@@ -53,7 +51,7 @@ export const useContentProcessor = (
       return;
     }
 
-    console.log("Processing content with style:", styleRef.current, "and bullet count:", bulletCountRef.current, "model:", settings.model);
+    console.log("Processing content with style:", styleRef.current, "and bullet count:", bulletCountRef.current);
 
     setIsLoading(true);
     setError(null);
@@ -83,7 +81,7 @@ export const useContentProcessor = (
       // Ensure the URL has a protocol prefix
       const fullUrl = hasProtocol ? processedUrl : `https://${processedUrl}`;
       
-      console.log("Processing URL:", fullUrl, "with style:", styleRef.current, "and bullet count:", bulletCountRef.current, "model:", settings.model);
+      console.log("Processing URL:", fullUrl, "with style:", styleRef.current, "and bullet count:", bulletCountRef.current);
       setProgress(20);
       
       setProgress(40);
@@ -92,16 +90,14 @@ export const useContentProcessor = (
         console.log("Calling Edge Function with params:", { 
           url: fullUrl, 
           style: styleRef.current, 
-          bulletCount: bulletCountRef.current, 
-          model: settings.model 
+          bulletCount: bulletCountRef.current
         });
         
         // Use invokeProcessFunction instead of directly using supabase.functions.invoke
         const data = await invokeProcessFunction({
           url: fullUrl,
           style: styleRef.current,
-          bulletCount: bulletCountRef.current,
-          model: settings.model
+          bulletCount: bulletCountRef.current
         });
         
         console.log("Received response from Edge Function:", data);
@@ -180,14 +176,14 @@ export const useContentProcessor = (
     } finally {
       setIsLoading(false);
     }
-  }, [settings.model]);
+  }, []);
 
   // Effect to process content when URL changes
   React.useEffect(() => {
     if (url && !initializationAttemptedRef.current) {
       processContent();
     }
-  }, [url, style, bulletCount, settings.model, processContent]);
+  }, [url, style, bulletCount, processContent]);
 
   // Return the retry function that calls processContent again
   return { 

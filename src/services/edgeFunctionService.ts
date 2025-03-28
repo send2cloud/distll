@@ -1,64 +1,40 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { createAppError } from "@/utils/errorUtils";
+import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Edge Function response interface
- */
-interface EdgeFunctionResponse {
-  summary: string;
-  originalContent: string;
-  error?: string;
-  errorCode?: string;
-}
-
-/**
- * Parameters for invoking the process-url edge function
- */
-interface ProcessParams {
-  url?: string;
-  content?: string;
+interface ProcessUrlParams {
+  url: string;
   style: string;
   bulletCount?: number;
-  model: string;
 }
 
-/**
- * Invokes the process-url edge function with the provided parameters
- * @param params Parameters to pass to the edge function
- * @returns Processed data from the edge function
- */
-export const invokeProcessFunction = async (params: ProcessParams): Promise<EdgeFunctionResponse> => {
+interface ProcessUrlResponse {
+  originalContent: string;
+  summary: string;
+}
+
+export const invokeProcessFunction = async (params: ProcessUrlParams): Promise<ProcessUrlResponse> => {
   try {
-    console.log("Invoking edge function with params:", params);
+    console.log("Invoking process-url function with params:", params);
     
-    // Pass the style directly - no normalization needed as the edge function will handle interpretation
     const { data, error } = await supabase.functions.invoke('process-url', {
+      method: 'POST',
       body: params
     });
     
-    // Handle edge function invocation errors (like network errors, not response errors)
     if (error) {
-      console.error('Error calling process-url function:', error);
-      throw createAppError(`Edge function error: ${error.message || "Unknown error"}`, "PROCESSING_ERROR");
+      console.error("Supabase function error:", error);
+      throw error;
     }
     
     if (!data) {
-      throw createAppError("No data returned from edge function", "PROCESSING_ERROR");
+      throw new Error("No data returned from function");
     }
     
-    // If the response contains an error property, it's an error
-    if (data.error) {
-      console.error('Error from edge function:', data.error, data.errorCode);
-      throw createAppError(data.error, (data.errorCode || "PROCESSING_ERROR") as any);
-    }
+    console.log("Function returned data:", data);
     
-    return data as EdgeFunctionResponse;
+    return data as ProcessUrlResponse;
   } catch (error) {
-    // Add more detailed logging for troubleshooting
-    console.error('Error in invokeProcessFunction:', error);
-    
-    // Re-throw the error to be handled by the calling code
+    console.error("Error invoking process-url function:", error);
     throw error;
   }
 };
