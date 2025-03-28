@@ -51,23 +51,33 @@ const PlainTextDisplay = ({ content, className = '', asPlainText = false }: Plai
     const paragraphs = content.split(/\n\n+/);
     
     return paragraphs.map((paragraph, index) => {
-      // Check if paragraph is a bullet list
-      if (paragraph.trim().startsWith('•') || /^\d+\./.test(paragraph.trim())) {
-        // Split the paragraph into individual bullet points
+      // Enhanced detection for bullet and numbered lists
+      const isBulletList = paragraph.includes('\n• ') || paragraph.trim().startsWith('• ');
+      const isNumberedList = paragraph.includes('\n1. ') || /^\d+\./.test(paragraph.trim());
+      
+      if (isBulletList || isNumberedList) {
+        // Split the paragraph into individual list items
         const listItems = paragraph
           .split('\n')
           .filter(item => item.trim().length > 0)
-          .map((item, itemIndex) => (
-            <li key={`item-${index}-${itemIndex}`} className="ml-5 mb-1">{item.replace(/^[•\s]+|^\d+\.\s+/, '')}</li>
-          ));
-        
-        // Determine if this is a numbered or bullet list
-        const isNumberedList = /^\d+\./.test(paragraph.trim());
+          .map((item, itemIndex) => {
+            // Extract the actual content without the bullet or number
+            const content = item.replace(/^[•\s]+|^\d+\.\s+/, '').trim();
+            return (
+              <li key={`item-${index}-${itemIndex}`} className="ml-5 mb-2">
+                {content}
+              </li>
+            );
+          });
         
         return isNumberedList ? (
-          <ol key={`list-${index}`} className="list-decimal mb-4 pl-4">{listItems}</ol>
+          <ol key={`list-${index}`} className="list-decimal mb-6 pl-4 space-y-1">
+            {listItems}
+          </ol>
         ) : (
-          <ul key={`list-${index}`} className="list-disc mb-4 pl-4">{listItems}</ul>
+          <ul key={`list-${index}`} className="list-disc mb-6 pl-4 space-y-1">
+            {listItems}
+          </ul>
         );
       }
       

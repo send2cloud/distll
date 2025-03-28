@@ -19,7 +19,7 @@ export class SummarizationPromptFactory {
     // Check for special cases that need specific handling
     if (style === 'bullets' || style.includes('bullet')) {
       const count = bulletCount || 5;
-      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. Present them as numbered items (1., 2., etc.) or bullet points (•). Make each point concise and informative. Use paragraph breaks between points for readability. ${contentFocusInstruction} ${baseInstruction}`;
+      return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. IMPORTANT: Present them as a properly formatted numbered list (1., 2., etc.) with one point per line and clear breaks between items. Make each point concise but complete. ${contentFocusInstruction} ${baseInstruction}`;
     }
     
     // For any other style, provide a general instruction that interprets the style from context
@@ -30,6 +30,8 @@ export class SummarizationPromptFactory {
     - If it's a language request (like "tamil" or "spanish"), translate appropriately.
     - If it's a format request (like "bullets" or "tweet"), follow that structural constraint.
     - If it's an audience specification (like "eli5" or "executive"), tailor complexity accordingly.
+    
+    IMPORTANT: If the style indicates a list format or multiple points, always use proper list formatting with clear line breaks between items.
     
     ${contentFocusInstruction} ${baseInstruction}`;
   }

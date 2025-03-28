@@ -19,7 +19,7 @@ export const preserveBasicFormatting = (content: string): string => {
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')    // Remove images
     .replace(/>\s*([^>\n]+)/g, '$1\n')         // Convert blockquotes to plain text
     
-    // Preserve bullet points and numbered lists
+    // Preserve and standardize bullet points and numbered lists
     .replace(/\n\s*[-*]\s+/g, '\n• ')          // Standardize bullet points
     .replace(/\n\s*(\d+)\.\s+/g, '\n$1. ')     // Preserve numbered lists
     
