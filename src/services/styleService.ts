@@ -86,7 +86,7 @@ const STYLE_DEFINITIONS: Record<string, StyleDefinition> = {
     description: 'In the style of Jerry Seinfeld\'s observational comedy',
     category: 'special',
     examples: ['seinfeld', 'seinfeld-joke', 'jerry-standup'],
-    promptModifier: 'Write in the style of Jerry Seinfeld doing observational comedy standup, with his characteristic "What's the deal with..." format and exaggerated observations.',
+    promptModifier: 'Write in the style of Jerry Seinfeld doing observational comedy standup, with his characteristic "What\'s the deal with..." format and exaggerated observations.',
     isPreset: false
   },
   'tamil': {
