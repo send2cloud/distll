@@ -39,7 +39,8 @@ export async function summarizeWithJinaProxiedUrl(
             "Content-Type": "application/json",
             "Authorization": `Bearer ${PUBLIC_API_KEY}`,
             "HTTP-Referer": "https://distill.app",
-            "X-Title": "Distill"
+            "X-Title": "Distill",
+            "User-Agent": "Distill/1.0"
           },
           body: JSON.stringify({
             model: currentModel,
@@ -50,7 +51,7 @@ export async function summarizeWithJinaProxiedUrl(
               },
               {
                 role: "user",
-                content: `Visit this URL and summarize the ACTUAL CONTENT you find there according to the style specified in my system message. IMPORTANT: You MUST focus EXCLUSIVELY on the actual content found at this URL, NOT what you might guess from the URL itself. The URL and its domain name could be misleading, so ONLY summarize what you actually read. Start directly with content. No preamble. No postamble. PLAIN TEXT ONLY - NO MARKDOWN.\n\nURL: ${jinaProxyUrl}`
+                content: `Visit this URL and summarize the ACTUAL CONTENT you find there according to the style specified in my system message. IMPORTANT: You MUST focus EXCLUSIVELY on the actual content found at this URL, NOT what you might guess from the URL itself. The URL and its domain name could be misleading, so ONLY summarize what you actually read. Start directly with content. No preamble. No postamble.\n\nURL: ${jinaProxyUrl}`
               }
             ],
             max_tokens: 1000
@@ -209,7 +210,8 @@ export async function summarizeContent(
             "Content-Type": "application/json",
             "Authorization": `Bearer ${PUBLIC_API_KEY}`,
             "HTTP-Referer": "https://distill.app",
-            "X-Title": "Distill"
+            "X-Title": "Distill",
+            "User-Agent": "Distill/1.0"
           },
           body: JSON.stringify({
             model: currentModel,
@@ -220,7 +222,7 @@ export async function summarizeContent(
               },
               {
                 role: "user",
-                content: `Summarize the following content according to the style specified in my system message. FOCUS EXCLUSIVELY on the actual content provided below. Ignore any preconceptions about what the content might be about. Start directly with content. No preamble. No postamble. PLAIN TEXT ONLY - NO MARKDOWN.\n\n${content}`
+                content: `Summarize the following content according to the style specified in my system message. FOCUS EXCLUSIVELY on the actual content provided below. Ignore any preconceptions about what the content might be about. Start directly with content. No preamble. No postamble.\n\n${content}`
               }
             ],
             max_tokens: 1000

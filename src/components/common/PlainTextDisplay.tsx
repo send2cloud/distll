@@ -60,6 +60,8 @@ const PlainTextDisplay = ({ content, className = '', asPlainText = false }: Plai
           ol: ({ node, ...props }) => <ol className="list-decimal mb-6 pl-6 space-y-1" {...props} />,
           li: ({ node, ...props }) => <li className="mb-1" {...props} />,
           blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4" {...props} />,
+          strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
+          em: ({ node, ...props }) => <em className="italic" {...props} />,
         }}
       >
         {content}
