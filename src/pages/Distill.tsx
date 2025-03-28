@@ -1,10 +1,9 @@
-
 import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
 import MinimalContentView from '@/components/MinimalContentView';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
-import { getStyleDefinition } from '@/services/styleService';
+import { getStyleDefinition } from '@/services/styles/styleService';
 
 const Distill = () => {
   const { customStyle } = useParams<{ customStyle?: string }>();

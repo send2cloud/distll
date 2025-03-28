@@ -1,6 +1,5 @@
-
 import { SummarizationStyle, AIModel } from '@/types/settings';
-import { parseStyleFromPath } from '@/services/styleService';
+import { parseStyleFromPath } from '@/services/styles/pathParser';
 
 // Return fixed default settings without using localStorage
 export const getSettings = () => {

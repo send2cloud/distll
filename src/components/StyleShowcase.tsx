@@ -1,9 +1,8 @@
-
 import * as React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { getRecommendedStyles, getAllStyles, StyleDefinition } from '@/services/styleService';
+import { getRecommendedStyles, getAllStyles, StyleDefinition } from '@/services/styles/styleService';
 
 interface StyleShowcaseProps {
   onStyleSelect: (styleId: string) => void;
