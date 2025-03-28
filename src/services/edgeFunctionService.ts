@@ -39,6 +39,17 @@ export const invokeProcessFunction = async (params: ProcessUrlParams): Promise<P
         
         if (error) {
           console.error(`Supabase function error (attempt ${attempts + 1}):`, error);
+          
+          // Check if the error is related to project not found
+          if (error.message && (
+             error.message.includes('project not found') || 
+             error.message.includes('could not find function') ||
+             error.message.includes('404')
+          )) {
+            console.error('Project or function not found error. Check Supabase project configuration.');
+            throw new Error('Service unavailable. Please check your connection and project configuration.');
+          }
+          
           lastError = error;
           attempts++;
           

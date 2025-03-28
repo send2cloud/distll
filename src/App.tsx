@@ -31,8 +31,9 @@ const App = () => {
             <div className="app">
               <Routes>
                 <Route path="/" element={<Index />} />
-                {/* Added routes for handling custom styles and direct URL patterns */}
+                {/* Route for style-based URLs - make sure this is properly configured */}
                 <Route path="/:customStyle/*" element={<Distill />} />
+                {/* Catch-all route for 404s */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>

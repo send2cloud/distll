@@ -72,12 +72,22 @@ const Distill = () => {
           }
         }
         
+        // Ensure the URL has a proper protocol prefix to prevent treating it as a local path
+        if (decodedUrl && !decodedUrl.match(/^https?:\/\//)) {
+          decodedUrl = 'https://' + decodedUrl;
+        }
+        
         setFullUrl(decodedUrl);
         console.log("Extracted and decoded URL:", decodedUrl);
       } catch (e) {
         console.error("Error decoding URL:", e);
         // Fallback to raw URL if decoding fails
-        setFullUrl(extractedUrl);
+        let rawUrl = extractedUrl;
+        // Ensure protocol prefix even for fallback
+        if (rawUrl && !rawUrl.match(/^https?:\/\//)) {
+          rawUrl = 'https://' + rawUrl;
+        }
+        setFullUrl(rawUrl);
       }
     }
   }, [location.pathname, customStyle]);
