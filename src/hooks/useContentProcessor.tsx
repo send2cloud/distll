@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
@@ -93,11 +92,15 @@ export const useContentProcessor = (
           bulletCount: bulletCountRef.current
         });
         
-        // Use invokeProcessFunction instead of directly using supabase.functions.invoke
+        // Get the API key from local storage if available
+        const userApiKey = localStorage.getItem('openrouter_api_key');
+        
+        // Use invokeProcessFunction with the API key if available
         const data = await invokeProcessFunction({
           url: fullUrl,
           style: styleRef.current,
-          bulletCount: bulletCountRef.current
+          bulletCount: bulletCountRef.current,
+          apiKey: userApiKey || undefined
         });
         
         console.log("Received response from Edge Function:", data);
@@ -131,6 +134,18 @@ export const useContentProcessor = (
           );
         }
         
+        // Handle rate limit errors with a special message prompting users to add their API key
+        if (apiError.message && (
+            apiError.message.includes("rate limit") || 
+            apiError.message.includes("quota") || 
+            apiError.message.includes("429")
+        )) {
+          throw createAppError(
+            "The free API quota has been reached. Please try again later or add your own OpenRouter API key in the settings.",
+            "AI_SERVICE_ERROR"
+          );
+        }
+        
         // Handle AI-specific errors that might be from the model's response
         if (apiError.message && (
             apiError.message.includes("I cannot access this URL") || 
@@ -141,17 +156,6 @@ export const useContentProcessor = (
           throw createAppError(
             "The AI model cannot access this URL directly. Please try a different URL.",
             "CONNECTION_ERROR"
-          );
-        }
-        
-        // If the error is an AI service error about rate limiting or quota
-        if (apiError.errorCode === "AI_SERVICE_ERROR" && 
-           (apiError.message.includes("quota") || 
-            apiError.message.includes("rate limit") || 
-            apiError.message.includes("capacity"))) {
-          throw createAppError(
-            "Our AI service has reached its rate limit. Please try again in a few minutes or try a different URL.",
-            "AI_SERVICE_ERROR"
           );
         }
         

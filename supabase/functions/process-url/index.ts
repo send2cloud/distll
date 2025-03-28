@@ -28,7 +28,7 @@ serve(async (req) => {
       throw new Error("Invalid JSON in request body");
     });
     
-    const { url, content, style, bulletCount, model } = requestData;
+    const { url, content, style, bulletCount, model, apiKey } = requestData;
     
     if (!url && !content) {
       throw new Error("Either URL or content parameter is required");
@@ -49,10 +49,10 @@ serve(async (req) => {
     
     // Try to process the request and generate the response
     if (url) {
-      result = await processUrl(url, style || 'standard', bulletCount, model);
+      result = await processUrl(url, style || 'standard', bulletCount, model, apiKey);
     } else if (content) {
       // Process direct content if provided
-      result = await processDirectContent(content, style || 'standard', bulletCount, model);
+      result = await processDirectContent(content, style || 'standard', bulletCount, model, apiKey);
     }
     
     // Prepare the response with proper cache headers
@@ -77,14 +77,17 @@ serve(async (req) => {
     let userMessage = error.message || "An unknown error occurred";
     let errorCode = "PROCESSING_ERROR";
     
-    // Categorize different error types
-    if (userMessage.includes("URL")) {
+    // Categorize different error types with specific error handling for rate limits
+    if (userMessage.includes("rate limit") || userMessage.includes("quota") || userMessage.includes("429")) {
+      errorCode = "AI_SERVICE_ERROR";
+      userMessage = "OpenRouter API rate limit reached. The free tier quota has been exceeded. Please try again later or provide your own API key in the settings.";
+    } else if (userMessage.includes("URL")) {
       errorCode = "URL_ERROR";
     } else if (userMessage.includes("fetch") || userMessage.includes("connection") || userMessage.includes("timed out")) {
       errorCode = "CONNECTION_ERROR";
     } else if (userMessage.includes("content") || userMessage.includes("extract")) {
       errorCode = "CONTENT_ERROR";
-    } else if (userMessage.includes("API") || userMessage.includes("quota") || userMessage.includes("rate limit")) {
+    } else if (userMessage.includes("API") || userMessage.includes("capacity")) {
       errorCode = "AI_SERVICE_ERROR";
     }
     

@@ -2,9 +2,10 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Globe, Wifi, FileText, Cpu, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Globe, Wifi, FileText, Cpu, RefreshCw, Settings } from 'lucide-react';
 import { ErrorCodeType } from '@/hooks/useContentProcessor';
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface ErrorDisplayProps {
   error: Error & { 
@@ -16,6 +17,12 @@ interface ErrorDisplayProps {
 const ErrorDisplay = ({ error, onRetry }: ErrorDisplayProps) => {
   // Determine error type from error message or errorCode if available
   const errorCode = error.errorCode || determineErrorCodeFromMessage(error.message);
+  
+  // Check if the error is related to API limits/rate limits
+  const isRateLimitError = error.message?.includes("rate limit") || 
+                           error.message?.includes("quota") || 
+                           error.message?.includes("API key") ||
+                           errorCode === "AI_SERVICE_ERROR";
   
   return (
     <Card className="mb-6 border-red-200 bg-red-50">
@@ -35,8 +42,22 @@ const ErrorDisplay = ({ error, onRetry }: ErrorDisplayProps) => {
           </AlertDescription>
         </Alert>
         
-        {onRetry && (
-          <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-end gap-2">
+          {isRateLimitError && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-white hover:bg-gray-100"
+              asChild
+            >
+              <Link to="/settings">
+                <Settings className="mr-2 h-4 w-4" />
+                Add API Key
+              </Link>
+            </Button>
+          )}
+          
+          {onRetry && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -46,8 +67,8 @@ const ErrorDisplay = ({ error, onRetry }: ErrorDisplayProps) => {
               <RefreshCw className="mr-2 h-4 w-4" />
               Try Again
             </Button>
-          </div>
-        )}
+          )}
+        </div>
         
         <details className="mt-4">
           <summary className="cursor-pointer text-sm text-red-500">Technical Details</summary>
@@ -122,7 +143,7 @@ function getSuggestionForError(errorCode: ErrorCodeType): string {
     case "CONTENT_ERROR":
       return "We couldn't extract meaningful content from this page. This often happens with dynamic sites, login-protected content, or pages with minimal text. Try a different page with more text content.";
     case "AI_SERVICE_ERROR":
-      return "There was an issue with the AI summarization service. This could be due to high demand or service limitations. Try again in a few minutes or with a different summarization style.";
+      return "The AI service has reached its rate limit. You can add your own OpenRouter API key in the settings to continue using the service, or try again later when the free tier quota resets.";
     default:
       return "Something unexpected happened. Try refreshing the page or using a different URL. If the problem persists, the service might be experiencing technical difficulties.";
   }

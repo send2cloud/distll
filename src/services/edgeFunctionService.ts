@@ -7,6 +7,7 @@ interface ProcessUrlParams {
   style: string;
   bulletCount?: number;
   model?: string;
+  apiKey?: string;
 }
 
 interface ProcessUrlResponse {
@@ -16,7 +17,10 @@ interface ProcessUrlResponse {
 
 export const invokeProcessFunction = async (params: ProcessUrlParams): Promise<ProcessUrlResponse> => {
   try {
-    console.log("Invoking process-url function with params:", params);
+    console.log("Invoking process-url function with params:", {
+      ...params,
+      apiKey: params.apiKey ? "PRESENT" : "NOT_PROVIDED" // Log whether API key is provided without exposing it
+    });
     
     const { data, error } = await supabase.functions.invoke('process-url', {
       method: 'POST',
@@ -33,6 +37,16 @@ export const invokeProcessFunction = async (params: ProcessUrlParams): Promise<P
     }
     
     console.log("Function returned data:", data);
+    
+    // Check if the response contains an error message from the edge function
+    if (data.error) {
+      console.error("Edge function returned error:", data.error);
+      const enhancedError = new Error(data.error);
+      if (data.errorCode) {
+        (enhancedError as any).errorCode = data.errorCode;
+      }
+      throw enhancedError;
+    }
     
     return data as ProcessUrlResponse;
   } catch (error) {
