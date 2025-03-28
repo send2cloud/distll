@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,7 +56,8 @@ const Index = () => {
     
     const normalizedStyle = customStyle.trim() ? styleFacade.normalizeStyleId(customStyle.trim()) : '';
     
-    let directUrl = `${window.location.origin}/direct-summary/`;
+    // Updated URL construction - removing '/direct-summary/' prefix
+    let directUrl = `${window.location.origin}/`;
     
     if (normalizedStyle) {
       directUrl += `${normalizedStyle}/`;
