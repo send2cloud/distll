@@ -1,3 +1,4 @@
+
 import { extractContentBetweenMarkers } from "../utils/text.ts";
 import { SummarizationPromptFactory } from "./promptService.ts";
 
@@ -5,7 +6,7 @@ import { SummarizationPromptFactory } from "./promptService.ts";
 const PUBLIC_API_KEY = "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";
 
 // Define fallback model to use when the primary model fails
-const FALLBACK_MODEL = "google/gemini-2.0-flash-thinking-exp:free";
+const FALLBACK_MODEL = "google/gemma-3-4b-it:free";
 
 /**
  * Summarizes content using an AI model with a direct Jina-proxied URL
