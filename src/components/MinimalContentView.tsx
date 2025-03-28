@@ -33,12 +33,7 @@ const MinimalContentView = ({
   return (
     <div className="flex flex-col items-center p-4 h-full bg-white">
       <div className="flex flex-col w-full max-w-2xl mx-auto mt-6">
-        {/* Title area */}
-        <div className="mb-6 flex items-center">
-          <h1 className="text-2xl font-semibold text-gray-800">
-            {styleDef.name} Summary
-          </h1>
-        </div>
+        {/* Title area - removed first heading */}
         
         {/* Content area */}
         <div className="w-full">

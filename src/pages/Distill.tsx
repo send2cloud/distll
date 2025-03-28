@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
@@ -74,13 +73,13 @@ const Distill = () => {
     }
   }, [location.pathname, customStyle]);
   
-  // Set page title based on the style
+  // Set page title based on the style - using just the style name without "Summary"
   React.useEffect(() => {
     if (currentSummarizationStyle) {
       const styleDef = styleFacade.getStyle(currentSummarizationStyle);
-      document.title = `${styleDef.name} Summary`;
+      document.title = styleDef.name;
     } else {
-      document.title = "Distill Summary";
+      document.title = "Distill";
     }
   }, [currentSummarizationStyle]);
   
