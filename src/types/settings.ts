@@ -4,7 +4,7 @@
  */
 
 // Type for summarization styles
-export type SummarizationStyle = 'standard' | 'simple' | 'bullets' | 'eli5' | 'concise' | 'tweet';
+export type SummarizationStyle = 'standard' | 'simple' | 'bullets' | 'eli5' | 'concise' | 'tweet' | 'clickbait' | 'seinfeld-standup';
 
 // Type for AI models
 export type AIModel = 
@@ -14,3 +14,6 @@ export type AIModel =
 
 // Allow for custom summarization styles as strings
 export type CustomSummarizationStyle = string;
+
+// Export combined style type
+export type AnyStyle = SummarizationStyle | CustomSummarizationStyle;

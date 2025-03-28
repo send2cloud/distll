@@ -4,6 +4,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { getSummarizationStyleFromPath } from '@/utils/settings';
 import MinimalContentView from '@/components/MinimalContentView';
 import { useContentProcessor } from '@/hooks/useContentProcessor';
+import { getStyleDefinition } from '@/services/styleService';
 
 const Distill = () => {
   const { customStyle } = useParams<{ customStyle?: string }>();
@@ -73,10 +74,15 @@ const Distill = () => {
     }
   }, [location.pathname, customStyle]);
   
-  // Set plain text title
+  // Set page title based on the style
   React.useEffect(() => {
-    document.title = "Distill Summary";
-  }, []);
+    if (currentSummarizationStyle) {
+      const styleDef = getStyleDefinition(currentSummarizationStyle);
+      document.title = `${styleDef.name} Summary`;
+    } else {
+      document.title = "Distill Summary";
+    }
+  }, [currentSummarizationStyle]);
   
   // Log what's being sent to the content processor
   React.useEffect(() => {

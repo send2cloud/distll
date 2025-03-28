@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -6,13 +7,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ArrowRight } from "lucide-react";
+import { StyleShowcase } from "@/components/StyleShowcase";
+import { normalizeStyleId, getStyleDefinition } from "@/services/styleService";
+
 const Index = () => {
   const [url, setUrl] = useState('');
   const [isValidUrl, setIsValidUrl] = useState(false);
   const [customStyle, setCustomStyle] = useState('');
+  const [isStyleSelectorOpen, setIsStyleSelectorOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
+  
   useEffect(() => {
     const path = location.pathname;
     if (path.length > 1) {
@@ -20,6 +26,7 @@ const Index = () => {
       processUrl(targetUrl);
     }
   }, [location.pathname]);
+  
   const validateUrl = (input: string) => {
     try {
       const urlToCheck = input.startsWith('http') ? input : `http://${input}`;
@@ -29,14 +36,17 @@ const Index = () => {
       return false;
     }
   };
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     setUrl(input);
     setIsValidUrl(validateUrl(input));
   };
+  
   const handleStyleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCustomStyle(e.target.value);
   };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValidUrl) {
@@ -47,22 +57,28 @@ const Index = () => {
       });
       return;
     }
+    
     let processableUrl = url;
     if (processableUrl.startsWith('http://')) {
       processableUrl = processableUrl.substring(7);
     } else if (processableUrl.startsWith('https://')) {
       processableUrl = processableUrl.substring(8);
     }
-    if (customStyle.trim()) {
-      navigate(`/${customStyle.trim()}/${processableUrl}`);
+    
+    const normalizedStyle = customStyle.trim() ? normalizeStyleId(customStyle.trim()) : '';
+    
+    if (normalizedStyle) {
+      navigate(`/${normalizedStyle}/${processableUrl}`);
     } else {
       navigate(`/${processableUrl}`);
     }
   };
+  
   const processUrl = (targetUrl: string) => {
     navigate(`/${encodeURIComponent(targetUrl)}`);
   };
-  const handleStyleClick = (style: string) => {
+  
+  const handleStyleSelect = (styleId: string) => {
     if (isValidUrl) {
       let processableUrl = url;
       if (processableUrl.startsWith('http://')) {
@@ -70,15 +86,22 @@ const Index = () => {
       } else if (processableUrl.startsWith('https://')) {
         processableUrl = processableUrl.substring(8);
       }
-      navigate(`/${style}/${processableUrl}`);
+      navigate(`/${styleId}/${processableUrl}`);
     } else {
-      setCustomStyle(style);
+      setCustomStyle(styleId);
+      
+      const styleDef = getStyleDefinition(styleId);
       toast({
-        title: "Style selected",
-        description: `"${style}" style will be applied when you enter a valid URL`
+        title: `${styleDef.name} Style Selected`,
+        description: styleDef.description,
       });
     }
   };
+  
+  const toggleStyleSelector = () => {
+    setIsStyleSelectorOpen(!isStyleSelectorOpen);
+  };
+  
   return <div className="min-h-screen font-sans bg-[#e4d5c2]">
       <header className="px-4 sm:px-6 py-4 flex justify-between items-center">
         <div className="text-xl sm:text-2xl font-bold text-[#221F26] font-serif"> </div>
@@ -106,23 +129,58 @@ const Index = () => {
                 </div>
                 
                 <div className="pt-1 sm:pt-4 px-1 py-0 my-0 sm:px-[104px]">
-                  <p className="text-sm mb-2 text-left text-orange-900 font-sans">Optional Style</p>
-                  <Input type="text" placeholder="Custom style (e.g., clickbait, academic, etc.)" value={customStyle} onChange={handleStyleChange} className="w-full border-gray-300 font-sans h-12 sm:h-10 text-base rounded-full" />
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-sm text-left text-orange-900 font-sans">Optional Style</p>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={toggleStyleSelector}
+                      className="text-xs text-orange-900 h-6 px-2"
+                    >
+                      {isStyleSelectorOpen ? 'Hide Styles' : 'Browse Styles'}
+                    </Button>
+                  </div>
+                  <Input 
+                    type="text" 
+                    placeholder="Custom style (e.g., seinfeld-standup, tamil, etc.)" 
+                    value={customStyle} 
+                    onChange={handleStyleChange} 
+                    className="w-full border-gray-300 font-sans h-12 sm:h-10 text-base rounded-full" 
+                  />
                 </div>
               </div>
               
-              <div className="pt-1">
-                <p className="text-sm text-[#8A898C] mb-2 text-left font-sans">Try these modifiers:</p>
-                <div className="flex flex-wrap gap-2">
-                  {['simple', 'eli5', 'clickbait', 'tamil', 'executivesummary', '5'].map(style => <Button key={style} type="button" variant="outline" size={isMobile ? "default" : "sm"} onClick={() => handleStyleClick(style)} className="border-[coffee] text-[coffee] rounded-full font-sans min-h-[20px] py-0 px-[11px] mx-0 font-thin text-xs bg-[#ecd9ba]/[0.13]">
-                      {style === '5' ? '5 Bullets' : style}
-                    </Button>)}
+              {isStyleSelectorOpen && (
+                <div className="pt-2">
+                  <StyleShowcase onStyleSelect={handleStyleSelect} />
                 </div>
-              </div>
+              )}
+              
+              {!isStyleSelectorOpen && (
+                <div className="pt-1">
+                  <p className="text-sm text-[#8A898C] mb-2 text-left font-sans">Try these styles:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['simple', 'eli5', 'clickbait', 'seinfeld-standup', 'tamil', '5'].map(style => (
+                      <Button 
+                        key={style} 
+                        type="button" 
+                        variant="outline" 
+                        size={isMobile ? "default" : "sm"} 
+                        onClick={() => handleStyleSelect(style === '5' ? 'bullets' : style)}
+                        className="border-[coffee] text-[coffee] rounded-full font-sans min-h-[20px] py-0 px-[11px] mx-0 font-thin text-xs bg-[#ecd9ba]/[0.13]"
+                      >
+                        {style === '5' ? '5 Bullets' : style}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>
       </section>
     </div>;
 };
+
 export default Index;
