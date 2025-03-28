@@ -1,5 +1,4 @@
 
-import { AIModel } from '@/types/settings';
 import { invokeProcessFunction } from "@/services/edgeFunctionService";
 import { createAppError, enhanceError } from "@/utils/errorUtils";
 
@@ -15,7 +14,7 @@ export const summarizeContent = async (
   content: string, 
   style?: string, 
   bulletCount?: number,
-  model?: AIModel
+  model?: string
 ) => {
   if (!content) {
     throw createAppError("No content provided for summarization", "CONTENT_ERROR");
@@ -48,7 +47,7 @@ export const summarizeUrl = async (
   url: string, 
   style?: string, 
   bulletCount?: number,
-  model?: AIModel
+  model?: string
 ) => {
   if (!url) {
     throw createAppError("No URL provided for summarization", "URL_ERROR");

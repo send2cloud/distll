@@ -2,9 +2,11 @@
 import { supabase } from '@/integrations/supabase/client';
 
 interface ProcessUrlParams {
-  url: string;
+  url?: string;
+  content?: string;
   style: string;
   bulletCount?: number;
+  model?: string;
 }
 
 interface ProcessUrlResponse {
