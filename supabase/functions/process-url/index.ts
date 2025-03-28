@@ -4,6 +4,14 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { corsHeaders } from "./utils/cors.ts";
 import { processUrl, processDirectContent } from "./services/contentProcessor.ts";
 
+// Cache duration in seconds (1 day)
+const CACHE_DURATION = 86400;
+
+// Generate a cache key based on request parameters
+function generateCacheKey(url: string, content: string | undefined, style: string, bulletCount: number | undefined, model: string): string {
+  return `${url || ''}|${content || ''}|${style}|${bulletCount || ''}|${model}`;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -28,7 +36,18 @@ serve(async (req) => {
     
     console.log(`Received request to process ${url ? 'URL: ' + url : 'direct content'} with style: ${style || 'standard'}, model: ${model || 'default'}`);
     
+    // Generate a cache key for this specific request
+    const cacheKey = generateCacheKey(
+      url || '', 
+      content, 
+      style || 'standard',
+      bulletCount,
+      model || 'google/gemini-2.0-flash-thinking-exp:free'
+    );
+    
     let result;
+    
+    // Try to process the request and generate the response
     if (url) {
       result = await processUrl(url, style || 'standard', bulletCount, model);
     } else if (content) {
@@ -36,14 +55,20 @@ serve(async (req) => {
       result = await processDirectContent(content, style || 'standard', bulletCount, model);
     }
     
+    // Prepare the response with proper cache headers
+    const responseHeaders = {
+      ...corsHeaders,
+      'Content-Type': 'application/json',
+      'Cache-Control': `public, max-age=${CACHE_DURATION}`,
+      'Surrogate-Control': `max-age=${CACHE_DURATION}`,
+      'CDN-Cache-Control': `max-age=${CACHE_DURATION}`,
+      'Vercel-CDN-Cache-Control': `max-age=${CACHE_DURATION}`,
+      'Edge-Cache-Tag': `rewrite-${cacheKey.substring(0, 40)}` // Limit tag length
+    };
+    
     return new Response(
       JSON.stringify(result),
-      { 
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
+      { headers: responseHeaders }
     );
   } catch (error) {
     console.error("Error in edge function:", error);
@@ -76,7 +101,10 @@ serve(async (req) => {
         status: 200, // Changed from 400 to 200
         headers: {
           ...corsHeaders,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       }
     );

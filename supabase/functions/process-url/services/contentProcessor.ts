@@ -1,9 +1,8 @@
 
-import { fetchContent } from "./contentFetcher.ts";
-import { summarizeContent } from "./aiService.ts";
+import { summarizeWithJinaProxiedUrl, summarizeContent } from "./aiService.ts";
 
 /**
- * Process a URL to fetch and summarize its content
+ * Process a URL to directly summarize its content using Jina proxy + LLM
  * @param url URL to process
  * @param style Summarization style to use
  * @param bulletCount Number of bullet points for bullet-style summaries
@@ -29,25 +28,16 @@ export async function processUrl(
       fullUrl = `http://${fullUrl}`;
     }
     
-    // Add Jina AI proxy prefix to the URL
+    // Add Jina AI proxy prefix to the URL - this will be passed directly to the LLM
     const jinaProxyUrl = `https://r.jina.ai/${fullUrl}`;
     
     console.log(`Processing URL: ${fullUrl} with Jina proxy: ${jinaProxyUrl}, style: ${style}, model: ${model}, bullet count: ${bulletCount}`);
     
-    // Get content from Jina proxy - we're not doing any HTML extraction as Jina gives us clean content
-    const content = await fetchContent(jinaProxyUrl);
-    
-    if (!content || content.trim() === '') {
-      throw new Error("Content was empty after fetching. The website may use techniques that prevent content extraction.");
-    }
-    
-    console.log(`Successfully fetched content (${content.length} chars), summarizing with model: ${model}...`);
-    
-    // Pass the content directly to OpenRouter for summarization
-    const summary = await summarizeContent(content, style, bulletCount, model);
+    // Pass the Jina-proxied URL directly to the LLM for content summarization
+    const summary = await summarizeWithJinaProxiedUrl(jinaProxyUrl, style, bulletCount, model);
     
     return {
-      originalContent: content,
+      originalContent: `Content from: ${fullUrl}`, // Return a placeholder for original content
       summary: summary
     };
   } catch (error) {
