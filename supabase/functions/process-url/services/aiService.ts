@@ -1,5 +1,4 @@
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.4.0";
 import { generatePrompt } from "./promptService.ts";
 
 // OpenRouter API endpoint
@@ -8,7 +7,7 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Set a reasonable timeout (in milliseconds)
 const FETCH_TIMEOUT = 30000;
 
-// Hard-coded API key to avoid 401 errors
+// Hard-coded API key to avoid 401 errors - this is the correct key
 const OPENROUTER_API_KEY = "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";
 
 /**
@@ -112,6 +111,7 @@ async function callOpenRouterAPI(
     // Use the provided API key or hardcoded key
     const openRouterApiKey = apiKey || OPENROUTER_API_KEY;
     
+    // Ensure we have an API key
     if (!openRouterApiKey) {
       throw new Error("OpenRouter API key is required but not provided");
     }

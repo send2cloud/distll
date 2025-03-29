@@ -11,10 +11,7 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Set a reasonable timeout (in milliseconds)
 const FETCH_TIMEOUT = 30000;
 
-// Cache duration in seconds (1 day)
-const CACHE_DURATION = 86400;
-
-// Hard-coded API key to avoid 401 errors
+// Hard-coded API key - this is the correct key
 const OPENROUTER_API_KEY = "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";
 
 /**
@@ -400,7 +397,7 @@ serve(async (req) => {
     const responseHeaders = {
       ...corsHeaders,
       'Content-Type': 'text/html; charset=UTF-8',
-      'Cache-Control': `public, max-age=${CACHE_DURATION}`,
+      'Cache-Control': `public, max-age=86400`,
     };
     
     return new Response(html, { 
