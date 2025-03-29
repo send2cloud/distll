@@ -48,6 +48,7 @@ const Index = () => {
       return;
     }
     
+    // Clean up the URL by removing protocol if present
     let processableUrl = url;
     if (processableUrl.startsWith('http://')) {
       processableUrl = processableUrl.substring(7);
@@ -55,19 +56,24 @@ const Index = () => {
       processableUrl = processableUrl.substring(8);
     }
     
-    const normalizedStyle = customStyle.trim() ? styleFacade.normalizeStyleId(customStyle.trim()) : '';
+    // Normalize the style
+    const normalizedStyle = customStyle.trim() ? 
+      styleFacade.normalizeStyleId(customStyle.trim()) : '';
     
-    // Updated URL construction - removing '/direct-summary/' prefix
+    // Construct the direct URL
     let directUrl = `${window.location.origin}/`;
     
+    // Add style path component if provided
     if (normalizedStyle) {
       directUrl += `${normalizedStyle}/`;
     }
     
+    // Add the URL to process
     directUrl += processableUrl;
     
     console.log("Redirecting to:", directUrl);
     
+    // Redirect to the generated URL instead of making API calls
     window.location.href = directUrl;
   };
   
@@ -98,7 +104,7 @@ const Index = () => {
   
   return <div className="min-h-screen font-sans bg-[#e4d5c2]">
       <header className="px-4 sm:px-6 py-4 flex justify-between items-center">
-        <div className="text-xl sm:text-2xl font-bold text-[#221F26] font-serif"> </div>
+        <div className="text-xl sm:text-2xl font-bold text-[#221F26] font-serif">Rewrite.page</div>
         <Button 
           variant="ghost" 
           size="sm" 
