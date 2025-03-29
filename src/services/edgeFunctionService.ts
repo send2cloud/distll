@@ -1,101 +1,64 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
+import { createAppError } from "@/utils/errorUtils";
 
-interface ProcessUrlParams {
+/**
+ * Edge Function response interface
+ */
+interface EdgeFunctionResponse {
+  summary: string;
+  originalContent: string;
+  error?: string;
+  errorCode?: string;
+}
+
+/**
+ * Parameters for invoking the process-url edge function
+ */
+interface ProcessParams {
   url?: string;
   content?: string;
   style: string;
   bulletCount?: number;
-  model?: string;
-  apiKey?: string;
-}
-
-interface ProcessUrlResponse {
-  originalContent: string;
-  summary: string;
+  model: string;
 }
 
 /**
- * Invokes the process-url edge function to summarize content
- * Follows the Single Responsibility Principle - this service only handles communication with the edge function
+ * Invokes the process-url edge function with the provided parameters
+ * @param params Parameters to pass to the edge function
+ * @returns Processed data from the edge function
  */
-export const invokeProcessFunction = async (params: ProcessUrlParams): Promise<ProcessUrlResponse> => {
+export const invokeProcessFunction = async (params: ProcessParams): Promise<EdgeFunctionResponse> => {
   try {
-    console.log("Invoking process-url function with params:", {
-      url: params.url,
-      content: params.content ? `${params.content.substring(0, 50)}... (${params.content.length} chars)` : undefined,
-      style: params.style,
-      bulletCount: params.bulletCount,
-      model: params.model,
-      apiKey: params.apiKey ? "PRESENT" : "NOT_PROVIDED" // Log whether API key is provided without exposing it
+    console.log("Invoking edge function with params:", params);
+    
+    // Use the style as provided - we're enforcing that style is a string at this point
+    const { data, error } = await supabase.functions.invoke('process-url', {
+      body: params
     });
     
-    // Validate inputs before sending to edge function
-    if (!params.url && !params.content) {
-      throw new Error("Either URL or content must be provided");
-    }
-    
-    // Style validation is simplified since we now accept any style string
-    // Just do basic length validation to prevent abuse
-    if (params.style && params.style.length > 100) {
-      throw new Error("Style parameter is too long (max 100 characters)");
-    }
-    
-    // Normalize style to lowercase and trim for consistency
-    const normalizedStyle = params.style ? params.style.trim().toLowerCase() : '';
-    
-    // Create the parameters object with the normalized style
-    const functionParams = {
-      ...params,
-      style: normalizedStyle
-    };
-    
-    // Set a timeout for the function call to prevent hanging UI
-    const functionPromise = supabase.functions.invoke('process-url', {
-      method: 'POST',
-      body: functionParams
-    });
-    
-    // Create a timeout promise
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Function call timed out after 30 seconds')), 30000);
-    });
-    
-    // Race the function call against the timeout
-    const { data, error } = await Promise.race([
-      functionPromise,
-      timeoutPromise.then(() => { throw new Error('Function call timed out'); })
-    ]) as any;
-    
+    // Handle edge function invocation errors (like network errors, not response errors)
     if (error) {
-      console.error("Supabase function error:", error);
-      throw error;
+      console.error('Error calling process-url function:', error);
+      throw createAppError(`Edge function error: ${error.message || "Unknown error"}`, "PROCESSING_ERROR");
     }
     
     if (!data) {
-      throw new Error("No data returned from function");
+      throw createAppError("No data returned from edge function", "PROCESSING_ERROR");
     }
     
-    console.log("Function returned data summary length:", data.summary ? data.summary.length : 0);
-    
-    // Check if the response contains an error message from the edge function
+    // If the response contains an error property, it's an error
     if (data.error) {
-      console.error("Edge function returned error:", data.error);
-      const enhancedError = new Error(data.error);
-      if (data.errorCode) {
-        (enhancedError as any).errorCode = data.errorCode;
-      }
-      throw enhancedError;
+      console.error('Error from edge function:', data.error, data.errorCode);
+      throw createAppError(data.error, (data.errorCode || "PROCESSING_ERROR") as any);
     }
     
-    // Validate the returned data
-    if (!data.summary || typeof data.summary !== 'string' || data.summary.trim().length === 0) {
-      throw new Error("Edge function returned an empty or invalid summary");
-    }
-    
-    return data as ProcessUrlResponse;
+    return data as EdgeFunctionResponse;
   } catch (error) {
-    console.error("Error invoking process-url function:", error);
+    // Add more detailed logging for troubleshooting
+    console.error('Error in invokeProcessFunction:', error);
+    
+    // Re-throw the error to be handled by the calling code
     throw error;
   }
 };

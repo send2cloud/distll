@@ -10,7 +10,7 @@ export type SettingsData = {
 
 const DEFAULT_SETTINGS: SettingsData = {
   openRouterApiKey: '',
-  model: 'google/gemma-3-4b-it',
+  model: 'google/gemini-2.5-pro-exp-03-25:free',
   darkMode: false,
 };
 

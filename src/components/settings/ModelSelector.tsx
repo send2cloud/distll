@@ -19,19 +19,9 @@ interface ModelOption {
 
 const models: ModelOption[] = [
   {
-    value: 'google/gemma-3-4b-it',
-    label: 'Gemma 3.4B (Google)',
-    description: 'Reliable and efficient AI model for text summarization'
-  },
-  {
     value: 'google/gemini-2.5-pro-exp-03-25:free',
     label: 'Gemini 2.5 Pro (Google)',
     description: 'Latest and most capable AI model from Google'
-  },
-  {
-    value: 'google/gemini-2.0-flash-lite-preview-02-05:free',
-    label: 'Gemini 2.0 Flash Lite (Google)',
-    description: 'Fast and lightweight AI model from Google'
   },
   {
     value: 'google/gemini-2.0-flash-thinking-exp:free',

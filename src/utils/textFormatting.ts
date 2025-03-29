@@ -1,13 +1,31 @@
 
 /**
- * Convert content to formatted markdown text
- * This function is now simpler since we're embracing markdown
+ * Convert content to plain text format with minimal formatting
+ * for all display types
  */
-export const preserveBasicFormatting = (content: string): string => {
+export const simplifyToPlainText = (content: string): string => {
   if (!content) return '';
   
+  // Apply comprehensive cleaning to create a plain text representation
+  let cleaned = content;
+  
+  // Remove markdown formatting
+  cleaned = cleaned
+    .replace(/#{1,6}\s+([^\n]+)/g, '$1\n\n')  // Convert headings to text with spacing
+    .replace(/\*\*([^*]+)\*\*/g, '$1')         // Remove bold
+    .replace(/\*([^*]+)\*/g, '$1')             // Remove italics
+    .replace(/`([^`]+)`/g, '$1')               // Remove code formatting
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1') // Convert links to just text
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')    // Remove images
+    .replace(/>\s*([^>\n]+)/g, '$1\n')         // Convert blockquotes to plain text
+    .replace(/\n\s*[-*+]\s+/g, '\n• ')         // Standardize bullet points
+    .replace(/\n\s*\d+\.\s+/g, '\n• ')         // Convert numbered lists to bullet points
+    .replace(/\n{3,}/g, '\n\n')                // Normalize multiple line breaks
+    .replace(/\s{2,}/g, ' ')                   // Normalize spaces
+    .replace(/•/g, '- ');                      // Replace bullet points with simple dashes
+  
   // Clean up any artifacts from JSON or other formatting
-  let cleaned = content
+  cleaned = cleaned
     .replace(/\\"/g, '"')
     .replace(/\\n/g, '\n')
     .replace(/\\t/g, '    ');
@@ -26,31 +44,23 @@ export const preserveBasicFormatting = (content: string): string => {
 
 /**
  * Legacy function maintained for backward compatibility
- * Now calls preserveBasicFormatting to allow markdown formatting
- */
-export const simplifyToPlainText = (content: string): string => {
-  return preserveBasicFormatting(content);
-};
-
-/**
- * Legacy function maintained for backward compatibility
- * Now just calls preserveBasicFormatting
+ * Now just calls simplifyToPlainText
  */
 export const simplifyMarkdownText = (content: string): string => {
-  return preserveBasicFormatting(content);
+  return simplifyToPlainText(content);
 };
 
 /**
  * Comprehensive text cleaner that handles various formatting issues
- * Now calls preserveBasicFormatting for consistency
+ * Now just calls simplifyToPlainText for consistency
  */
 export const cleanTextFormatting = (text: string): string => {
-  return preserveBasicFormatting(text);
+  return simplifyToPlainText(text);
 };
 
 /**
  * Extract content between specific markers or clean up content
- * when no markers are present, preserving markdown formatting
+ * when no markers are present
  */
 export const extractContentBetweenMarkers = (text: string, startMarker: string = 'START', endMarker: string = 'END'): string => {
   if (!text) return '';
@@ -65,10 +75,10 @@ export const extractContentBetweenMarkers = (text: string, startMarker: string =
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match && match[1] && match[1].trim()) {
-      return preserveBasicFormatting(match[1]);
+      return simplifyToPlainText(match[1]);
     }
   }
   
-  // If no markers found, just clean the text with markdown formatting preserved
-  return preserveBasicFormatting(text);
+  // If no markers found, just clean the text
+  return simplifyToPlainText(text);
 };

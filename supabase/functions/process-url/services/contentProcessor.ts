@@ -7,15 +7,13 @@ import { summarizeWithJinaProxiedUrl, summarizeContent } from "./aiService.ts";
  * @param style Summarization style to use
  * @param bulletCount Number of bullet points for bullet-style summaries
  * @param model OpenRouter model to use for summarization
- * @param apiKey Optional user-provided OpenRouter API key
  * @returns Object containing original and summarized content
  */
 export async function processUrl(
   url: string, 
   style: string, 
   bulletCount?: number, 
-  model: string = "google/gemma-3-4b-it",
-  apiKey?: string
+  model: string = "google/gemini-2.5-pro-exp-03-25:free"
 ): Promise<{ originalContent: string; summary: string }> {
   try {
     // Normalize URL to ensure it has a proper protocol prefix
@@ -25,28 +23,18 @@ export async function processUrl(
       throw new Error("URL is empty after trimming");
     }
     
-    // Clean up style parameter (now we accept any style string)
-    const normalizedStyle = style ? style.trim().toLowerCase() : 'standard';
-    
-    // For debugging - log what style we're using
-    console.log(`Style requested: "${normalizedStyle}"`);
-    
     // Ensure the URL has a protocol prefix
     if (!fullUrl.startsWith('http')) {
-      fullUrl = `https://${fullUrl}`;
+      fullUrl = `http://${fullUrl}`;
     }
     
     // Add Jina AI proxy prefix to the URL - this will be passed directly to the LLM
     const jinaProxyUrl = `https://r.jina.ai/${fullUrl}`;
     
-    console.log(`Processing URL: ${fullUrl} with Jina proxy: ${jinaProxyUrl}, style: ${normalizedStyle}, model: ${model}, bullet count: ${bulletCount}`);
+    console.log(`Processing URL: ${fullUrl} with Jina proxy: ${jinaProxyUrl}, style: ${style}, model: ${model}, bullet count: ${bulletCount}`);
     
     // Pass the Jina-proxied URL directly to the LLM for content summarization
-    const summary = await summarizeWithJinaProxiedUrl(jinaProxyUrl, normalizedStyle, bulletCount, model, apiKey);
-    
-    if (!summary || summary.trim().length === 0) {
-      throw new Error("Generated summary is empty or invalid");
-    }
+    const summary = await summarizeWithJinaProxiedUrl(jinaProxyUrl, style, bulletCount, model);
     
     return {
       originalContent: `Content from: ${fullUrl}`, // Return a placeholder for original content
@@ -64,33 +52,16 @@ export async function processUrl(
  * @param style Summarization style to use
  * @param bulletCount Number of bullet points for bullet-style summaries
  * @param model OpenRouter model to use for summarization
- * @param apiKey Optional user-provided OpenRouter API key
  * @returns Object containing original and summarized content
  */
 export async function processDirectContent(
   content: string, 
   style: string, 
   bulletCount?: number,
-  model: string = "google/gemma-3-4b-it",
-  apiKey?: string
+  model: string = "google/gemini-2.5-pro-exp-03-25:free"
 ): Promise<{ originalContent: string; summary: string }> {
   try {
-    // Normalize style (now we accept any style string)
-    const normalizedStyle = style ? style.trim().toLowerCase() : 'standard';
-    
-    // For debugging - log what style we're using
-    console.log(`Style requested for direct content: "${normalizedStyle}"`);
-    
-    if (!content || content.trim().length < 50) {
-      throw new Error("Content is too short to summarize meaningfully (less than 50 characters)");
-    }
-    
-    const summary = await summarizeContent(content, normalizedStyle, bulletCount, model, apiKey);
-    
-    if (!summary || summary.trim().length === 0) {
-      throw new Error("Generated summary is empty or invalid");
-    }
-    
+    const summary = await summarizeContent(content, style || 'standard', bulletCount, model);
     return {
       originalContent: content,
       summary: summary

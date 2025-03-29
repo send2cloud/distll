@@ -1,106 +1,8 @@
-
-# Distill - Web Content Summarization App
-
-Distill is a web application that extracts and summarizes content from any URL using AI. It offers various summarization styles and formatting options.
+# Welcome to your Lovable project
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/99d45188-0e94-40f1-b1e7-83c5bd06873c
-
-## How It Works
-
-### Architecture Overview
-
-Distill uses a simple, URL-driven architecture:
-
-```mermaid
-graph TD
-    A[User Browser] -->|style/url| B[Edge Function "Sofia"]
-    B -->|Prompt + Jina URL| C[OpenRouter AI API]
-    C -->|Fetches content via| D[Jina AI Proxy]
-    D -->|Returns web content| C
-    C -->|Generated Summary| B
-    B -->|Formatted HTML| A
-    
-    style A fill:#f9f9f9,stroke:#333,stroke-width:2px
-    style B fill:#dbeafe,stroke:#2563eb,stroke-width:2px
-    style C fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style D fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-```
-
-### Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant Frontend as Landing Page
-    participant Sofia as Edge Function
-    participant OpenRouter as OpenRouter API
-    participant Jina as Jina AI Proxy
-    
-    %% Direct URL Access
-    User->>Sofia: Visit rewrite.page/[style]/[url]
-    Sofia->>Sofia: Parse style and URL from path
-    Sofia->>OpenRouter: Send prompt with Jina URL (r.jina.ai/[url])
-    OpenRouter->>Jina: Fetch content via proxy
-    Jina-->>OpenRouter: Return web content
-    OpenRouter->>Sofia: Return AI-generated summary
-    Sofia->>User: Display formatted HTML
-    
-    %% Frontend Form Flow
-    User->>Frontend: Enter URL & select style in form
-    Frontend->>Frontend: Construct path: /[style]/[url]
-    Frontend->>User: Redirect to rewrite.page/[style]/[url]
-    Note over User,Sofia: Continues with direct URL flow above
-```
-
-### Data Flow
-
-```mermaid
-flowchart LR
-    A[User Input] --> B{Access Type}
-    B -->|Direct URL| C[Edge Function]
-    B -->|Form Submission| D[Frontend]
-    D -->|URL Redirect| C
-    C --> E[Format Request]
-    E --> F[OpenRouter AI]
-    F --> G[Jina Content Proxy]
-    G --> F
-    F --> C
-    C --> H[Format Response]
-    H --> I[Display to User]
-    
-    style A fill:#f9f9f9,stroke:#333,stroke-width:1px
-    style B fill:#e0e7ff,stroke:#4f46e5,stroke-width:1px
-    style C fill:#dbeafe,stroke:#2563eb,stroke-width:1px
-    style D fill:#dcfce7,stroke:#16a34a,stroke-width:1px
-    style E fill:#fef3c7,stroke:#d97706,stroke-width:1px
-    style F fill:#fae8ff,stroke:#a21caf,stroke-width:1px
-    style G fill:#fee2e2,stroke:#dc2626,stroke-width:1px
-    style H fill:#dbeafe,stroke:#2563eb,stroke-width:1px
-    style I fill:#f9f9f9,stroke:#333,stroke-width:1px
-```
-
-## Core Technologies
-
-- **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend**: Single Supabase Edge Function ("Sofia")
-- **Content Extraction**: Via Jina AI proxy (handled by LLM)
-- **AI Processing**: OpenRouter API (Google Gemini model)
-- **Caching**: Edge function caching (1 day TTL)
-
-## Summarization Styles
-
-Distill supports various summarization styles:
-
-- **Standard**: Concise, clear summary of key points
-- **Simple**: Easy-to-understand language with short sentences
-- **Bullets**: Key points presented as bullet points
-- **ELI5**: Explains content as if to a five-year-old
-- **Concise**: Ultra-compact summary of essential points
-- **Tweet**: Summary in 140 characters or less
-- **Clickbait**: Attention-grabbing sensationalist style
-- **Custom**: User-defined style with custom parameters
 
 ## How can I edit this code?
 
@@ -150,7 +52,7 @@ npm run dev
 
 ## What technologies are used for this project?
 
-This project is built with:
+This project is built with .
 
 - Vite
 - TypeScript

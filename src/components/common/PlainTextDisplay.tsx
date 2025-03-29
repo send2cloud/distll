@@ -1,6 +1,5 @@
 
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
 
 interface PlainTextDisplayProps {
   content: string;
@@ -9,8 +8,8 @@ interface PlainTextDisplayProps {
 }
 
 /**
- * A component that displays content with markdown formatting.
- * Can display with markdown styling or as completely plain text.
+ * A component that displays content as plain text without any special formatting.
+ * Can display as true plain text (no styling at all) or with minimal styling.
  */
 const PlainTextDisplay = ({ content, className = '', asPlainText = false }: PlainTextDisplayProps) => {
   // Check if we have any content to display
@@ -46,27 +45,13 @@ const PlainTextDisplay = ({ content, className = '', asPlainText = false }: Plai
     );
   }
   
-  // Render using ReactMarkdown to handle the markdown formatting
+  // Minimal styling approach
   return (
-    <div className={`font-sans text-base leading-relaxed ${className}`}>
-      <ReactMarkdown
-        components={{
-          // Customize rendering of different markdown elements
-          h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 mt-6" {...props} />,
-          h2: ({ node, ...props }) => <h2 className="text-xl font-bold mb-3 mt-5" {...props} />,
-          h3: ({ node, ...props }) => <h3 className="text-lg font-bold mb-2 mt-4" {...props} />,
-          p: ({ node, ...props }) => <p className="mb-4" {...props} />,
-          ul: ({ node, ...props }) => <ul className="list-disc mb-6 pl-6 space-y-1" {...props} />,
-          ol: ({ node, ...props }) => <ol className="list-decimal mb-6 pl-6 space-y-1" {...props} />,
-          li: ({ node, ...props }) => <li className="mb-1" {...props} />,
-          blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-gray-200 pl-4 italic my-4" {...props} />,
-          strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
-          em: ({ node, ...props }) => <em className="italic" {...props} />,
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-    </div>
+    <pre 
+      className={`whitespace-pre-wrap break-words font-sans text-base leading-relaxed p-0 m-0 ${className}`}
+    >
+      {content}
+    </pre>
   );
 };
 

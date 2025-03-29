@@ -9,7 +9,7 @@ const CACHE_DURATION = 86400;
 
 // Generate a cache key based on request parameters
 function generateCacheKey(url: string, content: string | undefined, style: string, bulletCount: number | undefined, model: string): string {
-  return `${url || ''}|${content ? 'content-' + content.length : ''}|${style}|${bulletCount || ''}|${model}`;
+  return `${url || ''}|${content || ''}|${style}|${bulletCount || ''}|${model}`;
 }
 
 serve(async (req) => {
@@ -28,13 +28,12 @@ serve(async (req) => {
       throw new Error("Invalid JSON in request body");
     });
     
-    const { url, content, style, bulletCount, model, apiKey } = requestData;
+    const { url, content, style, bulletCount, model } = requestData;
     
     if (!url && !content) {
       throw new Error("Either URL or content parameter is required");
     }
     
-    // Log the style parameter to help debug style interpretation issues
     console.log(`Received request to process ${url ? 'URL: ' + url : 'direct content'} with style: ${style || 'standard'}, model: ${model || 'default'}`);
     
     // Generate a cache key for this specific request
@@ -43,21 +42,18 @@ serve(async (req) => {
       content, 
       style || 'standard',
       bulletCount,
-      model || 'google/gemma-3-4b-it'
+      model || 'google/gemini-2.5-pro-exp-03-25:free'
     );
     
     let result;
     
     // Try to process the request and generate the response
     if (url) {
-      result = await processUrl(url, style || 'standard', bulletCount, model, apiKey);
+      result = await processUrl(url, style || 'standard', bulletCount, model);
     } else if (content) {
       // Process direct content if provided
-      result = await processDirectContent(content, style || 'standard', bulletCount, model, apiKey);
+      result = await processDirectContent(content, style || 'standard', bulletCount, model);
     }
-    
-    // Log success for monitoring
-    console.log(`Successfully processed ${url ? 'URL' : 'content'} with style: ${style || 'standard'}, summary length: ${result.summary.length}`);
     
     // Prepare the response with proper cache headers
     const responseHeaders = {
@@ -81,21 +77,15 @@ serve(async (req) => {
     let userMessage = error.message || "An unknown error occurred";
     let errorCode = "PROCESSING_ERROR";
     
-    // Categorize different error types with specific error handling for rate limits
-    if (userMessage.includes("rate limit") || userMessage.includes("quota") || userMessage.includes("429")) {
-      errorCode = "AI_SERVICE_ERROR";
-      userMessage = "OpenRouter API rate limit reached. The free tier quota has been exceeded. Please try again later or provide your own API key in the settings.";
-    } else if (userMessage.includes("URL")) {
+    // Categorize different error types
+    if (userMessage.includes("URL")) {
       errorCode = "URL_ERROR";
     } else if (userMessage.includes("fetch") || userMessage.includes("connection") || userMessage.includes("timed out")) {
       errorCode = "CONNECTION_ERROR";
     } else if (userMessage.includes("content") || userMessage.includes("extract")) {
       errorCode = "CONTENT_ERROR";
-    } else if (userMessage.includes("API") || userMessage.includes("capacity")) {
+    } else if (userMessage.includes("API") || userMessage.includes("quota") || userMessage.includes("rate limit")) {
       errorCode = "AI_SERVICE_ERROR";
-    } else if (userMessage.includes("style")) {
-      // Add specific handling for style-related errors
-      errorCode = "STYLE_ERROR";
     }
     
     // IMPORTANT: Return a 200 status with error in the body

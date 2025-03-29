@@ -1,67 +1,52 @@
-
-import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
+import { SummarizationStyle } from '@/types/settings';
 import PlainTextDisplay from '@/components/common/PlainTextDisplay';
-import ErrorDisplay from '@/components/distill/ErrorDisplay';
-import LoadingIndicator from '@/components/distill/LoadingIndicator';
-import { styleFacade } from '@/services/styles';
-import ContentStateDisplay from './common/ContentStateDisplay';
+import ContentStateDisplay from '@/components/common/ContentStateDisplay';
+import { simplifyToPlainText } from '@/utils/textFormatting';
 
 interface MinimalContentViewProps {
   content: string;
   isLoading: boolean;
-  error: Error | null;
-  style?: string;
-  progress?: number;
-  onRetry?: () => void;
+  error: Error & { errorCode?: string } | null;
+  style: string;
 }
 
 /**
- * A minimal view for displaying content with loading and error states
+ * A minimal view component that displays content in a plain text format
+ * for direct access or when rich formatting is not desired.
  */
-const MinimalContentView = ({ 
-  content, 
-  isLoading, 
-  error, 
-  style = 'standard',
-  progress = 0,
-  onRetry 
-}: MinimalContentViewProps) => {
-  // Get style definition from the style service
-  const styleDef = styleFacade.getStyle(style);
+const MinimalContentView = ({ content, isLoading, error, style = 'standard' }: MinimalContentViewProps) => {
+  // First check if we have any input at all
+  const hasRawInput = Boolean(content) && typeof content === 'string';
   
-  return (
-    <div className="flex flex-col items-center p-4 h-full bg-white">
-      <div className="flex flex-col w-full max-w-2xl mx-auto mt-6">
-        {/* Title area - removed first heading */}
-        
-        {/* Content area */}
-        <div className="w-full">
-          {isLoading ? (
-            <LoadingIndicator message={`Rewriting content in ${styleDef.name}...`} progress={progress} />
-          ) : error ? (
-            <ErrorDisplay error={error} onRetry={onRetry} />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>{styleDef.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {content ? (
-                  <PlainTextDisplay content={content} />
-                ) : (
-                  <ContentStateDisplay 
-                    isLoading={false} 
-                    error={null} 
-                    hasContent={false} 
-                    emptyMessage="No content to display" 
-                  />
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
+  // Then check if the input has actual content (not just whitespace)
+  const hasRawContent = hasRawInput && content.trim().length > 0;
+  
+  // Apply plain text formatting to all content regardless of style
+  const processedContent = hasRawContent ? simplifyToPlainText(content) : '';
+  
+  // Check if we still have valid content after processing
+  const hasActualContent = Boolean(processedContent && processedContent.trim().length > 0);
+
+  // Show loading/error states or empty content message
+  if (isLoading || error || !hasActualContent) {
+    return (
+      <div className="max-w-4xl mx-auto p-4 border border-gray-200 rounded-md shadow-sm bg-white">
+        <ContentStateDisplay 
+          isLoading={isLoading}
+          error={error}
+          hasContent={hasActualContent}
+          emptyMessage={`No content available for the URL${hasRawContent ? ' (content was empty after processing)' : ''}. Please check the URL or try a different page.`}
+          errorMessage={error ? `Error: ${error.message}. The server-side processing failed. Please try again later or with a different URL.` : undefined}
+        />
       </div>
+    );
+  }
+
+  // Return content as true plain text without any styling
+  return (
+    <div className="p-4 max-w-4xl mx-auto">
+      <PlainTextDisplay content={processedContent} asPlainText={true} />
     </div>
   );
 };

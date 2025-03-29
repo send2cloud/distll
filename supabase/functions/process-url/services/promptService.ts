@@ -1,93 +1,50 @@
 
 /**
- * Prompt generation service following Single Responsibility Principle
- * This service is responsible for generating appropriate prompts for the AI model
+ * Factory class for generating summarization prompts
  */
-
-// Interface for prompt options to follow Interface Segregation Principle
-interface PromptOptions {
-  content: string;
-  style: string;
-  bulletCount?: number;
-}
-
-/**
- * Style-specific prompt generator that follows Open-Closed Principle
- * New styles can be added without modifying existing code
- */
-class PromptGenerator {
-  private static readonly STYLE_EXAMPLES = `
-Here are some examples of how different styles should be interpreted:
-- "eli5": Explain like I'm 5 years old, using simple words and concepts a child would understand
-- "top10": Create a numbered list of the 10 most important points in decreasing order of importance
-- "bullet-points": Present the key information as a clear, concise bulleted list
-- "todo-list": Transform the content into a practical checklist of action items with checkboxes
-- "seinfeld-standup": Rewrite as if Jerry Seinfeld was doing a comedy routine about this topic
-- "piratetalk": Use pirate language, phrases and terminology throughout
-- "haiku": Create beautiful haiku poems that capture the essence of the content
-- "clickbait": Use exaggerated, attention-grabbing headlines and phrasings
-- "fantasy": Add magical elements and epic storytelling techniques
-- "tldr": Give an extremely concise "too long; didn't read" summary`;
-
+export class SummarizationPromptFactory {
   /**
-   * Generate a standard prompt with basic instructions
+   * Gets a summarization prompt based on the style and bullet count
+   * @param style Summarization style to use
+   * @param bulletCount Number of bullet points for bullet-style summaries
+   * @returns The prompt to use for the summarization
    */
-  private generateStandardPrompt(options: PromptOptions): string {
-    let prompt = `Please summarize the following content concisely and clearly.`;
+  static getPrompt(style: string, bulletCount?: number): string {
+    // Base instruction to avoid preambles and postambles, emphasizing PLAIN TEXT output
+    const baseInstruction = "CRITICAL: Output ONLY plain text format. NO markdown. NO formatting. Do NOT include ANY introduction or conclusion. NO phrases like 'here's a summary', 'in summary', or 'here are the key points'. NO sign-offs like 'let me know if you need more information'. Start DIRECTLY with content. END immediately after content. Use only basic ASCII characters, no unicode, emojis, or special characters. Format your output with a ### START ### tag at the beginning and ### END ### tag at the end.";
     
-    if (options.bulletCount && options.bulletCount > 0) {
-      prompt += `\nPresent your response as a list of exactly ${options.bulletCount} bullet points covering the most important aspects.`;
-    }
-    
-    return this.finalizePrompt(prompt, options.content);
-  }
-  
-  /**
-   * Generate a custom style prompt with creative instructions
-   */
-  private generateStyledPrompt(options: PromptOptions): string {
-    let prompt = `Please rewrite the following content in "${options.style}" style. Be creative and fully embrace the style.
-    
-${PromptGenerator.STYLE_EXAMPLES}
-
-If the style doesn't match any of these examples, use your creativity to match the requested style as closely as possible.`;
-    
-    if (options.bulletCount && options.bulletCount > 0) {
-      prompt += `\nPresent your response as a list of exactly ${options.bulletCount} bullet points covering the most important aspects.`;
-    }
-    
-    return this.finalizePrompt(prompt, options.content);
-  }
-  
-  /**
-   * Add content to prompt and format it properly
-   */
-  private finalizePrompt(instruction: string, content: string): string {
-    return `${instruction}\n\nContent to process:\n${content}`;
-  }
-  
-  /**
-   * Public method to generate appropriate prompt based on style
-   */
-  public generatePrompt(options: PromptOptions): string {
-    // Normalize style to lowercase for case-insensitive matching
-    const normalizedStyle = options.style.toLowerCase();
-    
-    // Generate prompt based on style
-    if (normalizedStyle === 'standard' || normalizedStyle === 'simple') {
-      return this.generateStandardPrompt(options);
-    } else {
-      return this.generateStyledPrompt(options);
+    // Check for standard predefined styles first
+    switch (style) {
+      case 'simple':
+        return `You are a helpful assistant that specializes in simplifying complex content. Your task is to rewrite the provided text in simple, easy-to-understand English with short sentences and common words. Avoid jargon and technical terms when possible. ${baseInstruction}`;
+      
+      case 'bullets':
+        const count = bulletCount || 5;
+        return `You are a helpful assistant that specializes in extracting the ${count} most important points from content. Your task is to identify only the ${count} key takeaways. Present them as numbered items (ex: 1. Point one). Make each point concise and informative. Do not use any special characters or formatting. ${baseInstruction}`;
+      
+      case 'eli5':
+        return `You are a helpful assistant that explains complex topics as if to a 5-year-old child. Use ONLY very simple language. Short sentences. Common words. Avoid ANY complex terms. Keep paragraphs to 2-3 simple sentences. Pretend the audience knows nothing about the topic. ${baseInstruction}`;
+      
+      case 'concise':
+        return `You are a helpful assistant that specializes in creating extremely concise summaries. Your task is to distill the content down to its absolute essence in as few words as possible while retaining all key information. Use short sentences and be very economical with language. ${baseInstruction}`;
+      
+      case 'tweet':
+        return `You are a helpful assistant that specializes in creating tweet-sized summaries. Your task is to distill the content into exactly 140 characters or less. Be extremely concise while capturing the most essential point. Don't use hashtags. ${baseInstruction}`;
+      
+      case 'clickbait':
+        return `You are a helpful assistant that specializes in creating clickbait-style headlines and teasers. Your task is to rewrite the content in an exaggerated, sensationalist style with CAPITALIZED words for emphasis, excessive punctuation (!!!), rhetorical questions, and dramatic claims. Use phrases like "YOU WON'T BELIEVE", "SHOCKING", "MIND-BLOWING", etc. Make it sound like the most exciting thing ever, but still cover the actual content. ${baseInstruction}`;
+      
+      case 'standard':
+        return `You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in a plain text format. If content contains rankings or lists (like top 10), format them as proper numbered items. ${baseInstruction}`;
+      
+      default:
+        // Handle custom style modifiers
+        if (style && style !== 'standard') {
+          return `You are a helpful assistant that specializes in creating summaries tailored to specific styles or perspectives. The user has requested a summary in the style of "${style}". Use your understanding of this style modifier to adapt your approach. For example, if it's a language or cultural reference (like "tamil" or "spanish"), adapt to that cultural or linguistic context. If it's a writing style (like "clickbait" or "academic"), adapt the tone and format accordingly. If it's a bias or perspective (like "leftbias" or "rightbias"), present the content from that perspective while making it clear you're following a style instruction. If it's a business format (like "executivesummary"), follow established conventions for that format. If you don't understand the style, default to a clear, concise summary. ${baseInstruction}`;
+        }
+        
+        // If nothing matches, use standard prompt
+        return `You are a helpful assistant that specializes in distilling complex content into concise and clear summaries. Your task is to identify the key information and present it in a plain text format. If content contains rankings or lists (like top 10), format them as proper numbered items. ${baseInstruction}`;
     }
   }
-}
-
-// Factory function to create and use the prompt generator (Dependency Inversion)
-export function generatePrompt(
-  content: string,
-  style: string = 'standard',
-  bulletCount?: number
-): string {
-  const promptGenerator = new PromptGenerator();
-  return promptGenerator.generatePrompt({ content, style, bulletCount });
 }
