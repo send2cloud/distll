@@ -35,13 +35,24 @@ export const invokeProcessFunction = async (params: ProcessUrlParams): Promise<P
       throw new Error("Either URL or content must be provided");
     }
     
+    // Style validation is simplified since we now accept any style string
+    // Just do basic length validation to prevent abuse
     if (params.style && params.style.length > 100) {
       throw new Error("Style parameter is too long (max 100 characters)");
     }
     
+    // Normalize style to lowercase and trim for consistency
+    const normalizedStyle = params.style ? params.style.trim().toLowerCase() : '';
+    
+    // Create the parameters object with the normalized style
+    const functionParams = {
+      ...params,
+      style: normalizedStyle
+    };
+    
     const { data, error } = await supabase.functions.invoke('process-url', {
       method: 'POST',
-      body: params
+      body: functionParams
     });
     
     if (error) {

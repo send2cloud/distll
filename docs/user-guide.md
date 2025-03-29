@@ -26,16 +26,32 @@ Distill accepts URLs in various formats:
 
 ## Summarization Styles
 
-Distill offers different summarization styles to suit your needs:
+Distill offers flexible summarization styles to fit your needs. You can enter any style you want, and the AI will interpret it creatively:
+
+### Popular Styles
 
 - **Simple**: A straightforward, concise summary of the main points
 - **ELI5** (Explain Like I'm 5): Simplifies complex topics into easy-to-understand language
 - **Clickbait**: Presents information in an attention-grabbing style
-- **Tamil**: Translates and summarizes content in Tamil language
-- **Executive Summary**: Formal, business-oriented summary of key points
-- **5 Bullets**: Summarizes content in 5 bullet points (number can be customized)
+- **Seinfeld-Standup**: Transforms content into Jerry Seinfeld's comedy style
+- **Piratetalk**: Summarizes in pirate language ("Arr, matey!")
+- **Haiku**: Creates a poetic summary in haiku form
+- **Top10**: Lists the top 10 points from the article
+- **Todo-list**: Presents action items in checkbox format
+- **Fantasy**: Rewrites content in fantasy novel style
+- **TLDR**: Ultra-concise "too long, didn't read" summary
 
-You can also enter a custom style in the "Custom style" field to get specialized summaries.
+### Creating Custom Styles
+
+You can use any descriptive style name, and the AI will interpret it! Here are some creative examples:
+- `/shakespearean/`: Summary in the style of Shakespeare
+- `/tweet-thread/`: Format content as a series of tweets
+- `/rap-lyrics/`: Transform content into rap lyrics
+- `/legal-brief/`: Formal legal summary
+- `/cooking-recipe/`: Present information as a cooking recipe
+- `/letter-from-grandma/`: Written as if your grandmother wrote it
+
+The AI will interpret the style name and adapt the content accordingly. Be creative!
 
 ## URL Shortcuts
 
@@ -44,8 +60,8 @@ Distill supports direct URL patterns for quick access to specific styles:
 - `distill.app/{url}` - Use the default style for a URL
 
 Examples:
-- `distill.app/executivesummary/example.com/article`
-- `distill.app/5/example.com/article` (5 bullet points)
+- `distill.app/eli5/example.com/article`
+- `distill.app/haiku/example.com/article`
 
 ## Features
 

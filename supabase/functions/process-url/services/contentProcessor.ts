@@ -25,8 +25,8 @@ export async function processUrl(
       throw new Error("URL is empty after trimming");
     }
     
-    // Clean up style parameter
-    const normalizedStyle = style ? style.trim() : 'standard';
+    // Clean up style parameter (now we accept any style string)
+    const normalizedStyle = style ? style.trim().toLowerCase() : 'standard';
     
     // For debugging - log what style we're using
     console.log(`Style requested: "${normalizedStyle}"`);
@@ -75,8 +75,8 @@ export async function processDirectContent(
   apiKey?: string
 ): Promise<{ originalContent: string; summary: string }> {
   try {
-    // Normalize style
-    const normalizedStyle = style ? style.trim() : 'standard';
+    // Normalize style (now we accept any style string)
+    const normalizedStyle = style ? style.trim().toLowerCase() : 'standard';
     
     // For debugging - log what style we're using
     console.log(`Style requested for direct content: "${normalizedStyle}"`);
