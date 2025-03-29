@@ -13,6 +13,9 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Set a reasonable timeout (in milliseconds)
 const FETCH_TIMEOUT = 30000;
 
+// Fallback API key - only used if environment variable is not set
+const FALLBACK_API_KEY = "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";
+
 /**
  * Creates a fetch request with timeout
  */
@@ -125,12 +128,14 @@ async function callOpenRouterAPI(
   model: string = "google/gemma-3-4b-it"
 ): Promise<string> {
   try {
-    // Use the environment variable for API key
-    const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
+    // Use the environment variable for API key or fall back to the default
+    const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY") || FALLBACK_API_KEY;
     
     if (!openRouterApiKey) {
       throw new Error("OpenRouter API key is required but not provided");
     }
+    
+    console.log("Using API key starting with:", openRouterApiKey.substring(0, 5) + "...");
     
     const payload = {
       model: model,
@@ -164,6 +169,9 @@ async function callOpenRouterAPI(
       console.error("OpenRouter API Error:", data);
       if (response.status === 429) {
         throw new Error("OpenRouter API rate limit reached. The free tier quota has been exceeded. Please try again later or provide your own API key in the settings.");
+      }
+      if (response.status === 401) {
+        throw new Error("API key is invalid or expired. Please provide a valid OpenRouter API key in the settings.");
       }
       throw new Error(`OpenRouter API error: ${data.error?.message || JSON.stringify(data)}`);
     }
