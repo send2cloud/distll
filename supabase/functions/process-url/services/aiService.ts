@@ -1,4 +1,5 @@
 
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.4.0";
 import { generatePrompt } from "./promptService.ts";
 
 // OpenRouter API endpoint
@@ -6,9 +7,6 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 // Set a reasonable timeout (in milliseconds)
 const FETCH_TIMEOUT = 30000;
-
-// Hardcoded API key - safer to use environment variables in production
-const OPENROUTER_API_KEY = "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";
 
 /**
  * Creates a fetch request with timeout
@@ -87,10 +85,12 @@ async function callOpenRouterAPI(
   apiKey?: string
 ): Promise<string> {
   try {
-    // Use provided API key or fall back to hardcoded key
-    const openRouterApiKey = apiKey || OPENROUTER_API_KEY;
+    // Use the provided API key or default to environment variable
+    const openRouterApiKey = apiKey || Deno.env.get("OPENROUTER_API_KEY");
     
-    console.log("Using API key for OpenRouter API");
+    if (!openRouterApiKey) {
+      throw new Error("OpenRouter API key is required but not provided");
+    }
     
     const payload = {
       model: model,
@@ -124,9 +124,6 @@ async function callOpenRouterAPI(
       console.error("OpenRouter API Error:", data);
       if (response.status === 429) {
         throw new Error("OpenRouter API rate limit reached. The free tier quota has been exceeded. Please try again later or provide your own API key in the settings.");
-      }
-      if (response.status === 401) {
-        throw new Error("API key is invalid or has expired. Please provide a valid OpenRouter API key in the settings.");
       }
       throw new Error(`OpenRouter API error: ${data.error?.message || JSON.stringify(data)}`);
     }

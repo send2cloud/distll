@@ -1,15 +1,27 @@
 
 /**
- * Extracts content between special markers or returns the original text
- * @param text Text to process
- * @returns Cleaned text without markers
+ * Extracts content between optional markdown markers
+ * For when OpenAI adds extra context or headers/footers
  */
-export function extractContentBetweenMarkers(text: string): string {
-  // Check if it contains the special "I cannot access this URL" message
-  if (text.includes("I cannot access this URL") || text.includes("could not access")) {
-    return "The content at this URL could not be accessed. Please check that the URL is correct and publicly accessible.";
-  }
+export function extractContentBetweenMarkers(content: string): string {
+  if (!content) return '';
   
-  // Basic cleaning - just return the text as-is
-  return text;
+  // Look for markdown-style "```" code blocks that sometimes appear in responses
+  const markdownMatch = content.match(/```(?:markdown)?\s*([\s\S]*?)```/);
+  if (markdownMatch) {
+    return markdownMatch[1].trim();
+  }
+
+  // Look for common markdown headers and footers from AI models
+  const noHeaderFooter = content
+    .replace(/^#\s*(?:Summary|Content Summary|Article Summary)[\s\n]*/i, '')
+    .replace(/\n+(?:In\s*conclusion|Overall|To\s*summarize)[^]*$/i, '')
+    .trim();
+
+  if (noHeaderFooter) {
+    return noHeaderFooter;
+  }
+
+  // If no recognizable patterns, return the original
+  return content;
 }

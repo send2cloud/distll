@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Globe, Wifi, FileText, Cpu, RefreshCw, Settings } from 'lucide-react';
-import { ErrorCodeType } from '@/types/errors';
+import { ErrorCodeType } from '@/hooks/useContentProcessor';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 

@@ -62,25 +62,22 @@ const Index = () => {
     const normalizedStyle = customStyle.trim() ? 
       styleFacade.normalizeStyleId(customStyle.trim()) : '';
     
-    // Construct the Edge function URL - always use Supabase Edge function
-    let edgeFunctionUrl;
-    const projectId = "mibqumffyhfbuddsyuaq"; // Supabase project ID
-    
-    // Always use Supabase edge function regardless of development or production
-    edgeFunctionUrl = `https://${projectId}.supabase.co/functions/v1/rewrite`;
+    // Construct the Sofia edge function URL
+    const sofiaBaseUrl = "https://rewrite.page/";
+    let sofiaUrl = sofiaBaseUrl;
     
     // Add style path component if provided
     if (normalizedStyle) {
-      edgeFunctionUrl += `/${normalizedStyle}`;
+      sofiaUrl += `${normalizedStyle}/`;
     }
     
     // Add the URL to process
-    edgeFunctionUrl += `/${processableUrl}`;
+    sofiaUrl += processableUrl;
     
-    console.log("Redirecting to Edge function:", edgeFunctionUrl);
+    console.log("Redirecting to Sofia edge function:", sofiaUrl);
     
-    // Redirect to the Edge function
-    window.location.href = edgeFunctionUrl;
+    // Redirect to the Sofia edge function
+    window.location.href = sofiaUrl;
   };
   
   const handleStyleSelect = (styleId: string) => {
@@ -156,7 +153,7 @@ const Index = () => {
                 <div className="border-t pt-3 mt-3">
                   <h3 className="font-medium text-[#5d4a1d]">Direct URL Format</h3>
                   <code className="text-xs block bg-gray-100 p-2 rounded mt-1 text-[#221F26]">
-                    https://mibqumffyhfbuddsyuaq.supabase.co/functions/v1/rewrite/<span className="text-blue-600">[style]</span>/<span className="text-green-600">example.com/article</span>
+                    rewrite.page/<span className="text-blue-600">[style]</span>/<span className="text-green-600">example.com/article</span>
                   </code>
                   <p className="text-xs mt-1 text-[#8A898C]">
                     <span className="text-blue-600">Optional style</span> + 

@@ -1,6 +1,2 @@
 
-# This config is applied when running locally with `supabase functions serve`
-project_id = "mibqumffyhfbuddsyuaq"
-
-[functions.rewrite]
-verify_jwt = false
+project_id = "dev-server"
