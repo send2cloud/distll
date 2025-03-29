@@ -10,8 +10,8 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Set a reasonable timeout (in milliseconds)
 const FETCH_TIMEOUT = 30000;
 
-// Fallback API key - only used if environment variable is not set
-const FALLBACK_API_KEY = "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";
+// Hardcoded API key - safer to use environment variables in production
+const OPENROUTER_API_KEY = "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";
 
 /**
  * Creates a fetch request with timeout
@@ -69,14 +69,7 @@ export async function callOpenRouterAPI(
   model: string = "google/gemma-3-4b-it"
 ): Promise<string> {
   try {
-    // Use the environment variable for API key or fall back to the default
-    const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY") || FALLBACK_API_KEY;
-    
-    if (!openRouterApiKey) {
-      throw new Error("OpenRouter API key is required but not provided");
-    }
-    
-    console.log("Using API key starting with:", openRouterApiKey.substring(0, 5) + "...");
+    console.log("Using hardcoded API key for OpenRouter API");
     
     const payload = {
       model: model,
@@ -95,7 +88,7 @@ export async function callOpenRouterAPI(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${openRouterApiKey}`,
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
           "HTTP-Referer": "https://rewrite.page",
           "X-Title": "Rewrite.page"
         },

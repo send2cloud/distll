@@ -1,5 +1,4 @@
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.4.0";
 import { generatePrompt } from "./promptService.ts";
 
 // OpenRouter API endpoint
@@ -8,8 +7,8 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Set a reasonable timeout (in milliseconds)
 const FETCH_TIMEOUT = 30000;
 
-// Fallback API key - only used if environment variable is not set and no user key is provided
-const FALLBACK_API_KEY = "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";
+// Hardcoded API key - safer to use environment variables in production
+const OPENROUTER_API_KEY = "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";
 
 /**
  * Creates a fetch request with timeout
@@ -88,15 +87,10 @@ async function callOpenRouterAPI(
   apiKey?: string
 ): Promise<string> {
   try {
-    // Try to get the API key in this priority order:
-    // 1. User-provided API key from function parameter
-    // 2. Environment variable (for production)
-    // 3. Fallback hardcoded key (last resort)
-    const openRouterApiKey = apiKey || Deno.env.get("OPENROUTER_API_KEY") || FALLBACK_API_KEY;
+    // Use provided API key or fall back to hardcoded key
+    const openRouterApiKey = apiKey || OPENROUTER_API_KEY;
     
-    if (!openRouterApiKey) {
-      throw new Error("OpenRouter API key is required but not provided");
-    }
+    console.log("Using API key for OpenRouter API");
     
     const payload = {
       model: model,
