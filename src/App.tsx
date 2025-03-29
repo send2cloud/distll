@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import Settings from "@/pages/Settings";
 import * as React from 'react';
 
+// Create the query client outside of the component to avoid re-creation on renders
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -21,27 +23,25 @@ const queryClient = new QueryClient({
 
 const App = () => {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <SettingsProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <div className="app">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/:customStyle/*" element={<Distill />} />
-                  <Route path="/*" element={<Distill />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </SettingsProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <SettingsProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="app">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/:customStyle/*" element={<Distill />} />
+                <Route path="/*" element={<Distill />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SettingsProvider>
+    </QueryClientProvider>
   );
 };
 
