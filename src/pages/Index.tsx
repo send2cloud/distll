@@ -62,22 +62,29 @@ const Index = () => {
     const normalizedStyle = customStyle.trim() ? 
       styleFacade.normalizeStyleId(customStyle.trim()) : '';
     
-    // Construct the Sofia edge function URL
-    const sofiaBaseUrl = "https://rewrite.page/";
-    let sofiaUrl = sofiaBaseUrl;
+    // Construct the Edge function URL
+    let edgeFunctionUrl;
+    
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      // Local development
+      edgeFunctionUrl = `${window.location.protocol}//${window.location.host}/functions/rewrite`;
+    } else {
+      // Production
+      edgeFunctionUrl = "https://rewrite.page";
+    }
     
     // Add style path component if provided
     if (normalizedStyle) {
-      sofiaUrl += `${normalizedStyle}/`;
+      edgeFunctionUrl += `/${normalizedStyle}`;
     }
     
     // Add the URL to process
-    sofiaUrl += processableUrl;
+    edgeFunctionUrl += `/${processableUrl}`;
     
-    console.log("Redirecting to Sofia edge function:", sofiaUrl);
+    console.log("Redirecting to Edge function:", edgeFunctionUrl);
     
-    // Redirect to the Sofia edge function
-    window.location.href = sofiaUrl;
+    // Redirect to the Edge function
+    window.location.href = edgeFunctionUrl;
   };
   
   const handleStyleSelect = (styleId: string) => {
