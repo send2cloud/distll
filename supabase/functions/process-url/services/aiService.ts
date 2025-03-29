@@ -1,351 +1,148 @@
 
-import { extractContentBetweenMarkers } from "../utils/text.ts";
-import { SummarizationPromptFactory } from "./promptService.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.4.0";
+import { generatePrompt } from "./promptService.ts";
 
-// Fixed public API key with $5 limit that will be used for all requests
-const PUBLIC_API_KEY = "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";
+// OpenRouter API endpoint
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// Define fallback model to use when the primary model fails
-const FALLBACK_MODEL = "google/gemma-3-4b-it";
+// Set a reasonable timeout (in milliseconds)
+const FETCH_TIMEOUT = 30000;
 
 /**
- * Summarizes content using an AI model with a direct Jina-proxied URL
- * @param jinaProxyUrl The Jina-proxied URL to summarize
- * @param style Summarization style to use
- * @param bulletCount Number of bullet points for bullet-style summaries
- * @param model OpenRouter model to use for summarization
- * @param apiKey Optional user-provided OpenRouter API key
- * @returns Summarized content
+ * Creates a fetch request with timeout
+ */
+async function fetchWithTimeout(url: string, options: RequestInit, timeout: number) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  
+  const response = await fetch(url, {
+    ...options,
+    signal: controller.signal
+  });
+  clearTimeout(id);
+  
+  return response;
+}
+
+/**
+ * Summarize content directly by sending it to the OpenRouter API
+ */
+export async function summarizeContent(
+  content: string,
+  style: string = 'standard',
+  bulletCount?: number,
+  model: string = "google/gemma-3-4b-it",
+  apiKey?: string
+): Promise<string> {
+  try {
+    console.log(`Summarizing content with style: ${style}, bullet count: ${bulletCount}, model: ${model}`);
+    
+    // Generate the prompt for the model based on style
+    const prompt = generatePrompt(content, style, bulletCount);
+    
+    return await callOpenRouterAPI(prompt, model, apiKey);
+  } catch (error) {
+    console.error(`Error in summarizeContent: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Summarize content from a Jina-proxied URL
  */
 export async function summarizeWithJinaProxiedUrl(
   jinaProxyUrl: string,
-  style: string,
+  style: string = 'standard',
   bulletCount?: number,
   model: string = "google/gemma-3-4b-it",
   apiKey?: string
 ): Promise<string> {
   try {
     console.log(`Summarizing URL with style: ${style}, bullet count: ${bulletCount}, model: ${model}`);
-
-    // Single retry for API calls
-    let retries = 0;
-    const maxRetries = 1;
-    let currentModel = model;
     
-    while (retries <= maxRetries) {
-      try {
-        console.log(`Attempting summarization with model: ${currentModel}`);
-        
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${PUBLIC_API_KEY}`,
-            "HTTP-Referer": "https://distill.app",
-            "X-Title": "Distill",
-            "User-Agent": "Distill/1.0"
-          },
-          body: JSON.stringify({
-            model: currentModel,
-            messages: [
-              {
-                role: "system",
-                content: SummarizationPromptFactory.getPrompt(style, bulletCount)
-              },
-              {
-                role: "user",
-                content: `Visit this URL and summarize the ACTUAL CONTENT you find there according to the style specified in my system message. IMPORTANT: You MUST focus EXCLUSIVELY on the actual content found at this URL, NOT what you might guess from the URL itself. The URL and its domain name could be misleading, so ONLY summarize what you actually read. Start directly with content. No preamble. No postamble.\n\nURL: ${jinaProxyUrl}`
-              }
-            ],
-            max_tokens: 1000
-          })
-        });
+    // Generate the prompt for the model
+    const prompt = `Visit this URL: ${jinaProxyUrl}
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          let errorMessage = `API error (${response.status}: ${response.statusText})`;
-          
-          try {
-            const errorData = JSON.parse(errorText);
-            if (errorData.error?.message) {
-              errorMessage = errorData.error.message;
-            }
-            
-            // Check if error is rate limit related
-            const isRateLimitError = 
-              errorMessage.includes("quota") || 
-              errorMessage.includes("rate limit") || 
-              errorMessage.includes("capacity") ||
-              errorMessage.includes("429") ||
-              response.status === 429;
-            
-            // If it's a rate limit error and we have retries left, try with fallback model
-            if (isRateLimitError && retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-              console.log(`Rate limit error with model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
-              currentModel = FALLBACK_MODEL;
-              retries++;
-              // Wait before retry
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              continue;
-            }
-          } catch (e) {
-            // If we can't parse the error, use the default message
-            console.error("Error parsing API error response:", e);
-          }
-          
-          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-            console.log(`Retrying after error: ${errorMessage} with fallback model: ${FALLBACK_MODEL}`);
-            currentModel = FALLBACK_MODEL;
-            retries++;
-            // Wait before retry
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
-          }
-          
-          throw new Error(errorMessage);
-        }
+Please read the content at this URL, then ${style === 'standard' ? 'summarize it' : 'rewrite it in ' + style + ' style'}${bulletCount ? ` with ${bulletCount} key points` : ''}.
 
-        const data = await response.json();
-        
-        // Add defensive check for data.choices being undefined or empty
-        if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-          console.error("Invalid API response structure:", JSON.stringify(data, null, 2));
-          
-          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-            console.log(`Invalid response from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
-            currentModel = FALLBACK_MODEL;
-            retries++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
-          }
-          
-          throw new Error("Invalid response from OpenRouter API - missing or empty choices array");
-        }
-        
-        // Add defensive check for message content
-        if (!data.choices[0].message || !data.choices[0].message.content) {
-          console.error("Invalid message structure in response:", JSON.stringify(data.choices[0], null, 2));
-          
-          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-            console.log(`Missing content from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
-            currentModel = FALLBACK_MODEL;
-            retries++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
-          }
-          
-          throw new Error("Invalid response structure - missing message content");
-        }
-        
-        const summary = data.choices[0].message.content;
-        
-        // Simple cleanup - no complex processing
-        const cleanedSummary = extractContentBetweenMarkers(summary);
-        
-        if (!cleanedSummary || cleanedSummary.trim().length < 10) {
-          console.error("Generated summary is too short or empty:", cleanedSummary);
-          
-          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-            console.log(`Empty summary from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
-            currentModel = FALLBACK_MODEL;
-            retries++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
-          }
-          
-          throw new Error("Failed to generate a meaningful summary");
-        }
-        
-        // Basic text cleanup
-        return cleanedSummary.replace(/\s+/g, ' ').trim();
-      } catch (error) {
-        if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-          console.log(`Retry ${retries + 1} after error with model ${currentModel}:`, error);
-          currentModel = FALLBACK_MODEL;
-          retries++;
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        } else {
-          throw error;
-        }
-      }
-    }
+If you can't access the URL content, say "I cannot access this URL." Do not make up a summary if you cannot access the content.`;
     
-    throw new Error("Failed to generate summary after retries");
+    console.log(`Attempting summarization with model: ${model}`);
+    
+    return await callOpenRouterAPI(prompt, model, apiKey);
   } catch (error) {
-    console.error("Failed to summarize content:", error);
+    console.error(`Error in summarizeWithJinaProxiedUrl: ${error.message}`);
     throw error;
   }
 }
 
 /**
- * Summarizes content using an AI model
- * @param content Content to summarize
- * @param style Summarization style to use
- * @param bulletCount Number of bullet points for bullet-style summaries
- * @param model OpenRouter model to use for summarization
- * @param apiKey Optional user-provided OpenRouter API key
- * @returns Summarized content
+ * Make a call to the OpenRouter API
  */
-export async function summarizeContent(
-  content: string, 
-  style: string, 
-  bulletCount?: number,
+async function callOpenRouterAPI(
+  prompt: string,
   model: string = "google/gemma-3-4b-it",
   apiKey?: string
 ): Promise<string> {
   try {
-    console.log(`Summarizing content with style: ${style}, bullet count: ${bulletCount}, model: ${model}, content length: ${content.length} chars`);
+    // Use the provided API key or default to environment variable
+    const openRouterApiKey = apiKey || Deno.env.get("OPENROUTER_API_KEY");
     
-    if (!content || content.trim().length < 100) {
-      throw new Error("Content is too short to summarize meaningfully (less than 100 characters)");
+    if (!openRouterApiKey) {
+      throw new Error("OpenRouter API key is required but not provided");
     }
     
-    // Single retry for API calls
-    let retries = 0;
-    const maxRetries = 1;
-    let currentModel = model;
+    const payload = {
+      model: model,
+      messages: [
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      max_tokens: 2048
+    };
     
-    while (retries <= maxRetries) {
-      try {
-        console.log(`Attempting content summarization with model: ${currentModel}`);
-        
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${PUBLIC_API_KEY}`,
-            "HTTP-Referer": "https://distill.app",
-            "X-Title": "Distill",
-            "User-Agent": "Distill/1.0"
-          },
-          body: JSON.stringify({
-            model: currentModel,
-            messages: [
-              {
-                role: "system",
-                content: SummarizationPromptFactory.getPrompt(style, bulletCount)
-              },
-              {
-                role: "user",
-                content: `Summarize the following content according to the style specified in my system message. FOCUS EXCLUSIVELY on the actual content provided below. Ignore any preconceptions about what the content might be about. Start directly with content. No preamble. No postamble.\n\n${content}`
-              }
-            ],
-            max_tokens: 1000
-          })
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          let errorMessage = `API error (${response.status}: ${response.statusText})`;
-          
-          try {
-            const errorData = JSON.parse(errorText);
-            if (errorData.error?.message) {
-              errorMessage = errorData.error.message;
-            }
-            
-            // Check if error is rate limit related
-            const isRateLimitError = 
-              errorMessage.includes("quota") || 
-              errorMessage.includes("rate limit") || 
-              errorMessage.includes("capacity") ||
-              errorMessage.includes("429") ||
-              response.status === 429;
-            
-            // If it's a rate limit error and we have retries left, try with fallback model
-            if (isRateLimitError && retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-              console.log(`Rate limit error with model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
-              currentModel = FALLBACK_MODEL;
-              retries++;
-              // Wait before retry
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              continue;
-            }
-          } catch (e) {
-            // If we can't parse the error, use the default message
-            console.error("Error parsing API error response:", e);
-          }
-          
-          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-            console.log(`Retrying after error: ${errorMessage} with fallback model: ${FALLBACK_MODEL}`);
-            currentModel = FALLBACK_MODEL;
-            retries++;
-            // Wait before retry
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
-          }
-          
-          throw new Error(errorMessage);
-        }
-
-        const data = await response.json();
-        
-        // Add defensive check for data.choices being undefined or empty
-        if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-          console.error("Invalid API response structure:", JSON.stringify(data, null, 2));
-          
-          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-            console.log(`Invalid response from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
-            currentModel = FALLBACK_MODEL;
-            retries++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
-          }
-          
-          throw new Error("Invalid response from OpenRouter API - missing or empty choices array");
-        }
-        
-        // Add defensive check for message content
-        if (!data.choices[0].message || !data.choices[0].message.content) {
-          console.error("Invalid message structure in response:", JSON.stringify(data.choices[0], null, 2));
-          
-          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-            console.log(`Missing content from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
-            currentModel = FALLBACK_MODEL;
-            retries++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
-          }
-          
-          throw new Error("Invalid response structure - missing message content");
-        }
-        
-        const summary = data.choices[0].message.content;
-        
-        // Simple cleanup - no complex processing
-        const cleanedSummary = extractContentBetweenMarkers(summary);
-        
-        if (!cleanedSummary || cleanedSummary.trim().length < 10) {
-          console.error("Generated summary is too short or empty:", cleanedSummary);
-          
-          if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-            console.log(`Empty summary from model ${currentModel}. Switching to fallback model: ${FALLBACK_MODEL}`);
-            currentModel = FALLBACK_MODEL;
-            retries++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
-          }
-          
-          throw new Error("Failed to generate a meaningful summary");
-        }
-        
-        // Basic text cleanup
-        return cleanedSummary.replace(/\s+/g, ' ').trim();
-      } catch (error) {
-        if (retries < maxRetries && currentModel !== FALLBACK_MODEL) {
-          console.log(`Retry ${retries + 1} after error with model ${currentModel}:`, error);
-          currentModel = FALLBACK_MODEL;
-          retries++;
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        } else {
-          throw error;
-        }
+    const response = await fetchWithTimeout(
+      OPENROUTER_API_URL,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openRouterApiKey}`,
+          "HTTP-Referer": "https://rewrite.page",
+          "X-Title": "Rewrite.page"
+        },
+        body: JSON.stringify(payload)
+      },
+      FETCH_TIMEOUT
+    );
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error("OpenRouter API Error:", data);
+      if (response.status === 429) {
+        throw new Error("OpenRouter API rate limit reached. The free tier quota has been exceeded. Please try again later or provide your own API key in the settings.");
       }
+      throw new Error(`OpenRouter API error: ${data.error?.message || JSON.stringify(data)}`);
     }
     
-    throw new Error("Failed to generate summary after retries");
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("No response from OpenRouter API");
+    }
+    
+    const generatedText = data.choices[0].message.content.trim();
+    
+    if (!generatedText) {
+      throw new Error("OpenRouter API returned empty content");
+    }
+    
+    console.log(`Received response of length: ${generatedText.length}`);
+    
+    return generatedText;
   } catch (error) {
-    console.error("Failed to summarize content:", error);
+    console.error(`Error in callOpenRouterAPI: ${error.message}`);
     throw error;
   }
 }

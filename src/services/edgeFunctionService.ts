@@ -50,10 +50,22 @@ export const invokeProcessFunction = async (params: ProcessUrlParams): Promise<P
       style: normalizedStyle
     };
     
-    const { data, error } = await supabase.functions.invoke('process-url', {
+    // Set a timeout for the function call to prevent hanging UI
+    const functionPromise = supabase.functions.invoke('process-url', {
       method: 'POST',
       body: functionParams
     });
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Function call timed out after 30 seconds')), 30000);
+    });
+    
+    // Race the function call against the timeout
+    const { data, error } = await Promise.race([
+      functionPromise,
+      timeoutPromise.then(() => { throw new Error('Function call timed out'); })
+    ]) as any;
     
     if (error) {
       console.error("Supabase function error:", error);

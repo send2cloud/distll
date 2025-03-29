@@ -89,6 +89,13 @@ const Index = () => {
     setShowHowToUse(!showHowToUse);
   };
   
+  // Collection of example styles to showcase
+  const exampleStyles = [
+    'simple', 'eli5', 'clickbait', 'seinfeld-standup', 'piratetalk',
+    'haiku', 'top10', 'todo-list', 'fantasy', 'tldr', 'poetry',
+    'shakespeare', 'movie-trailer', 'newsletter', 'telegram'
+  ];
+  
   return <div className="min-h-screen font-sans bg-[#e4d5c2]">
       <header className="px-4 sm:px-6 py-4 flex justify-between items-center">
         <div className="text-xl sm:text-2xl font-bold text-[#221F26] font-serif"> </div>
@@ -144,6 +151,18 @@ const Index = () => {
                     <span className="text-blue-600">Optional style</span> + 
                     <span className="text-green-600"> URL to rewrite</span>
                   </p>
+                </div>
+                
+                <div className="mt-4">
+                  <h3 className="font-medium text-[#5d4a1d]">Creative Style Examples</h3>
+                  <p className="text-sm text-[#8A898C]">The AI can adapt to any style you request:</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-xs bg-[#ecd9ba]/[0.5] px-2 py-1 rounded-full text-[#5d4a1d]">/poetry/</span>
+                    <span className="text-xs bg-[#ecd9ba]/[0.5] px-2 py-1 rounded-full text-[#5d4a1d]">/shakespeare/</span>
+                    <span className="text-xs bg-[#ecd9ba]/[0.5] px-2 py-1 rounded-full text-[#5d4a1d]">/movie-trailer/</span>
+                    <span className="text-xs bg-[#ecd9ba]/[0.5] px-2 py-1 rounded-full text-[#5d4a1d]">/newsletter/</span>
+                    <span className="text-xs bg-[#ecd9ba]/[0.5] px-2 py-1 rounded-full text-[#5d4a1d]">/telegram/</span>
+                  </div>
                 </div>
                 
                 <div>
@@ -207,7 +226,7 @@ const Index = () => {
                 <div className="pt-1">
                   <p className="text-sm text-[#8A898C] mb-2 text-left font-sans">Try these styles:</p>
                   <div className="flex flex-wrap gap-2">
-                    {['simple', 'eli5', 'clickbait', 'seinfeld-standup', 'piratetalk', 'haiku', 'top10', 'todo-list', 'fantasy', 'tldr'].map(style => (
+                    {exampleStyles.map(style => (
                       <Button 
                         key={style} 
                         type="button" 
