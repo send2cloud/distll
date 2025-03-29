@@ -1,25 +1,22 @@
 
 /**
- * Generates a prompt for the AI model based on the content and style
+ * Prompt generation service following Single Responsibility Principle
+ * This service is responsible for generating appropriate prompts for the AI model
  */
-export function generatePrompt(
-  content: string,
-  style: string = 'standard',
-  bulletCount?: number
-): string {
-  // Build basic instruction for the AI
-  let instruction = '';
-  
-  // Normalize style to lowercase for case-insensitive matching
-  const normalizedStyle = style.toLowerCase();
-  
-  // Build the prompt based on style
-  if (normalizedStyle === 'standard' || normalizedStyle === 'simple') {
-    instruction = `Please summarize the following content concisely and clearly.`;
-  } else {
-    // For any custom style, provide a general instruction with examples
-    instruction = `Please rewrite the following content in "${style}" style. Be creative and fully embrace the style.
-    
+
+// Interface for prompt options to follow Interface Segregation Principle
+interface PromptOptions {
+  content: string;
+  style: string;
+  bulletCount?: number;
+}
+
+/**
+ * Style-specific prompt generator that follows Open-Closed Principle
+ * New styles can be added without modifying existing code
+ */
+class PromptGenerator {
+  private static readonly STYLE_EXAMPLES = `
 Here are some examples of how different styles should be interpreted:
 - "eli5": Explain like I'm 5 years old, using simple words and concepts a child would understand
 - "top10": Create a numbered list of the 10 most important points in decreasing order of importance
@@ -30,16 +27,67 @@ Here are some examples of how different styles should be interpreted:
 - "haiku": Create beautiful haiku poems that capture the essence of the content
 - "clickbait": Use exaggerated, attention-grabbing headlines and phrasings
 - "fantasy": Add magical elements and epic storytelling techniques
-- "tldr": Give an extremely concise "too long; didn't read" summary
+- "tldr": Give an extremely concise "too long; didn't read" summary`;
+
+  /**
+   * Generate a standard prompt with basic instructions
+   */
+  private generateStandardPrompt(options: PromptOptions): string {
+    let prompt = `Please summarize the following content concisely and clearly.`;
+    
+    if (options.bulletCount && options.bulletCount > 0) {
+      prompt += `\nPresent your response as a list of exactly ${options.bulletCount} bullet points covering the most important aspects.`;
+    }
+    
+    return this.finalizePrompt(prompt, options.content);
+  }
+  
+  /**
+   * Generate a custom style prompt with creative instructions
+   */
+  private generateStyledPrompt(options: PromptOptions): string {
+    let prompt = `Please rewrite the following content in "${options.style}" style. Be creative and fully embrace the style.
+    
+${PromptGenerator.STYLE_EXAMPLES}
 
 If the style doesn't match any of these examples, use your creativity to match the requested style as closely as possible.`;
+    
+    if (options.bulletCount && options.bulletCount > 0) {
+      prompt += `\nPresent your response as a list of exactly ${options.bulletCount} bullet points covering the most important aspects.`;
+    }
+    
+    return this.finalizePrompt(prompt, options.content);
   }
   
-  // Add bullet point instruction if specified
-  if (bulletCount && bulletCount > 0) {
-    instruction += `\nPresent your response as a list of exactly ${bulletCount} bullet points covering the most important aspects.`;
+  /**
+   * Add content to prompt and format it properly
+   */
+  private finalizePrompt(instruction: string, content: string): string {
+    return `${instruction}\n\nContent to process:\n${content}`;
   }
   
-  // Build the complete prompt
-  return `${instruction}\n\nContent to process:\n${content}`;
+  /**
+   * Public method to generate appropriate prompt based on style
+   */
+  public generatePrompt(options: PromptOptions): string {
+    // Normalize style to lowercase for case-insensitive matching
+    const normalizedStyle = options.style.toLowerCase();
+    
+    // Generate prompt based on style
+    if (normalizedStyle === 'standard' || normalizedStyle === 'simple') {
+      return this.generateStandardPrompt(options);
+    } else {
+      return this.generateStyledPrompt(options);
+    }
+  }
+}
+
+// Factory function to create and use the prompt generator (Dependency Inversion)
+export function generatePrompt(
+  content: string,
+  style: string = 'standard',
+  bulletCount?: number
+): string {
+  const promptGenerator = new PromptGenerator();
+  return promptGenerator.generatePrompt({ content, style, bulletCount });
 }
