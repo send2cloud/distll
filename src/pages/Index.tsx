@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,21 +62,22 @@ const Index = () => {
     const normalizedStyle = customStyle.trim() ? 
       styleFacade.normalizeStyleId(customStyle.trim()) : '';
     
-    // Construct the direct URL format for redirection
-    let redirectPath = '/';
+    // Construct the Sofia edge function URL
+    const sofiaBaseUrl = "https://rewrite.page/";
+    let sofiaUrl = sofiaBaseUrl;
     
     // Add style path component if provided
     if (normalizedStyle) {
-      redirectPath += `${normalizedStyle}/`;
+      sofiaUrl += `${normalizedStyle}/`;
     }
     
     // Add the URL to process
-    redirectPath += processableUrl;
+    sofiaUrl += processableUrl;
     
-    console.log("Redirecting to:", redirectPath);
+    console.log("Redirecting to Sofia edge function:", sofiaUrl);
     
-    // Navigate to the distill page with the URL and style in the path
-    window.location.href = redirectPath;
+    // Redirect to the Sofia edge function
+    window.location.href = sofiaUrl;
   };
   
   const handleStyleSelect = (styleId: string) => {
@@ -151,7 +153,7 @@ const Index = () => {
                 <div className="border-t pt-3 mt-3">
                   <h3 className="font-medium text-[#5d4a1d]">Direct URL Format</h3>
                   <code className="text-xs block bg-gray-100 p-2 rounded mt-1 text-[#221F26]">
-                    {window.location.origin}/<span className="text-blue-600">[style]</span>/<span className="text-green-600">example.com/article</span>
+                    rewrite.page/<span className="text-blue-600">[style]</span>/<span className="text-green-600">example.com/article</span>
                   </code>
                   <p className="text-xs mt-1 text-[#8A898C]">
                     <span className="text-blue-600">Optional style</span> + 
