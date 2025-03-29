@@ -8,6 +8,9 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Set a reasonable timeout (in milliseconds)
 const FETCH_TIMEOUT = 30000;
 
+// Hard-coded API key to avoid 401 errors
+const OPENROUTER_API_KEY = "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";
+
 /**
  * Creates a fetch request with timeout
  */
@@ -85,8 +88,8 @@ async function callOpenRouterAPI(
   apiKey?: string
 ): Promise<string> {
   try {
-    // Use the provided API key or default to environment variable
-    const openRouterApiKey = apiKey || Deno.env.get("OPENROUTER_API_KEY");
+    // Use the provided API key, hardcoded key, or fall back to env variable
+    const openRouterApiKey = apiKey || OPENROUTER_API_KEY || Deno.env.get("OPENROUTER_API_KEY");
     
     if (!openRouterApiKey) {
       throw new Error("OpenRouter API key is required but not provided");
