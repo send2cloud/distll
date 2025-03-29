@@ -11,8 +11,18 @@ export const parseStyleFromPath = (pathname: string): {
 } => {
   console.log(`Parsing style from path: ${pathname}`);
   
-  // Remove any leading slashes for consistent parsing
-  const cleanPath = pathname.replace(/^\/+/, '');
+  // Remove any leading/trailing slashes for consistent parsing
+  const cleanPath = pathname.replace(/^\/+/, '').replace(/\/+$/, '');
+  console.log(`Cleaned path: ${cleanPath}`);
+  
+  // Handle empty path
+  if (!cleanPath) {
+    console.log('Empty path, using standard style');
+    return { 
+      styleId: 'standard', 
+      isBulletStyle: false 
+    };
+  }
   
   // Check for bullet point number in URL path (e.g., /5/)
   const bulletMatch = cleanPath.match(/^(\d+)(?:\/|$)/);

@@ -12,6 +12,18 @@ const FETCH_TIMEOUT = 30000;
 const OPENROUTER_API_KEY = "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";
 
 /**
+ * Interface for AI service options following Interface Segregation Principle
+ */
+interface AiServiceOptions {
+  content?: string;
+  model?: string;
+  style?: string;
+  bulletCount?: number;
+  apiKey?: string;
+  jinaProxyUrl?: string;
+}
+
+/**
  * Creates a fetch request with timeout
  */
 async function fetchWithTimeout(url: string, options: RequestInit, timeout: number) {
@@ -43,7 +55,11 @@ export async function summarizeContent(
     // Generate the prompt for the model based on style
     const prompt = generatePrompt(content, style, bulletCount);
     
-    return await callOpenRouterAPI(prompt, model, apiKey);
+    return await callOpenRouterAPI({
+      content: prompt,
+      model,
+      apiKey
+    });
   } catch (error) {
     console.error(`Error in summarizeContent: ${error.message}`);
     throw error;
@@ -72,7 +88,11 @@ If you can't access the URL content, say "I cannot access this URL." Do not make
     
     console.log(`Attempting summarization with model: ${model}`);
     
-    return await callOpenRouterAPI(prompt, model, apiKey);
+    return await callOpenRouterAPI({
+      content: prompt,
+      model,
+      apiKey
+    });
   } catch (error) {
     console.error(`Error in summarizeWithJinaProxiedUrl: ${error.message}`);
     throw error;
@@ -81,32 +101,37 @@ If you can't access the URL content, say "I cannot access this URL." Do not make
 
 /**
  * Make a call to the OpenRouter API
+ * Refactored to use an options object following Interface Segregation Principle
  */
 async function callOpenRouterAPI(
-  prompt: string,
-  model: string = "google/gemma-3-4b-it",
-  apiKey?: string
+  options: AiServiceOptions
 ): Promise<string> {
   try {
-    // Use the provided API key, hardcoded key, or fall back to env variable
+    const { content, model = "google/gemma-3-4b-it", apiKey } = options;
+    
+    // Use the provided API key or hardcoded key
     const openRouterApiKey = apiKey || OPENROUTER_API_KEY;
     
     if (!openRouterApiKey) {
       throw new Error("OpenRouter API key is required but not provided");
     }
     
+    // Log whether API key is present without revealing it
     console.log("Using API key:", openRouterApiKey ? "API key is present" : "No API key");
+    console.log("Using model:", model);
     
     const payload = {
       model: model,
       messages: [
         {
           role: "user",
-          content: prompt
+          content: content
         }
       ],
       max_tokens: 2048
     };
+    
+    console.log("Sending request to OpenRouter API");
     
     const response = await fetchWithTimeout(
       OPENROUTER_API_URL,
@@ -129,6 +154,9 @@ async function callOpenRouterAPI(
       console.error("OpenRouter API Error:", data);
       if (response.status === 429) {
         throw new Error("OpenRouter API rate limit reached. The free tier quota has been exceeded. Please try again later or provide your own API key in the settings.");
+      } else if (response.status === 401) {
+        console.error("Authentication error with OpenRouter API. Check API key validity.");
+        throw new Error(`OpenRouter API authentication error. Please try again with a valid API key.`);
       }
       throw new Error(`OpenRouter API error: ${data.error?.message || JSON.stringify(data)}`);
     }

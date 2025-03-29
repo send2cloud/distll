@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { corsHeaders } from "./utils/cors.ts";
 import { extractContentBetweenMarkers } from "./utils/text.ts";
+import { parsePathInfo, normalizeUrl, normalizeStyleId } from "./services/urlParser.ts";
 
 // OpenRouter API endpoint
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -30,94 +31,6 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout: numb
   clearTimeout(id);
   
   return response;
-}
-
-/**
- * Extract style and URL information from a path
- */
-function parsePathInfo(path: string): { 
-  styleId: string, 
-  targetUrl: string,
-  bulletCount?: number 
-} {
-  console.log(`Parsing path info: ${path}`);
-  
-  // Remove leading slash if present
-  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-  
-  // Check for bullet point number in URL path (e.g., /5/)
-  const bulletMatch = cleanPath.match(/^(\d+)(?:\/|$)/);
-  if (bulletMatch) {
-    const bulletCount = parseInt(bulletMatch[1], 10);
-    // Extract the URL which comes after the bullet count and slash
-    const urlPart = cleanPath.substring(bulletMatch[0].length);
-    return { 
-      styleId: 'bullets', 
-      bulletCount,
-      targetUrl: urlPart
-    };
-  }
-  
-  // Check for custom style modifier (e.g., /seinfeld-standup/)
-  const customStyleMatch = cleanPath.match(/^([a-zA-Z0-9_-]+)(?:\/|$)/);
-  if (customStyleMatch) {
-    const styleId = customStyleMatch[1].toLowerCase();
-    // Extract the URL which comes after the style and slash
-    const urlPart = cleanPath.substring(customStyleMatch[0].length);
-    
-    // Special case: if the style is "bullets" without a count, default to 5 bullets
-    if (styleId === 'bullets') {
-      return { 
-        styleId, 
-        bulletCount: 5,
-        targetUrl: urlPart
-      };
-    }
-    
-    return { 
-      styleId,
-      targetUrl: urlPart
-    };
-  }
-  
-  // If no style/bullet info, the whole path is the URL
-  return { 
-    styleId: 'standard',
-    targetUrl: cleanPath
-  };
-}
-
-/**
- * Normalize a style ID for consistent handling
- */
-function normalizeStyleId(styleId: string): string {
-  if (!styleId) return 'standard';
-  
-  const normalized = styleId.toLowerCase().trim();
-  
-  // Handle special cases and aliases
-  const styleAliases: Record<string, string> = {
-    'bullet': 'bullets',
-    'bulletpoint': 'bullets',
-    'bulletpoints': 'bullets',
-    'bullet-point': 'bullets',
-    'bullet-points': 'bullets',
-    'eli': 'eli5',
-    'eli-5': 'eli5',
-    'explainlikeimfive': 'eli5',
-    'explain-like-im-five': 'eli5',
-    'seinfeld': 'seinfeld-standup',
-    'jerry': 'seinfeld-standup',
-    'jerryseinfeld': 'seinfeld-standup',
-    'jerry-seinfeld': 'seinfeld-standup',
-    'pirate': 'piratetalk',
-    'piratesp': 'piratetalk',
-    'pirates': 'piratetalk',
-    'click': 'clickbait',
-    'clickbaity': 'clickbait'
-  };
-  
-  return styleAliases[normalized] || normalized;
 }
 
 /**
@@ -160,7 +73,7 @@ async function callOpenRouterAPI(
   model: string = "google/gemma-3-4b-it"
 ): Promise<string> {
   try {
-    console.log("Calling OpenRouter API with prompt:", prompt.substring(0, 100) + "...");
+    console.log("Calling OpenRouter API with prompt length:", prompt.length);
     console.log("Using model:", model);
     
     const payload = {
@@ -173,6 +86,9 @@ async function callOpenRouterAPI(
       ],
       max_tokens: 2048
     };
+    
+    // Log API key presence without revealing it
+    console.log("Using API key:", OPENROUTER_API_KEY ? "API key is present" : "No API key");
     
     const response = await fetchWithTimeout(
       OPENROUTER_API_URL,
@@ -195,6 +111,9 @@ async function callOpenRouterAPI(
       console.error("OpenRouter API Error:", data);
       if (response.status === 429) {
         throw new Error("OpenRouter API rate limit reached. The free tier quota has been exceeded. Please try again later or provide your own API key in the settings.");
+      } else if (response.status === 401) {
+        console.error("Authentication error with OpenRouter API. Check API key validity.");
+        throw new Error(`OpenRouter API authentication error. Please check your API key.`);
       }
       throw new Error(`OpenRouter API error: ${data.error?.message || JSON.stringify(data)}`);
     }
@@ -458,29 +377,24 @@ serve(async (req) => {
       throw new Error("No URL provided in the path");
     }
     
-    // Normalize style
-    const normalizedStyle = normalizeStyleId(styleId);
+    // Normalize the target URL
+    const processedUrl = normalizeUrl(targetUrl);
     
-    console.log(`Processing with style: ${normalizedStyle}, bullet count: ${bulletCount}, URL: ${targetUrl}`);
-    
-    // Process the URL to get the summary
-    let processedUrl = targetUrl;
-    if (!processedUrl.match(/^[a-zA-Z]+:\/\//)) {
-      processedUrl = 'https://' + processedUrl;
-    }
+    console.log(`Processing with style: ${styleId}, bullet count: ${bulletCount}, URL: ${processedUrl}`);
     
     // Create the Jina proxy URL
     const jinaProxyUrl = `https://r.jina.ai/${processedUrl}`;
+    console.log(`Using Jina proxy URL: ${jinaProxyUrl}`);
     
     // Generate prompt for OpenRouter
-    const prompt = generateStylePrompt(normalizedStyle, jinaProxyUrl, bulletCount);
+    const prompt = generateStylePrompt(styleId, jinaProxyUrl, bulletCount);
     
     // Call OpenRouter API with the prompt
     const summary = await callOpenRouterAPI(prompt, 'google/gemma-3-4b-it');
     
     // Create an HTML response
     const cleanedSummary = extractContentBetweenMarkers(summary);
-    const html = generateHtmlResponse(cleanedSummary, normalizedStyle, processedUrl);
+    const html = generateHtmlResponse(cleanedSummary, styleId, processedUrl);
     
     // Return the HTML with appropriate headers
     const responseHeaders = {
