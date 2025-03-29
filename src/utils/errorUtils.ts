@@ -1,5 +1,5 @@
 
-import { ErrorCodeType } from "@/hooks/useContentProcessor";
+import { ErrorCodeType } from "@/types/errors";
 
 /**
  * Creates an error object with an assigned error code
