@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,25 +55,27 @@ const Index = () => {
       processableUrl = processableUrl.substring(8);
     }
     
+    console.log("Processing URL:", processableUrl);
+    
     // Normalize the style
     const normalizedStyle = customStyle.trim() ? 
       styleFacade.normalizeStyleId(customStyle.trim()) : '';
     
-    // Construct the direct URL
-    let directUrl = `${window.location.origin}/`;
+    // Construct the direct URL format for redirection
+    let redirectPath = '/';
     
     // Add style path component if provided
     if (normalizedStyle) {
-      directUrl += `${normalizedStyle}/`;
+      redirectPath += `${normalizedStyle}/`;
     }
     
     // Add the URL to process
-    directUrl += processableUrl;
+    redirectPath += processableUrl;
     
-    console.log("Redirecting to:", directUrl);
+    console.log("Redirecting to:", redirectPath);
     
-    // Redirect to the generated URL instead of making API calls
-    window.location.href = directUrl;
+    // Navigate to the distill page with the URL and style in the path
+    window.location.href = redirectPath;
   };
   
   const handleStyleSelect = (styleId: string) => {
@@ -95,7 +96,6 @@ const Index = () => {
     setShowHowToUse(!showHowToUse);
   };
   
-  // Collection of example styles to showcase
   const exampleStyles = [
     'simple', 'eli5', 'clickbait', 'seinfeld-standup', 'piratetalk',
     'haiku', 'top10', 'todo-list', 'fantasy', 'tldr', 'poetry',

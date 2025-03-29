@@ -49,6 +49,8 @@ const Distill = () => {
       extractedUrl = location.pathname.substring(1);
     }
     
+    console.log("Raw extracted URL:", extractedUrl);
+    
     if (extractedUrl) {
       try {
         // First try standard decoding
@@ -72,8 +74,13 @@ const Distill = () => {
           }
         }
         
+        // Ensure URL has a protocol
+        if (!decodedUrl.match(/^[a-zA-Z]+:\/\//)) {
+          decodedUrl = `https://${decodedUrl}`;
+        }
+        
         setFullUrl(decodedUrl);
-        console.log("Extracted and decoded URL:", decodedUrl);
+        console.log("Final processed URL:", decodedUrl);
       } catch (e) {
         console.error("Error decoding URL:", e);
         // Fallback to raw URL if decoding fails
