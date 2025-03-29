@@ -9,7 +9,7 @@ const CACHE_DURATION = 86400;
 
 // Generate a cache key based on request parameters
 function generateCacheKey(url: string, content: string | undefined, style: string, bulletCount: number | undefined, model: string): string {
-  return `${url || ''}|${content || ''}|${style}|${bulletCount || ''}|${model}`;
+  return `${url || ''}|${content ? 'content-' + content.length : ''}|${style}|${bulletCount || ''}|${model}`;
 }
 
 serve(async (req) => {
@@ -34,6 +34,7 @@ serve(async (req) => {
       throw new Error("Either URL or content parameter is required");
     }
     
+    // Log the style parameter to help debug style interpretation issues
     console.log(`Received request to process ${url ? 'URL: ' + url : 'direct content'} with style: ${style || 'standard'}, model: ${model || 'default'}`);
     
     // Generate a cache key for this specific request
@@ -54,6 +55,9 @@ serve(async (req) => {
       // Process direct content if provided
       result = await processDirectContent(content, style || 'standard', bulletCount, model, apiKey);
     }
+    
+    // Log success for monitoring
+    console.log(`Successfully processed ${url ? 'URL' : 'content'} with style: ${style || 'standard'}, summary length: ${result.summary.length}`);
     
     // Prepare the response with proper cache headers
     const responseHeaders = {
@@ -89,6 +93,9 @@ serve(async (req) => {
       errorCode = "CONTENT_ERROR";
     } else if (userMessage.includes("API") || userMessage.includes("capacity")) {
       errorCode = "AI_SERVICE_ERROR";
+    } else if (userMessage.includes("style")) {
+      // Add specific handling for style-related errors
+      errorCode = "STYLE_ERROR";
     }
     
     // IMPORTANT: Return a 200 status with error in the body

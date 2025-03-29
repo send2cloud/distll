@@ -15,12 +15,29 @@ interface ProcessUrlResponse {
   summary: string;
 }
 
+/**
+ * Invokes the process-url edge function to summarize content
+ * Follows the Single Responsibility Principle - this service only handles communication with the edge function
+ */
 export const invokeProcessFunction = async (params: ProcessUrlParams): Promise<ProcessUrlResponse> => {
   try {
     console.log("Invoking process-url function with params:", {
-      ...params,
+      url: params.url,
+      content: params.content ? `${params.content.substring(0, 50)}... (${params.content.length} chars)` : undefined,
+      style: params.style,
+      bulletCount: params.bulletCount,
+      model: params.model,
       apiKey: params.apiKey ? "PRESENT" : "NOT_PROVIDED" // Log whether API key is provided without exposing it
     });
+    
+    // Validate inputs before sending to edge function
+    if (!params.url && !params.content) {
+      throw new Error("Either URL or content must be provided");
+    }
+    
+    if (params.style && params.style.length > 100) {
+      throw new Error("Style parameter is too long (max 100 characters)");
+    }
     
     const { data, error } = await supabase.functions.invoke('process-url', {
       method: 'POST',
@@ -36,7 +53,7 @@ export const invokeProcessFunction = async (params: ProcessUrlParams): Promise<P
       throw new Error("No data returned from function");
     }
     
-    console.log("Function returned data:", data);
+    console.log("Function returned data summary length:", data.summary ? data.summary.length : 0);
     
     // Check if the response contains an error message from the edge function
     if (data.error) {
@@ -46,6 +63,11 @@ export const invokeProcessFunction = async (params: ProcessUrlParams): Promise<P
         (enhancedError as any).errorCode = data.errorCode;
       }
       throw enhancedError;
+    }
+    
+    // Validate the returned data
+    if (!data.summary || typeof data.summary !== 'string' || data.summary.trim().length === 0) {
+      throw new Error("Edge function returned an empty or invalid summary");
     }
     
     return data as ProcessUrlResponse;

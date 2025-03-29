@@ -25,18 +25,28 @@ export async function processUrl(
       throw new Error("URL is empty after trimming");
     }
     
+    // Clean up style parameter
+    const normalizedStyle = style ? style.trim() : 'standard';
+    
+    // For debugging - log what style we're using
+    console.log(`Style requested: "${normalizedStyle}"`);
+    
     // Ensure the URL has a protocol prefix
     if (!fullUrl.startsWith('http')) {
-      fullUrl = `http://${fullUrl}`;
+      fullUrl = `https://${fullUrl}`;
     }
     
     // Add Jina AI proxy prefix to the URL - this will be passed directly to the LLM
     const jinaProxyUrl = `https://r.jina.ai/${fullUrl}`;
     
-    console.log(`Processing URL: ${fullUrl} with Jina proxy: ${jinaProxyUrl}, style: ${style}, model: ${model}, bullet count: ${bulletCount}`);
+    console.log(`Processing URL: ${fullUrl} with Jina proxy: ${jinaProxyUrl}, style: ${normalizedStyle}, model: ${model}, bullet count: ${bulletCount}`);
     
     // Pass the Jina-proxied URL directly to the LLM for content summarization
-    const summary = await summarizeWithJinaProxiedUrl(jinaProxyUrl, style, bulletCount, model, apiKey);
+    const summary = await summarizeWithJinaProxiedUrl(jinaProxyUrl, normalizedStyle, bulletCount, model, apiKey);
+    
+    if (!summary || summary.trim().length === 0) {
+      throw new Error("Generated summary is empty or invalid");
+    }
     
     return {
       originalContent: `Content from: ${fullUrl}`, // Return a placeholder for original content
@@ -65,7 +75,22 @@ export async function processDirectContent(
   apiKey?: string
 ): Promise<{ originalContent: string; summary: string }> {
   try {
-    const summary = await summarizeContent(content, style || 'standard', bulletCount, model, apiKey);
+    // Normalize style
+    const normalizedStyle = style ? style.trim() : 'standard';
+    
+    // For debugging - log what style we're using
+    console.log(`Style requested for direct content: "${normalizedStyle}"`);
+    
+    if (!content || content.trim().length < 50) {
+      throw new Error("Content is too short to summarize meaningfully (less than 50 characters)");
+    }
+    
+    const summary = await summarizeContent(content, normalizedStyle, bulletCount, model, apiKey);
+    
+    if (!summary || summary.trim().length === 0) {
+      throw new Error("Generated summary is empty or invalid");
+    }
+    
     return {
       originalContent: content,
       summary: summary
