@@ -62,16 +62,12 @@ const Index = () => {
     const normalizedStyle = customStyle.trim() ? 
       styleFacade.normalizeStyleId(customStyle.trim()) : '';
     
-    // Construct the Edge function URL
+    // Construct the Edge function URL - always use Supabase Edge function
     let edgeFunctionUrl;
+    const projectId = "mibqumffyhfbuddsyuaq"; // Supabase project ID
     
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      // Local development
-      edgeFunctionUrl = `${window.location.protocol}//${window.location.host}/functions/rewrite`;
-    } else {
-      // Production
-      edgeFunctionUrl = "https://rewrite.page";
-    }
+    // Always use Supabase edge function regardless of development or production
+    edgeFunctionUrl = `https://${projectId}.supabase.co/functions/v1/rewrite`;
     
     // Add style path component if provided
     if (normalizedStyle) {
@@ -160,7 +156,7 @@ const Index = () => {
                 <div className="border-t pt-3 mt-3">
                   <h3 className="font-medium text-[#5d4a1d]">Direct URL Format</h3>
                   <code className="text-xs block bg-gray-100 p-2 rounded mt-1 text-[#221F26]">
-                    rewrite.page/<span className="text-blue-600">[style]</span>/<span className="text-green-600">example.com/article</span>
+                    https://mibqumffyhfbuddsyuaq.supabase.co/functions/v1/rewrite/<span className="text-blue-600">[style]</span>/<span className="text-green-600">example.com/article</span>
                   </code>
                   <p className="text-xs mt-1 text-[#8A898C]">
                     <span className="text-blue-600">Optional style</span> + 
