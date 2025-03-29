@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { generatePrompt } from "./services/promptService.ts";
 import { extractContentBetweenMarkers } from "./utils/text.ts";
 import { corsHeaders } from "./utils/cors.ts";
 
@@ -119,26 +118,6 @@ function normalizeStyleId(styleId: string): string {
 }
 
 /**
- * Process content using the AI service
- */
-async function processWithAI(
-  content: string,
-  style: string = 'standard',
-  bulletCount?: number,
-  model: string = "google/gemma-3-4b-it"
-): Promise<string> {
-  try {
-    // Generate the prompt for the model based on style
-    const prompt = generatePrompt(content, style, bulletCount);
-    
-    return await callOpenRouterAPI(prompt, model);
-  } catch (error) {
-    console.error(`Error in processWithAI: ${error.message}`);
-    throw error;
-  }
-}
-
-/**
  * Make a call to the OpenRouter API
  */
 async function callOpenRouterAPI(
@@ -209,53 +188,35 @@ async function callOpenRouterAPI(
 }
 
 /**
- * Process a URL with style options
+ * Generate a prompt with style instructions
  */
-async function processUrl(
-  url: string, 
-  style: string, 
-  bulletCount?: number, 
-  model: string = "google/gemma-3-4b-it"
-): Promise<string> {
-  try {
-    // Normalize URL to ensure it has a proper protocol prefix
-    let fullUrl = url.trim();
-    
-    if (!fullUrl) {
-      throw new Error("URL is empty after trimming");
-    }
-    
-    // Clean up style parameter
-    const normalizedStyle = normalizeStyleId(style ? style.trim() : 'standard');
-    
-    // For debugging - log what style we're using
-    console.log(`Style requested: "${normalizedStyle}"`);
-    
-    // Ensure the URL has a protocol prefix
-    if (!fullUrl.startsWith('http')) {
-      fullUrl = `https://${fullUrl}`;
-    }
-    
-    // Add Jina AI proxy prefix to the URL - this will be passed directly to the LLM
-    const jinaProxyUrl = `https://r.jina.ai/${fullUrl}`;
-    
-    console.log(`Processing URL: ${fullUrl} with Jina proxy: ${jinaProxyUrl}, style: ${normalizedStyle}, model: ${model}, bullet count: ${bulletCount}`);
-    
-    // Generate the prompt for the model
-    const prompt = `Visit this URL: ${jinaProxyUrl}
+function generateStylePrompt(style: string, jinaProxyUrl: string, bulletCount?: number): string {
+  // Base prompt with style examples
+  const styleExamples = `
+Here are some examples of how different styles should be interpreted:
+- "eli5": Explain like I'm 5 years old, using simple words and concepts a child would understand
+- "top10": Create a numbered list of the 10 most important points in decreasing order of importance
+- "bullet-points": Present the key information as a clear, concise bulleted list
+- "todo-list": Transform the content into a practical checklist of action items with checkboxes
+- "seinfeld-standup": Rewrite as if Jerry Seinfeld was doing a comedy routine about this topic
+- "piratetalk": Use pirate language, phrases and terminology throughout
+- "haiku": Create beautiful haiku poems that capture the essence of the content
+- "clickbait": Use exaggerated, attention-grabbing headlines and phrasings
+- "fantasy": Add magical elements and epic storytelling techniques
+- "tldr": Give an extremely concise "too long; didn't read" summary`;
 
-Please read the content at this URL, then ${normalizedStyle === 'standard' ? 'summarize it' : 'rewrite it in ' + normalizedStyle + ' style'}${bulletCount ? ` with ${bulletCount} key points` : ''}.
+  // Create the prompt for the model
+  let prompt = `Visit this URL: ${jinaProxyUrl}
+
+Please read the content at this URL, then ${style === 'standard' ? 'summarize it' : 'rewrite it in ' + style + ' style'}${bulletCount ? ` with ${bulletCount} key points` : ''}.
+
+${styleExamples}
+
+If the style doesn't match any of these examples, use your creativity to match the requested style as closely as possible.
 
 If you can't access the URL content, say "I cannot access this URL." Do not make up a summary if you cannot access the content.`;
-    
-    console.log(`Attempting summarization with model: ${model}`);
-    
-    // Submit to OpenRouter API
-    return await callOpenRouterAPI(prompt, model);
-  } catch (error) {
-    console.error(`Error in processUrl: ${error.message}`);
-    throw error;
-  }
+
+  return prompt;
 }
 
 /**
@@ -462,170 +423,91 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const path = url.pathname;
-    const params = url.searchParams;
     
     console.log(`Received request for path: ${path}`);
     
-    // Check if it's an API request (has 'api' path segment or Content-Type is application/json)
-    const isApiRequest = path.includes('/api') || 
-                         req.headers.get('Content-Type') === 'application/json';
-
-    if (isApiRequest && req.method === 'POST') {
-      // Handle as API request
-      const requestData = await req.json();
-      const { url: targetUrl, content, style, bulletCount, model } = requestData;
-      
-      if (!targetUrl && !content) {
-        throw new Error("Either URL or content parameter is required");
-      }
-      
-      let result;
-      if (targetUrl) {
-        const summary = await processUrl(
-          targetUrl, 
-          style || 'standard', 
-          bulletCount, 
-          model || 'google/gemma-3-4b-it'
-        );
-        
-        result = {
-          originalContent: `Content from: ${targetUrl}`,
-          summary
-        };
-      } else {
-        const summary = await processWithAI(
-          content, 
-          style || 'standard', 
-          bulletCount, 
-          model || 'google/gemma-3-4b-it'
-        );
-        
-        result = {
-          originalContent: content,
-          summary
-        };
-      }
-      
-      return new Response(JSON.stringify(result), {
+    // Return a simple landing page for root requests
+    if (path === '/' || path === '') {
+      return new Response(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Rewrite.page</title>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
+            <meta http-equiv="refresh" content="0;url=/">
+          </head>
+          <body class="bg-gray-50 text-gray-800">
+            <div class="container mx-auto px-4 py-8 max-w-3xl">
+              <h1 class="text-2xl font-bold mb-4">Redirecting...</h1>
+              <p class="mb-4">Redirecting to homepage.</p>
+            </div>
+          </body>
+        </html>
+      `, {
         headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
+          'Content-Type': 'text/html'
         }
       });
-    } else {
-      // Handle as direct URL request
-      if (path === '/' || path === '') {
-        // Return a simple page explaining how to use the service
-        return new Response(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Rewrite.page</title>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
-            </head>
-            <body class="bg-gray-50 text-gray-800">
-              <div class="container mx-auto px-4 py-8 max-w-3xl">
-                <h1 class="text-2xl font-bold mb-4">Rewrite.page</h1>
-                <p class="mb-4">Use this service to rewrite web content in different styles.</p>
-                <p class="mb-2">Example usage:</p>
-                <code class="block bg-gray-100 p-2 rounded mb-4">
-                  https://rewrite.page/eli5/example.com/article<br>
-                  https://rewrite.page/haiku/example.com/article<br>
-                  https://rewrite.page/seinfeld-standup/example.com/article
-                </code>
-                <p>Visit the <a href="/" class="text-blue-600 hover:underline">homepage</a> to use the form interface.</p>
-              </div>
-            </body>
-          </html>
-        `, {
-          headers: {
-            'Content-Type': 'text/html'
-          }
-        });
-      }
-      
-      // Parse path and extract style and URL
-      const { styleId, targetUrl, bulletCount } = parsePathInfo(path);
-      
-      if (!targetUrl) {
-        throw new Error("No URL provided in the path");
-      }
-      
-      // Normalize style
-      const normalizedStyle = normalizeStyleId(styleId);
-      
-      console.log(`Processing with style: ${normalizedStyle}, bullet count: ${bulletCount}, URL: ${targetUrl}`);
-      
-      // Process the URL to get the summary
-      let processedUrl = targetUrl;
-      if (!processedUrl.match(/^[a-zA-Z]+:\/\//)) {
-        processedUrl = 'https://' + processedUrl;
-      }
-      
-      const summary = await processUrl(
-        processedUrl, 
-        normalizedStyle, 
-        bulletCount, 
-        'google/gemma-3-4b-it'
-      );
-      
-      // Create an HTML response
-      const cleanedSummary = extractContentBetweenMarkers(summary);
-      const html = generateHtmlResponse(cleanedSummary, normalizedStyle, processedUrl);
-      
-      // Return the HTML with appropriate headers
-      const responseHeaders = {
-        ...corsHeaders,
-        'Content-Type': 'text/html; charset=UTF-8',
-        'Cache-Control': `public, max-age=${CACHE_DURATION}`,
-      };
-      
-      return new Response(html, { 
-        headers: responseHeaders 
-      });
     }
+    
+    // Parse path and extract style and URL
+    const { styleId, targetUrl, bulletCount } = parsePathInfo(path);
+    
+    if (!targetUrl) {
+      throw new Error("No URL provided in the path");
+    }
+    
+    // Normalize style
+    const normalizedStyle = normalizeStyleId(styleId);
+    
+    console.log(`Processing with style: ${normalizedStyle}, bullet count: ${bulletCount}, URL: ${targetUrl}`);
+    
+    // Process the URL to get the summary
+    let processedUrl = targetUrl;
+    if (!processedUrl.match(/^[a-zA-Z]+:\/\//)) {
+      processedUrl = 'https://' + processedUrl;
+    }
+    
+    // Create the Jina proxy URL
+    const jinaProxyUrl = `https://r.jina.ai/${processedUrl}`;
+    
+    // Generate prompt for OpenRouter
+    const prompt = generateStylePrompt(normalizedStyle, jinaProxyUrl, bulletCount);
+    
+    // Call OpenRouter API with the prompt
+    const summary = await callOpenRouterAPI(prompt, 'google/gemma-3-4b-it');
+    
+    // Create an HTML response
+    const cleanedSummary = extractContentBetweenMarkers(summary);
+    const html = generateHtmlResponse(cleanedSummary, normalizedStyle, processedUrl);
+    
+    // Return the HTML with appropriate headers
+    const responseHeaders = {
+      ...corsHeaders,
+      'Content-Type': 'text/html; charset=UTF-8',
+      'Cache-Control': `public, max-age=${CACHE_DURATION}`,
+    };
+    
+    return new Response(html, { 
+      headers: responseHeaders 
+    });
   } catch (error) {
     console.error("Error processing request:", error);
     
-    // Determine if it's likely an API request based on Accept header or URL
-    const acceptHeader = req.headers.get('Accept');
-    const url = new URL(req.url);
-    const isLikelyApiRequest = 
-      acceptHeader?.includes('application/json') || 
-      url.pathname.includes('/api');
-    
-    if (isLikelyApiRequest) {
-      // Return JSON error for API requests
-      return new Response(
-        JSON.stringify({
-          error: error.message,
-          errorCode: "PROCESSING_ERROR"
-        }),
-        { 
-          status: 200, // Using 200 to ensure client can process the error
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-store'
-          }
+    // Return HTML error page
+    const errorHtml = generateErrorHtml(error.message);
+    return new Response(
+      errorHtml,
+      { 
+        status: 200, // Using 200 to ensure the error page is shown
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/html; charset=UTF-8',
+          'Cache-Control': 'no-store'
         }
-      );
-    } else {
-      // Return HTML error page for direct access
-      const errorHtml = generateErrorHtml(error.message);
-      return new Response(
-        errorHtml,
-        { 
-          status: 200, // Using 200 to ensure the error page is shown
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'text/html; charset=UTF-8',
-            'Cache-Control': 'no-store'
-          }
-        }
-      );
-    }
+      }
+    );
   }
 });
