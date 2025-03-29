@@ -89,11 +89,13 @@ async function callOpenRouterAPI(
 ): Promise<string> {
   try {
     // Use the provided API key, hardcoded key, or fall back to env variable
-    const openRouterApiKey = apiKey || OPENROUTER_API_KEY || Deno.env.get("OPENROUTER_API_KEY");
+    const openRouterApiKey = apiKey || OPENROUTER_API_KEY;
     
     if (!openRouterApiKey) {
       throw new Error("OpenRouter API key is required but not provided");
     }
+    
+    console.log("Using API key:", openRouterApiKey ? "API key is present" : "No API key");
     
     const payload = {
       model: model,
