@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Globe, Wifi, FileText, Cpu } from 'lucide-react';
-import { ErrorCodeType } from '@/hooks/useContentProcessor';
+import { ErrorCodeType, determineErrorCodeFromMessage } from '@/core/errors';
 
 interface ErrorDisplayProps {
-  error: Error & { 
+  error: Error & {
     errorCode?: ErrorCodeType;
   };
 }
@@ -14,7 +13,7 @@ interface ErrorDisplayProps {
 const ErrorDisplay = ({ error }: ErrorDisplayProps) => {
   // Determine error type from error message or errorCode if available
   const errorCode = error.errorCode || determineErrorCodeFromMessage(error.message);
-  
+
   return (
     <Card className="mb-6 border-red-200 bg-red-50">
       <CardHeader className="pb-2">
@@ -25,14 +24,14 @@ const ErrorDisplay = ({ error }: ErrorDisplayProps) => {
       </CardHeader>
       <CardContent>
         <p className="text-red-600 mb-4">{error.message}</p>
-        
+
         <Alert className="mt-2 border-amber-200 bg-amber-50">
           <AlertTitle className="text-amber-800">Suggested Fix</AlertTitle>
           <AlertDescription className="text-amber-700">
             {getSuggestionForError(errorCode)}
           </AlertDescription>
         </Alert>
-        
+
         <details className="mt-4">
           <summary className="cursor-pointer text-sm text-red-500">Technical Details</summary>
           <pre className="mt-2 p-4 bg-gray-100 rounded text-xs overflow-auto">
@@ -43,24 +42,6 @@ const ErrorDisplay = ({ error }: ErrorDisplayProps) => {
     </Card>
   );
 };
-
-// Determine error type based on message content
-function determineErrorCodeFromMessage(message: string): ErrorCodeType {
-  if (message.includes("URL") || message.includes("url format") || message.includes("domain")) {
-    return "URL_ERROR";
-  } else if (message.includes("fetch") || message.includes("connection") || message.includes("timed out") || 
-             message.includes("network") || message.includes("down") || message.includes("access denied") ||
-             message.includes("403") || message.includes("404")) {
-    return "CONNECTION_ERROR";
-  } else if (message.includes("content") || message.includes("extract") || message.includes("empty") || 
-             message.includes("too short") || message.includes("JavaScript")) {
-    return "CONTENT_ERROR";
-  } else if (message.includes("API") || message.includes("AI") || message.includes("OpenRouter") || 
-             message.includes("quota") || message.includes("rate limit") || message.includes("token")) {
-    return "AI_SERVICE_ERROR";
-  }
-  return "PROCESSING_ERROR";
-}
 
 // Get error title based on error code
 function getErrorTitle(errorCode: ErrorCodeType): string {

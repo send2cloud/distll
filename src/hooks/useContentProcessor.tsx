@@ -1,11 +1,9 @@
-
 import * as React from 'react';
 import { toast } from "@/components/ui/use-toast";
-import { invokeProcessFunction } from "@/services/edgeFunctionService";
 import { useSettings } from '@/contexts/SettingsContext';
-
-// Define the valid error code types to match the ErrorDisplay component
-export type ErrorCodeType = 'URL_ERROR' | 'CONNECTION_ERROR' | 'CONTENT_ERROR' | 'AI_SERVICE_ERROR' | 'PROCESSING_ERROR';
+import { ErrorCodeType, determineErrorCodeFromMessage, getToastTitleForError } from '@/core/errors';
+import { normalizeUrl } from '@/core/url';
+import { summarizationService } from '@/core/summarization';
 
 interface ContentProcessorResult {
   originalContent: string;
@@ -16,7 +14,7 @@ interface ContentProcessorResult {
 }
 
 export const useContentProcessor = (
-  url: string | undefined, 
+  url: string | undefined,
   style: string,
   bulletCount?: number
 ): ContentProcessorResult => {
@@ -42,57 +40,44 @@ export const useContentProcessor = (
       setSummary(''); // Reset summary to avoid showing stale content
       setOriginalContent(''); // Reset original content
       setProgress(10);
-      
+
       try {
-        // Process the URL carefully to handle various encoding issues
-        let processedUrl = url.trim();
-        
-        if (!processedUrl) {
-          throw Object.assign(new Error("URL is empty after processing"), { errorCode: "URL_ERROR" as ErrorCodeType });
-        }
-        
-        // Detect if URL contains protocol
-        const hasProtocol = processedUrl.match(/^[a-zA-Z]+:\/\//);
-        
-        // Ensure the URL has a protocol prefix
-        const fullUrl = hasProtocol ? processedUrl : `https://${processedUrl}`;
-        
+        const fullUrl = normalizeUrl(url);
+
         console.log("Processing URL:", fullUrl, "with style:", style, "and bullet count:", bulletCount, "model:", settings.model);
         setProgress(20);
-        
         setProgress(40);
-        
+
         // Add a timeout to detect long-running requests
         const timeoutDuration = 30000; // 30 seconds
-        
+
         try {
-          console.log("Calling Edge Function with params:", { url: fullUrl, style, bulletCount, model: settings.model });
-          
-          // Use invokeProcessFunction instead of directly using supabase.functions.invoke
-          const data = await invokeProcessFunction({
+          console.log("Calling Summarization Service with params:", { url: fullUrl, style, bulletCount, model: settings.model });
+
+          const data = await summarizationService.process({
             url: fullUrl,
             style: style,
             bulletCount: bulletCount,
             model: settings.model
           });
-          
-          console.log("Received response from Edge Function:", data);
-          
+
+          console.log("Received response from Summarization Service");
+
           setProgress(80);
-          
+
           if (!data.summary || data.summary.trim() === '') {
             throw Object.assign(
-              new Error("Received empty summary from AI service"), 
+              new Error("Received empty summary from AI service"),
               { errorCode: "AI_SERVICE_ERROR" as ErrorCodeType }
             );
           }
-          
+
           setSummary(data.summary);
           setOriginalContent(data.originalContent);
           setProgress(100);
         } catch (apiError: any) {
-          console.error('Error processing URL with edge function:', apiError);
-          
+          console.error('Error processing URL with summarization service:', apiError);
+
           // If the error is a timeout error from our Promise.race
           if (apiError.message && apiError.message.includes("timed out")) {
             throw Object.assign(
@@ -100,22 +85,22 @@ export const useContentProcessor = (
               { errorCode: "CONNECTION_ERROR" as ErrorCodeType }
             );
           }
-          
+
           throw apiError;
         }
       } catch (error: any) {
         console.error('Error in content processing:', error);
-        
+
         // Create enhanced error object with error code if not already present
-        const enhancedError = error.errorCode ? 
-          error : 
+        const enhancedError = error.errorCode ?
+          error :
           Object.assign(
-            new Error(error.message || "Failed to process content"), 
+            new Error(error.message || "Failed to process content"),
             { errorCode: determineErrorCodeFromMessage(error.message) as ErrorCodeType }
           );
-        
+
         setError(enhancedError);
-        
+
         toast({
           title: getToastTitleForError(enhancedError.errorCode as ErrorCodeType),
           description: enhancedError.message,
@@ -125,45 +110,9 @@ export const useContentProcessor = (
         setIsLoading(false);
       }
     };
-    
+
     processContent();
   }, [url, style, bulletCount, settings.model]);
 
   return { originalContent, summary, isLoading, error, progress };
 };
-
-// Helper function to determine error type based on message content
-function determineErrorCodeFromMessage(message: string): ErrorCodeType {
-  if (!message) return "PROCESSING_ERROR";
-  
-  if (message.includes("URL") || message.includes("url format") || message.includes("domain")) {
-    return "URL_ERROR";
-  } else if (message.includes("fetch") || message.includes("connection") || message.includes("timed out") || 
-             message.includes("network") || message.includes("down") || message.includes("access denied") ||
-             message.includes("403") || message.includes("404")) {
-    return "CONNECTION_ERROR";
-  } else if (message.includes("content") || message.includes("extract") || message.includes("empty") || 
-             message.includes("too short") || message.includes("JavaScript")) {
-    return "CONTENT_ERROR";
-  } else if (message.includes("API") || message.includes("AI") || message.includes("OpenRouter") || 
-             message.includes("quota") || message.includes("rate limit") || message.includes("token")) {
-    return "AI_SERVICE_ERROR";
-  }
-  return "PROCESSING_ERROR";
-}
-
-// Get user-friendly toast title based on error code
-function getToastTitleForError(errorCode: ErrorCodeType): string {
-  switch (errorCode) {
-    case "URL_ERROR":
-      return "Invalid URL";
-    case "CONNECTION_ERROR":
-      return "Connection Problem";
-    case "CONTENT_ERROR":
-      return "Content Issue";
-    case "AI_SERVICE_ERROR":
-      return "AI Service Issue";
-    default:
-      return "Error";
-  }
-}
