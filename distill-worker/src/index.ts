@@ -97,7 +97,7 @@ async function processUrl(
     url: string,
     style: string,
     bulletCount?: number,
-    model: string = "google/gemini-2.5-flash",
+    model: string = "openai/gpt-5-nano",
     apiKey: string = ""
 ) {
     let fullUrl = url.trim();
@@ -123,7 +123,7 @@ async function processDirectContent(
     content: string,
     style: string,
     bulletCount?: number,
-    model: string = "google/gemini-2.5-flash",
+    model: string = "openai/gpt-5-nano",
     apiKey: string = ""
 ) {
     const summary = await summarizeContent(content, style || 'standard', bulletCount, model, apiKey);
@@ -134,53 +134,70 @@ async function processDirectContent(
 }
 
 async function fetchContent(url: string): Promise<string> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const maxRetries = 2;
+    let retries = 0;
 
-    try {
-        const response = await fetch(url, {
-            signal: controller.signal,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; DistillApp/1.0; +https://distill.app)',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5'
+    while (retries <= maxRetries) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        try {
+            const response = await fetch(url, {
+                signal: controller.signal,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (compatible; DistillApp/1.0; +https://distill.app)',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5'
+                }
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                if (response.status === 429 && retries < maxRetries) {
+                    retries++;
+                    await new Promise(resolve => setTimeout(resolve, 2000 * retries));
+                    continue;
+                }
+
+                const errorText = await response.text();
+                if (response.status === 403 || response.status === 401) {
+                    throw new Error(`Access denied. The website may be blocking our requests. Status: ${response.status}. Details: ${errorText.substring(0, 50)}`);
+                } else if (response.status === 404) {
+                    throw new Error(`Page not found. Please check that the URL is correct.`);
+                } else if (response.status >= 500) {
+                    throw new Error(`Website server error. The target website is experiencing issues. Status: ${response.status}`);
+                } else {
+                    throw new Error(`Failed to fetch content. Status: ${response.status} ${response.statusText}`);
+                }
             }
-        });
 
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            if (response.status === 403 || response.status === 401) {
-                throw new Error(`Access denied. The website may be blocking our requests. Status: ${response.status}. Details: ${errorText.substring(0, 50)}`);
-            } else if (response.status === 404) {
-                throw new Error(`Page not found. Please check that the URL is correct.`);
-            } else if (response.status >= 500) {
-                throw new Error(`Website server error. The target website is experiencing issues. Status: ${response.status}`);
-            } else {
-                throw new Error(`Failed to fetch content. Status: ${response.status} ${response.statusText}`);
+            const content = await response.text();
+            if (!content || content.trim() === '') {
+                throw new Error("Received empty content from URL.");
             }
+            return content;
+        } catch (error: any) {
+            clearTimeout(timeoutId);
+            if (retries < maxRetries && (error.name === 'AbortError' || error.message.includes('fetch'))) {
+                retries++;
+                await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+                continue;
+            }
+            if (error.name === 'AbortError') {
+                throw new Error("Request timed out after 15 seconds.");
+            }
+            throw error;
         }
-
-        const content = await response.text();
-        if (!content || content.trim() === '') {
-            throw new Error("Received empty content from URL.");
-        }
-        return content;
-    } catch (error: any) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-            throw new Error("Request timed out after 15 seconds.");
-        }
-        throw error;
     }
+    throw new Error("Failed to fetch content after retries");
 }
 
 async function summarizeContent(
     content: string,
     style: string,
     bulletCount?: number,
-    model: string = "google/gemini-2.5-flash",
+    model: string = "openai/gpt-5-nano",
     apiKey: string = ""
 ): Promise<string> {
     if (!content || content.trim().length < 100) {
@@ -229,7 +246,15 @@ async function summarizeContent(
             }
 
             const data = await response.json<any>();
-            const summary = data.choices[0].message.content;
+            const summary = data.choices?.[0]?.message?.content;
+
+            console.log("GPT-5-NANO raw response content length:", summary?.length);
+            console.log("GPT-5-NANO raw response:", summary);
+
+            if (!summary) {
+                console.error("No summary in response:", JSON.stringify(data));
+                throw new Error("Empty response from AI model");
+            }
 
             const cleanedSummary = extractContentBetweenMarkers(summary);
             if (!cleanedSummary || cleanedSummary.trim().length < 10) {

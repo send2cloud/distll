@@ -1,4 +1,4 @@
-const URL_TO_TEST = 'https://www.globenewswire.com/news-release/2026/02/19/3241549/32716/en/Gemini-Space-Station-GEMI-Shares-Slide-Amid-Surprise-International-Pullback-and-Executive-Departures-Both-Within-Months-of-IPO-Hagens-Berman.html';
+const URL_TO_TEST = 'https://simonwillison.net/2026/Feb/15/deep-blue/';
 const WORKER_URL = 'https://distill-worker.send2cloud.workers.dev';
 
 async function runTest() {
@@ -18,7 +18,7 @@ async function runTest() {
                 url: URL_TO_TEST,
                 style: 'bullets',
                 bulletCount: 5,
-                model: 'google/gemini-2.5-flash'
+                model: 'openai/gpt-5-nano'
             })
         });
 
