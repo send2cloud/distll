@@ -10,7 +10,7 @@ export type SettingsData = {
 
 const DEFAULT_SETTINGS: SettingsData = {
   openRouterApiKey: '',
-  model: 'google/gemini-2.0-flash-thinking-exp:free',
+  model: 'openai/gpt-5-nano',
   darkMode: false,
 };
 
@@ -25,7 +25,7 @@ const SettingsContext = React.createContext<SettingsContextType | undefined>(und
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = React.useState<SettingsData>(DEFAULT_SETTINGS);
-  
+
   // Load settings from localStorage on initial render
   React.useEffect(() => {
     const savedSettings = localStorage.getItem('distill-settings');

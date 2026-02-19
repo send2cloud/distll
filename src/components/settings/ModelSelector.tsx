@@ -1,6 +1,6 @@
 import React from 'react';
 import { Label } from "@/components/ui/label";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -18,13 +18,23 @@ interface ModelOption {
 
 const models: ModelOption[] = [
   {
+    value: 'openai/gpt-5-nano',
+    label: 'GPT-5 Nano (OpenAI)',
+    description: 'Latest efficient reasoning model from OpenAI'
+  },
+  {
+    value: 'google/gemini-2.5-flash',
+    label: 'Gemini 2.5 Flash (Google)',
+    description: 'High-speed, low-latency model from Google'
+  },
+  {
     value: 'google/gemini-2.0-flash-thinking-exp:free',
-    label: 'Gemini 2.0 (Google)',
-    description: 'Fast and efficient AI model from Google'
+    label: 'Gemini 2.0 Thinking (Experimental)',
+    description: 'Thinking model with deep reasoning capabilities'
   },
   {
     value: 'mistralai/mistral-small-3.1-24b-instruct:free',
-    label: 'Mistral 3.1 Small (Mistral AI)',
+    label: 'Mistral 3.1 Small',
     description: '24B parameter efficient model from Mistral AI'
   }
 ];
@@ -36,8 +46,8 @@ export const ModelSelector = () => {
     <div className="space-y-2">
       <div className="flex flex-col space-y-1">
         <Label htmlFor="model-selector">AI Model</Label>
-        <Select 
-          value={settings.model} 
+        <Select
+          value={settings.model}
           onValueChange={(value) => updateSettings({ model: value as AIModel })}
         >
           <SelectTrigger id="model-selector">

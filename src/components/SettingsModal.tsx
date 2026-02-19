@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
-import { ApiKeySettings } from "./settings/ApiKeySettings";
 import { ModelSelector } from "./settings/ModelSelector";
 
 // Re-export types from the types file
@@ -44,15 +43,14 @@ const SettingsModalContent = () => {
         <DialogHeader>
           <DialogTitle>Distill Settings</DialogTitle>
           <DialogDescription>
-            Configure your API keys and model preferences for content distillation.
+            Configure your model preferences for content distillation. Backend secrets are handled securely.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
-          <ApiKeySettings />
           <ModelSelector />
         </div>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
