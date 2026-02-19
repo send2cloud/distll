@@ -75,6 +75,11 @@ const SettingsContent = () => {
             Save All Settings
           </Button>
         </div>
+
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          <p>Distill v1.0.0</p>
+          <p>Last updated: February 19, 2026</p>
+        </div>
       </div>
     </div>
   );
