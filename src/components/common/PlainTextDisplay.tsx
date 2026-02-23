@@ -17,14 +17,14 @@ const PlainTextDisplay = ({ content, className = '' }: PlainTextDisplayProps) =>
 
   if (!hasContent) {
     return (
-      <div className="text-muted-foreground p-4 text-center border border-amber-200 bg-amber-50 rounded-md font-sans">
+      <div className="text-muted-foreground p-4 text-center border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 rounded-md font-sans">
         No content available to display.
       </div>
     );
   }
 
   return (
-    <div className={`prose prose-stone max-w-none text-base md:text-lg leading-relaxed ${className}`}>
+    <div className={`prose prose-stone dark:prose-invert max-w-none text-base md:text-lg leading-relaxed ${className}`}>
       <ReactMarkdown remarkPlugins={[remarkGfm]}>
         {content}
       </ReactMarkdown>
