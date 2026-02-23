@@ -23,7 +23,7 @@ const ContentStateDisplay = ({
   emptyMessage = 'No content available'
 }: ContentStateDisplayProps) => {
   if (isLoading) {
-    return <div className="py-4 px-4 text-sm bg-blue-50 border border-blue-200 rounded-md">{loadingMessage}</div>;
+    return <div className="py-4 px-4 text-sm bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-foreground">{loadingMessage}</div>;
   }
 
   if (error) {
