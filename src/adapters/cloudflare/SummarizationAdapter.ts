@@ -15,7 +15,7 @@ export class CloudflareSummarizationAdapter implements SummarizationService {
                 body: JSON.stringify(params)
             });
 
-            const data = await response.json<any>();
+            const data = await response.json() as any;
 
             if (data.error) {
                 throw createAppError(data.error, (data.errorCode || "PROCESSING_ERROR") as any);

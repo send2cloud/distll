@@ -5,7 +5,7 @@ export interface SummarizationRequest {
     content?: string;
     style: string;
     bulletCount?: number;
-    model: string;
+    model?: string;
 }
 
 export interface SummarizationResponse {
