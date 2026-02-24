@@ -6,9 +6,20 @@ import { StyleGrid } from "@/components/home/StyleGrid";
 import { UrlForm } from "@/components/home/UrlForm";
 import { validateUrl, stripProtocol } from "@/core/url";
 
+const SAMPLE_URLS = [
+  'en.wikipedia.org/wiki/Moon',
+  'en.wikipedia.org/wiki/Coffee',
+  'en.wikipedia.org/wiki/Black_hole',
+  'en.wikipedia.org/wiki/Octopus',
+  'en.wikipedia.org/wiki/Jazz',
+  'en.wikipedia.org/wiki/Stoicism',
+  'en.wikipedia.org/wiki/Bermuda_Triangle',
+  'en.wikipedia.org/wiki/Nikola_Tesla',
+];
+
 const Index = () => {
-  const [url, setUrl] = useState('');
-  const [isValidUrl, setIsValidUrl] = useState(false);
+  const [url, setUrl] = useState(() => SAMPLE_URLS[Math.floor(Math.random() * SAMPLE_URLS.length)]);
+  const [isValidUrl, setIsValidUrl] = useState(true);
   const [customStyle, setCustomStyle] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
