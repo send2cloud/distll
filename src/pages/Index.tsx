@@ -7,14 +7,14 @@ import { UrlForm } from "@/components/home/UrlForm";
 import { validateUrl, stripProtocol } from "@/core/url";
 
 const SAMPLE_URLS = [
-  'en.wikipedia.org/wiki/Moon',
-  'en.wikipedia.org/wiki/Coffee',
-  'en.wikipedia.org/wiki/Black_hole',
-  'en.wikipedia.org/wiki/Octopus',
-  'en.wikipedia.org/wiki/Jazz',
-  'en.wikipedia.org/wiki/Stoicism',
-  'en.wikipedia.org/wiki/Bermuda_Triangle',
-  'en.wikipedia.org/wiki/Nikola_Tesla',
+  'bbc.com/news',
+  'bbc.com/sport',
+  'bbc.com/culture',
+  'bbc.com/travel',
+  'bbc.com/future',
+  'bbc.com/worklife',
+  'bbc.com/reel',
+  'bbc.com/innovation',
 ];
 
 const Index = () => {
