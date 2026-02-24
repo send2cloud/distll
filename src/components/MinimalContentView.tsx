@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PlainTextDisplay from '@/components/common/PlainTextDisplay';
 import ContentStateDisplay from '@/components/common/ContentStateDisplay';
+import LetterJuggler from '@/components/distill/LetterJuggler';
 import { ArrowLeft, Share2, Check, Copy, Twitter } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
