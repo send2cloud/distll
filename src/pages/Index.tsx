@@ -75,13 +75,18 @@ const Index = () => {
 
         <div className="mt-16">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
-            Presets
+            Presets — or type anything
           </h2>
           <StyleGrid
             selectedStyle={customStyle}
             onStyleClick={handleStyleClick}
           />
         </div>
+
+        <footer className="mt-20 text-center text-xs text-muted-foreground/60 space-y-1">
+          <p>A creative experiment. No data is stored. Content is processed on‑the‑fly and never saved.</p>
+          <p>Summaries are AI‑generated and may be inaccurate. Original content belongs to its respective owners. Fair use.</p>
+        </footer>
       </main>
     </div>
   );
